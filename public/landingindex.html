@@ -1,0 +1,2687 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#060907" />
+    <title>MINDSPACE — AI-Powered 3D Stock Intelligence & Market Agents</title>
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg: #050806;
+        --panel: #0a110d;
+        --panel2: #0f1a14;
+        --line: #182b20;
+        --line-bright: #234230;
+        --text: #f0f7f3;
+        --muted: #8b9d92;
+        --bull: #00e59a;
+        --bull-glow: rgba(0, 229, 154, 0.35);
+        --bear: #ff3b57;
+        --bear-glow: rgba(255, 59, 87, 0.35);
+        --stag: #38bdf8;
+        --stag-glow: rgba(56, 189, 248, 0.35);
+        --rabbit: #ffd166;
+        --rabbit-glow: rgba(255, 209, 102, 0.35);
+        --primary: #00e59a;
+        --radius: 18px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        line-height: 1.6;
+        overflow-x: hidden;
+        background-image:
+          radial-gradient(circle at 18% 10%, rgba(0, 229, 154, 0.08) 0%, transparent 45%),
+          radial-gradient(circle at 82% 25%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
+          radial-gradient(circle at 50% 85%, rgba(255, 59, 87, 0.05) 0%, transparent 60%);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .wrap {
+        width: min(1200px, calc(100% - 40px));
+        margin: auto;
+      }
+
+      /* Nav */
+      nav {
+        height: 76px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(5, 8, 6, 0.82);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--line);
+      }
+      .nav-inner {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 19px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+      }
+      .brand img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+        filter: drop-shadow(0 0 10px var(--bull-glow));
+      }
+      .links {
+        display: flex;
+        gap: 30px;
+        color: #9db2a5;
+        font-size: 13.5px;
+        font-weight: 500;
+      }
+      .links a:hover {
+        color: var(--bull);
+      }
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .badge-live {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 99px;
+        border: 1px solid #1a422d;
+        background: #091a11;
+        color: var(--bull);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+      .pulse-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--bull);
+        box-shadow: 0 0 10px var(--bull);
+        animation: pulse 1.8s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.4;
+          transform: scale(0.85);
+        }
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        background: var(--bull);
+        color: #030d07;
+        font-weight: 800;
+        border: 1px solid var(--bull);
+        padding: 11px 20px;
+        border-radius: 12px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(0, 229, 154, 0.35);
+        background: #0fffab;
+      }
+      .btn.ghost {
+        background: transparent;
+        color: #eaf4ed;
+        border-color: #27382c;
+      }
+      .btn.ghost:hover {
+        border-color: var(--bull);
+        color: var(--bull);
+        background: rgba(0, 229, 154, 0.06);
+      }
+      .btn.sm {
+        padding: 8px 14px;
+        font-size: 12px;
+        border-radius: 9px;
+      }
+
+      /* Hero */
+      .hero {
+        padding: 50px 0 35px;
+        display: grid;
+        grid-template-columns: 1fr 1.08fr;
+        gap: 40px;
+        align-items: center;
+      }
+      .eyebrow {
+        color: var(--bull);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        font-weight: 800;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      h1 {
+        font-size: clamp(38px, 4.8vw, 62px);
+        letter-spacing: -0.05em;
+        line-height: 1.04;
+        margin: 0 0 18px;
+        font-weight: 900;
+      }
+      h1 span.hl {
+        color: var(--bull);
+        text-shadow: 0 0 24px rgba(0, 229, 154, 0.25);
+      }
+      .hero-p {
+        font-size: 16px;
+        color: var(--muted);
+        max-width: 530px;
+        line-height: 1.75;
+        margin-bottom: 26px;
+      }
+      .hero-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 26px;
+      }
+      .checks {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 12px;
+        color: #8c9e92;
+      }
+      .checks span:before {
+        content: "✓";
+        color: var(--bull);
+        font-weight: 900;
+        margin-right: 6px;
+      }
+
+      /* 3D Scene Card */
+      .scene-container {
+        height: 480px;
+        position: relative;
+        border-radius: 24px;
+        border: 1px solid var(--line-bright);
+        background: radial-gradient(ellipse at 50% 90%, #0d1e15 0%, #060907 70%);
+        box-shadow:
+          0 24px 60px rgba(0, 0, 0, 0.75),
+          inset 0 0 40px rgba(0, 229, 154, 0.05);
+        overflow: hidden;
+      }
+      #hero-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        cursor: grab;
+      }
+      #hero-canvas:active {
+        cursor: grabbing;
+      }
+
+      .scene-top {
+        position: absolute;
+        top: 16px;
+        left: 18px;
+        right: 18px;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        pointer-events: none;
+      }
+      .scene-title {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+        color: #8ea597;
+        background: rgba(8, 14, 10, 0.8);
+        padding: 5px 10px;
+        border-radius: 8px;
+        border: 1px solid #1c2b21;
+      }
+      .scene-bottom {
+        position: absolute;
+        bottom: 14px;
+        left: 18px;
+        right: 18px;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        pointer-events: none;
+      }
+      .scene-caption {
+        background: rgba(6, 11, 8, 0.88);
+        backdrop-filter: blur(10px);
+        border: 1px solid #1e3325;
+        padding: 9px 13px;
+        border-radius: 12px;
+        font-size: 11px;
+        color: #b0c4b7;
+        max-width: 320px;
+      }
+      .scene-caption b {
+        color: #f0f7f3;
+        display: block;
+        font-size: 12px;
+        margin-bottom: 2px;
+      }
+      .agent-chips {
+        display: flex;
+        gap: 6px;
+        pointer-events: auto;
+        background: rgba(6, 11, 8, 0.9);
+        padding: 6px;
+        border-radius: 12px;
+        border: 1px solid #1e3325;
+      }
+      .chip-btn {
+        background: #0d1510;
+        color: #a3b8ab;
+        border: 1px solid #25382b;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 10.5px;
+        font-weight: 800;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
+      }
+      .chip-btn:hover,
+      .chip-btn.active {
+        background: #14281c;
+        color: var(--bull);
+        border-color: var(--bull);
+        box-shadow: 0 0 14px rgba(0, 229, 154, 0.3);
+      }
+      .chip-btn.bear-chip.active {
+        color: var(--bear);
+        border-color: var(--bear);
+        box-shadow: 0 0 14px var(--bear-glow);
+      }
+      .chip-btn.stag-chip.active {
+        color: var(--stag);
+        border-color: var(--stag);
+        box-shadow: 0 0 14px var(--stag-glow);
+      }
+      .chip-btn.rabbit-chip.active {
+        color: var(--rabbit);
+        border-color: var(--rabbit);
+        box-shadow: 0 0 14px var(--rabbit-glow);
+      }
+
+      /* Stats strip */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin: 25px 0 65px;
+      }
+      .stat-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 20px 22px;
+        transition:
+          transform 0.2s,
+          border-color 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--line-bright);
+      }
+      .stat-card strong {
+        font-size: 26px;
+        font-weight: 900;
+        display: block;
+        letter-spacing: -0.04em;
+        margin-bottom: 2px;
+      }
+      .stat-card small {
+        color: var(--bull);
+        font-size: 16px;
+        margin-left: 4px;
+        font-weight: 700;
+      }
+      .stat-card span {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+
+      /* Sections */
+      section {
+        padding: 65px 0;
+      }
+      .section-head {
+        max-width: 720px;
+        margin-bottom: 36px;
+      }
+      .section-head h2 {
+        font-size: clamp(30px, 3.8vw, 44px);
+        letter-spacing: -0.04em;
+        line-height: 1.12;
+        margin: 10px 0 14px;
+        font-weight: 900;
+      }
+      .section-head p {
+        font-size: 15.5px;
+        color: var(--muted);
+        line-height: 1.8;
+        margin: 0;
+      }
+
+      /* 4 Agents Grid */
+      .agents-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .agent-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .agent-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--card-color);
+        box-shadow:
+          0 16px 36px rgba(0, 0, 0, 0.6),
+          0 0 20px var(--card-glow);
+      }
+      .agent-card.active-card {
+        border-color: var(--card-color);
+        box-shadow: 0 0 24px var(--card-glow);
+        background: linear-gradient(180deg, #101c15 0%, var(--panel) 100%);
+      }
+      .card-top {
+        margin-bottom: 18px;
+      }
+      .agent-avatar-tag {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-size: 24px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--card-color);
+        color: var(--card-color);
+        margin-bottom: 16px;
+        box-shadow: 0 0 15px var(--card-glow);
+      }
+      .agent-role-pill {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        color: var(--card-color);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .agent-card h3 {
+        font-size: 22px;
+        margin: 0 0 8px;
+        font-weight: 800;
+      }
+      .agent-card p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.7;
+        margin: 0;
+      }
+      .agent-metrics {
+        margin: 16px 0;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: #a4b8ab;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .agent-metrics div {
+        display: flex;
+        justify-content: space-between;
+      }
+      .explore-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        background: #0f1812;
+        border: 1px solid #233428;
+        color: #e0ece3;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        transition: all 0.2s;
+      }
+      .agent-card:hover .explore-btn {
+        background: var(--card-color);
+        color: #040c07;
+        border-color: var(--card-color);
+        font-weight: 800;
+      }
+
+      /* Modal / Deep-Dive Stage */
+      .agent-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(3, 6, 4, 0.88);
+        backdrop-filter: blur(16px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+      }
+      .agent-modal-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .agent-modal-box {
+        width: min(1050px, 96vw);
+        max-height: 92vh;
+        background: #0b120e;
+        border: 1px solid var(--modal-accent, #2a4032);
+        border-radius: 26px;
+        box-shadow:
+          0 35px 80px rgba(0, 0, 0, 0.85),
+          0 0 50px var(--modal-glow, rgba(0, 229, 154, 0.2));
+        display: grid;
+        grid-template-columns: 1.05fr 1.35fr;
+        overflow: hidden;
+        transform: scale(0.96) translateY(12px);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .agent-modal-overlay.open .agent-modal-box {
+        transform: scale(1) translateY(0);
+      }
+      .modal-3d-stage {
+        background: radial-gradient(circle at 50% 60%, #11261b 0%, #060a08 75%);
+        position: relative;
+        border-right: 1px solid #1a2a20;
+        display: flex;
+        flex-direction: column;
+      }
+      #modal-canvas {
+        width: 100%;
+        height: 100%;
+        min-height: 440px;
+        display: block;
+        cursor: grab;
+      }
+      #modal-canvas:active {
+        cursor: grabbing;
+      }
+      .modal-stage-controls {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        z-index: 5;
+      }
+      .anim-btn {
+        background: rgba(6, 11, 8, 0.85);
+        border: 1px solid #23382b;
+        color: #c7ded0;
+        padding: 7px 12px;
+        border-radius: 9px;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .anim-btn:hover {
+        background: var(--bull);
+        color: #040c07;
+        border-color: var(--bull);
+      }
+      .modal-stage-hint {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: #799182;
+        font-family: "JetBrains Mono", monospace;
+        background: rgba(5, 9, 7, 0.75);
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid #192b1f;
+      }
+
+      .modal-info-panel {
+        padding: 34px 38px;
+        overflow-y: auto;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .modal-close-btn {
+        position: absolute;
+        top: 18px;
+        right: 22px;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #101c15;
+        border: 1px solid #243b2d;
+        color: #cbdcd0;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        font-size: 18px;
+        z-index: 20;
+        transition: all 0.2s;
+      }
+      .modal-close-btn:hover {
+        background: #ff3b57;
+        color: white;
+        border-color: #ff3b57;
+      }
+      .dossier-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      .dossier-title-area h2 {
+        font-size: 32px;
+        font-weight: 900;
+        margin: 6px 0 2px;
+      }
+      .dossier-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: rgba(0, 229, 154, 0.12);
+        border: 1px solid var(--bull);
+        color: var(--bull);
+      }
+      .dossier-tagline {
+        color: var(--muted);
+        font-size: 14.5px;
+        line-height: 1.6;
+        margin: 4px 0 0;
+      }
+
+      .dossier-block {
+        background: #0d1611;
+        border: 1px solid #1f3025;
+        border-radius: 15px;
+        padding: 18px 20px;
+      }
+      .dossier-block h4 {
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9eb5a6;
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .dossier-block p {
+        font-size: 13.5px;
+        color: #cbd9ce;
+        line-height: 1.7;
+        margin: 0;
+      }
+      .spec-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .spec-item {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-size: 13px;
+        color: #b5c7bc;
+      }
+      .spec-item:before {
+        content: "◈";
+        color: var(--bull);
+        font-size: 10px;
+      }
+      .spec-item b {
+        color: #f0f7f3;
+      }
+
+      /* Discussions Feature Showcase */
+      .discussion-section {
+        background: radial-gradient(circle at 85% 20%, #152d21 0%, #070e0a 65%);
+        border: 1px solid #1f3d2a;
+        border-radius: 28px;
+        padding: 48px;
+        margin: 40px 0;
+        display: grid;
+        grid-template-columns: 1.15fr 0.95fr;
+        gap: 40px;
+        align-items: center;
+      }
+      .discussion-chat-preview {
+        background: #09120c;
+        border: 1px solid #1d3324;
+        border-radius: 20px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      }
+      .chat-bubble {
+        padding: 12px 16px;
+        border-radius: 14px;
+        font-size: 12.5px;
+        line-height: 1.6;
+        border-left: 3px solid transparent;
+        background: #0e1a12;
+      }
+      .chat-bubble.bull-msg {
+        border-color: var(--bull);
+      }
+      .chat-bubble.bear-msg {
+        border-color: var(--bear);
+      }
+      .chat-bubble.stag-msg {
+        border-color: var(--stag);
+      }
+      .chat-bubble.rabbit-msg {
+        border-color: var(--rabbit);
+      }
+      .chat-sender {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      .chat-input-fake {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #060b08;
+        border: 1px solid #233b2b;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 12px;
+        color: #748c7c;
+        margin-top: 6px;
+      }
+
+      /* Capabilities Grid */
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .feature-box {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 24px;
+        transition:
+          transform 0.2s,
+          border-color 0.2s;
+      }
+      .feature-box:hover {
+        transform: translateY(-4px);
+        border-color: var(--line-bright);
+      }
+      .feature-icon {
+        font-size: 26px;
+        margin-bottom: 14px;
+        display: inline-block;
+      }
+      .feature-box h3 {
+        font-size: 17px;
+        margin: 0 0 8px;
+        font-weight: 800;
+      }
+      .feature-box p {
+        font-size: 13.5px;
+        color: var(--muted);
+        line-height: 1.7;
+        margin: 0;
+      }
+
+      /* Workflow Steps */
+      .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .step-box {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-top: 2px solid var(--bull);
+        border-radius: 0 0 16px 16px;
+        padding: 24px 20px;
+      }
+      .step-num {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--bull);
+        letter-spacing: 0.12em;
+        margin-bottom: 8px;
+      }
+      .step-box h3 {
+        font-size: 17px;
+        margin: 0 0 8px;
+        font-weight: 800;
+      }
+      .step-box p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.7;
+        margin: 0;
+      }
+
+      /* CTA Section */
+      .cta-banner {
+        padding: 48px;
+        border-radius: 28px;
+        background: radial-gradient(ellipse at 80% 20%, #153624 0%, #08120b 60%);
+        border: 1px solid #234c32;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 30px;
+        margin: 60px 0;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+      }
+      .cta-banner h2 {
+        font-size: clamp(28px, 3.4vw, 42px);
+        line-height: 1.1;
+        margin: 0 0 12px;
+        font-weight: 900;
+      }
+      .cta-banner p {
+        font-size: 15px;
+        color: #a6bdae;
+        margin: 0;
+        max-width: 580px;
+      }
+
+      /* Footer */
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 35px 0 45px;
+        color: #6e8275;
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .footer-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        color: #9bb2a3;
+      }
+      .footer-brand img {
+        width: 22px;
+        height: 22px;
+      }
+
+      /* Responsive */
+      @media (max-width: 1024px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+        .scene-container {
+          height: 400px;
+        }
+        .agents-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .features-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .workflow-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .agent-modal-box {
+          grid-template-columns: 1fr;
+          max-height: 94vh;
+        }
+        #modal-canvas {
+          min-height: 280px;
+        }
+        .discussion-section {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 680px) {
+        .links {
+          display: none;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+        .agents-grid,
+        .features-grid,
+        .workflow-grid {
+          grid-template-columns: 1fr;
+        }
+        .cta-banner {
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 30px;
+        }
+        .scene-container {
+          height: 340px;
+        }
+        .scene-bottom {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+
+    <!-- Three.js UMD and OrbitControls via reliable CDN for seamless file:/// and web serving -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  </head>
+  <body>
+    <!-- Top Navigation Bar -->
+    <nav>
+      <div class="wrap nav-inner">
+        <a class="brand" href="#top">
+          <img src="logo.png" alt="Mindspace Logo" onerror="this.src = '/logo.png'" />
+          MINDSPACE
+        </a>
+        <div class="links">
+          <a href="#hero-3d">3D Floor</a>
+          <a href="#agents">AI Agents</a>
+          <a href="#discussions">Roundtable</a>
+          <a href="#capabilities">Capabilities</a>
+          <a href="#workflow">Workflow</a>
+        </div>
+        <div class="nav-actions">
+          <span class="badge-live">
+            <span class="pulse-dot"></span>
+            EXCHANGE ONLINE
+          </span>
+          <button class="btn" onclick="launchMindspaceApp(event)">Try out Mindspace ↗</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Hero Section -->
+    <main id="top">
+      <div class="wrap">
+        <div class="hero">
+          <div>
+            <div class="eyebrow">
+              <span class="pulse-dot"></span>
+              AI-POWERED 3D MARKET INTELLIGENCE
+            </div>
+            <h1>
+              Four minds.<br />
+              One market.<br />
+              <span class="hl">Clearer decisions.</span>
+            </h1>
+            <p class="hero-p">
+              Meet Mindspace: an immersive 3D trading floor bridging real-time market data across
+              Indian (NSE/BSE) and US exchanges, four autonomous AI market agents, official
+              session-locked settlements, Groww-style simulation trading, and live agent roundtables
+              into one focused workspace.
+            </p>
+            <div class="hero-actions">
+              <button class="btn" onclick="launchMindspaceApp(event)">Try out Mindspace ↗</button>
+              <a class="btn ghost" href="#agents"> Explore 4 AI Agents ↓ </a>
+              <a class="btn ghost" href="#discussions"> 💬 3D Roundtable </a>
+            </div>
+            <div class="checks">
+              <span>Live NSE/BSE & US Markets</span>
+              <span>Session-Aware Freezing</span>
+              <span>4 Roblox AI Agents</span>
+              <span>Word (.docx) Report Export</span>
+            </div>
+          </div>
+
+          <!-- 3D Interactive Exchange Floor Hero -->
+          <div class="scene-container" id="hero-3d">
+            <div class="scene-top">
+              <span class="scene-title">MINDSPACE // 3D AGENT TRADING FLOOR</span>
+              <span class="badge-live">● INTERACTIVE 3D</span>
+            </div>
+
+            <canvas id="hero-canvas"></canvas>
+
+            <div class="scene-bottom">
+              <div class="scene-caption" id="hero-caption">
+                <b>🐂 BULL · Upside Breakout Scout</b>
+                Drag to orbit 360° · Scroll to zoom · Click any agent to inspect
+              </div>
+              <div class="agent-chips">
+                <button class="chip-btn active" data-agent="bull">🐂 BULL</button>
+                <button class="chip-btn bear-chip" data-agent="bear">🐻 BEAR</button>
+                <button class="chip-btn stag-chip" data-agent="stag">🦌 STAG</button>
+                <button class="chip-btn rabbit-chip" data-agent="rabbit">🐇 RABBIT</button>
+                <button class="chip-btn" id="btn-reset-cam" title="Reset Camera View">
+                  🔄 RESET
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Metrics Ribbon -->
+        <div class="stats">
+          <div class="stat-card">
+            <strong>4 <small>agents</small></strong>
+            <span>Bull, Bear, Stag & Rabbit with distinct domain perspectives</span>
+          </div>
+          <div class="stat-card">
+            <strong>91%+ <small>accuracy</small></strong>
+            <span>Multi-agent quantitative consensus & ML validation</span>
+          </div>
+          <div class="stat-card">
+            <strong>Market-Aware</strong>
+            <span>Locks to official closing prices after 3:30 PM IST / 4:00 PM EST</span>
+          </div>
+          <div class="stat-card">
+            <strong>Zero-Token Q&A</strong>
+            <span>Roundtable coffee table lounge with instant offline quantitative tips</span>
+          </div>
+        </div>
+
+        <!-- Section: The 4 AI Agents -->
+        <section id="agents">
+          <div class="section-head">
+            <div class="eyebrow">THE AUTONOMOUS TEAM</div>
+            <h2>Four agents. Four ways to read the market.</h2>
+            <p>
+              Unlike generic AI bots, each Mindspace agent is modeled after a battle-tested
+              financial archetype. Click <b>"Explore Agent"</b> on any card below to launch the
+              dedicated 3D interactive character inspector with full mathematical indicators,
+              execution jobs, and roundtable personas.
+            </p>
+          </div>
+
+          <div class="agents-grid">
+            <!-- Bull Card -->
+            <article
+              class="agent-card active-card"
+              data-card="bull"
+              style="--card-color: var(--bull); --card-glow: var(--bull-glow)"
+              onclick="openAgentModal('bull')"
+            >
+              <div class="card-top">
+                <div class="agent-avatar-tag">🐂</div>
+                <div class="agent-role-pill">Growth & Momentum Scout</div>
+                <h3>BULL</h3>
+                <p>
+                  Hunts for aggressive upside breakouts, volume-confirmed rallies, and golden
+                  moving-average crosses.
+                </p>
+              </div>
+              <div class="agent-metrics">
+                <div><span>Core Indicators:</span><b>EMA 9/21, SuperTrend</b></div>
+                <div><span>Trigger Filter:</span><b>RSI > 55 + Vol > 1.5x</b></div>
+                <div><span>Focus Horizon:</span><b>1 Day to 1 Month</b></div>
+              </div>
+              <button
+                class="explore-btn"
+                onclick="
+                  event.stopPropagation();
+                  openAgentModal('bull');
+                "
+              >
+                <span>Explore Bull in 3D</span>
+                <span>→</span>
+              </button>
+            </article>
+
+            <!-- Bear Card -->
+            <article
+              class="agent-card"
+              data-card="bear"
+              style="--card-color: var(--bear); --card-glow: var(--bear-glow)"
+              onclick="openAgentModal('bear')"
+            >
+              <div class="card-top">
+                <div class="agent-avatar-tag">🐻</div>
+                <div class="agent-role-pill">Risk Officer & Hedging Guardian</div>
+                <h3>BEAR</h3>
+                <p>
+                  Stress-tests bullish assumptions, flags overbought exhaustion traps, and enforces
+                  strict stop-losses.
+                </p>
+              </div>
+              <div class="agent-metrics">
+                <div><span>Core Indicators:</span><b>Bollinger High, MACD-</b></div>
+                <div><span>Risk Ceiling:</span><b>Max 1-2% Capital Drawdown</b></div>
+                <div><span>Focus Horizon:</span><b>Intraday & Swing Protection</b></div>
+              </div>
+              <button
+                class="explore-btn"
+                onclick="
+                  event.stopPropagation();
+                  openAgentModal('bear');
+                "
+              >
+                <span>Explore Bear in 3D</span>
+                <span>→</span>
+              </button>
+            </article>
+
+            <!-- Stag Card -->
+            <article
+              class="agent-card"
+              data-card="stag"
+              style="--card-color: var(--stag); --card-glow: var(--stag-glow)"
+              onclick="openAgentModal('stag')"
+            >
+              <div class="card-top">
+                <div class="agent-avatar-tag">🦌</div>
+                <div class="agent-role-pill">Macro Valuation & Asset Allocator</div>
+                <h3>STAG</h3>
+                <p>
+                  Steps back from short-term volatility to compute fundamental fair value, P/E
+                  multiples, and rebalancing bands.
+                </p>
+              </div>
+              <div class="agent-metrics">
+                <div><span>Core Indicators:</span><b>P/E Median, 200-Day SMA</b></div>
+                <div><span>Strategy:</span><b>Disciplined SIP & Compounding</b></div>
+                <div><span>Focus Horizon:</span><b>6 Months to 5 Years</b></div>
+              </div>
+              <button
+                class="explore-btn"
+                onclick="
+                  event.stopPropagation();
+                  openAgentModal('stag');
+                "
+              >
+                <span>Explore Stag in 3D</span>
+                <span>→</span>
+              </button>
+            </article>
+
+            <!-- Rabbit Card -->
+            <article
+              class="agent-card"
+              data-card="rabbit"
+              style="--card-color: var(--rabbit); --card-glow: var(--rabbit-glow)"
+              onclick="openAgentModal('rabbit')"
+            >
+              <div class="card-top">
+                <div class="agent-avatar-tag">🐇</div>
+                <div class="agent-role-pill">HFT Order Flow & Execution Specialist</div>
+                <h3>RABBIT</h3>
+                <p>
+                  Scans Level-2 order book depth, top-5 bid/ask queues, and VWAP micro-deviations to
+                  pinpoint zero-slippage entries.
+                </p>
+              </div>
+              <div class="agent-metrics">
+                <div><span>Core Indicators:</span><b>Level-2 Depth, VWAP Band</b></div>
+                <div><span>Execution Edge:</span><b>Sub-Second Queue Timing</b></div>
+                <div><span>Focus Horizon:</span><b>Intraday Scalps & Limit Fills</b></div>
+              </div>
+              <button
+                class="explore-btn"
+                onclick="
+                  event.stopPropagation();
+                  openAgentModal('rabbit');
+                "
+              >
+                <span>Explore Rabbit in 3D</span>
+                <span>→</span>
+              </button>
+            </article>
+          </div>
+        </section>
+
+        <!-- Section: 3D Discussion Lounge & Q&A Feature -->
+        <section id="discussions">
+          <div class="discussion-section">
+            <div>
+              <div class="eyebrow">NEW: 3D AGENT ROUNDTABLE</div>
+              <h2
+                style="
+                  font-size: clamp(28px, 3.4vw, 40px);
+                  font-weight: 900;
+                  line-height: 1.15;
+                  margin: 10px 0 16px;
+                "
+              >
+                When not analyzing stocks, they sit around the coffee table and debate.
+              </h2>
+              <p style="color: #a4bba9; font-size: 15px; line-height: 1.8; margin-bottom: 24px">
+                Switch to the <b>"Agent Discussions"</b> drawer in Mindspace: Bull, Bear, Stag, and
+                Rabbit leave their trading desks and gather around the executive lounge in 3D space
+                to discuss tactical investing tips, risk management protocols, and market
+                psychology.
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 26px">
+                <div style="display: flex; gap: 10px; font-size: 13.5px; color: #d0e4d7">
+                  <span style="color: var(--bull)">▶</span>
+                  <span
+                    ><b>Start / Stop Discussion Controls:</b> Full user autonomy to pause or trigger
+                    new topics at will.</span
+                  >
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 13.5px; color: #d0e4d7">
+                  <span style="color: var(--bull)">💬</span>
+                  <span
+                    ><b>Interactive User Q&A:</b> Ask questions like
+                    <i>"How do I hedge during interest rate hikes?"</i> and all 4 agents immediately
+                    respond from their dedicated domain lenses.</span
+                  >
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 13.5px; color: #d0e4d7">
+                  <span style="color: var(--bull)">⚡</span>
+                  <span
+                    ><b>Zero-Credit Token Architecture:</b> Micro-prompting (~150-250 tokens) with
+                    instant offline quantitative fallbacks ensures zero lag and minimal token
+                    consumption.</span
+                  >
+                </div>
+              </div>
+              <button class="btn" onclick="launchMindspaceApp(event)">
+                Experience Roundtable in 3D ↗
+              </button>
+            </div>
+
+            <!-- Discussion Mock Preview -->
+            <div class="discussion-chat-preview">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  border-bottom: 1px solid #1c2e22;
+                  padding-bottom: 10px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: #9ab3a2;
+                    font-family: &quot;JetBrains Mono&quot;, monospace;
+                  "
+                >
+                  ● ROUNDTABLE: POSITION SIZING & RISK
+                </span>
+                <span
+                  style="
+                    font-size: 10px;
+                    color: var(--bull);
+                    background: #0c2015;
+                    padding: 3px 8px;
+                    border-radius: 6px;
+                    font-weight: 700;
+                  "
+                >
+                  LIVE
+                </span>
+              </div>
+
+              <div class="chat-bubble bull-msg">
+                <div class="chat-sender" style="color: var(--bull)">
+                  <span>🐂 BULL</span><span>00:12:04</span>
+                </div>
+                Scale 50% on the initial 20-day high breakout, then add the remaining 50% only when
+                volume confirms follow-through above EMA 9.
+              </div>
+
+              <div class="chat-bubble bear-msg">
+                <div class="chat-sender" style="color: var(--bear)">
+                  <span>🐻 BEAR</span><span>00:12:18</span>
+                </div>
+                Never risk more than 1.5% of total account equity on that breakout. If price pulls
+                back below the prior candle low, cut immediately.
+              </div>
+
+              <div class="chat-bubble stag-msg">
+                <div class="chat-sender" style="color: var(--stag)">
+                  <span>🦌 STAG</span><span>00:12:35</span>
+                </div>
+                Ensure your sector allocation does not exceed 25% of your total portfolio,
+                regardless of how promising the momentum appears.
+              </div>
+
+              <div class="chat-bubble rabbit-msg">
+                <div class="chat-sender" style="color: var(--rabbit)">
+                  <span>🐇 RABBIT</span><span>00:12:49</span>
+                </div>
+                Never chase with market orders during the opening 15 minutes! Place passive limit
+                bids at the VWAP lower band to avoid 0.4% slippage.
+              </div>
+
+              <div class="chat-input-fake">
+                <span>Ask Bull, Bear, Stag & Rabbit a question...</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Platform Capabilities -->
+        <section id="capabilities">
+          <div class="section-head">
+            <div class="eyebrow">INSTITUTIONAL GRADE TOOLKIT</div>
+            <h2>Everything you need to analyze, simulate & learn.</h2>
+            <p>
+              Mindspace connects real-world exchange feeds with multi-agent intelligence and
+              quantitative safety protocols.
+            </p>
+          </div>
+
+          <div class="features-grid">
+            <div class="feature-box">
+              <div class="feature-icon">⏰</div>
+              <h3>Session-Aware Freezing</h3>
+              <p>
+                Automatically checks Indian (NSE/BSE) and US market hours. Freezes prices to
+                official settlement data after 3:30 PM IST / 4:00 PM EST, completely eliminating
+                artificial off-market volatility.
+              </p>
+            </div>
+            <div class="feature-box">
+              <div class="feature-icon">📊</div>
+              <h3>Groww-Style Paper Trading</h3>
+              <p>
+                Execute simulated market and limit orders by exact number of shares. Track real-time
+                P&L, holdings, margin utilization, and completed order history stored securely in
+                SQLite.
+              </p>
+            </div>
+            <div class="feature-box">
+              <div class="feature-icon">📄</div>
+              <h3>Export to Word (.docx)</h3>
+              <p>
+                Generate professionally formatted research reports with a single click. Includes
+                executive consensus, tabular agent comparison metrics, individual theses, and
+                formula appendices.
+              </p>
+            </div>
+            <div class="feature-box">
+              <div class="feature-icon">📈</div>
+              <h3>Candlestick & Indicator Depth</h3>
+              <p>
+                Inspect interactive candlestick charts with EMA 9/21 ribbons, RSI momentum gauges,
+                Bollinger Bands, and real-time volume oscillators for both Indian and US equities.
+              </p>
+            </div>
+            <div class="feature-box">
+              <div class="feature-icon">🗄️</div>
+              <h3>Embedded SQLite Database</h3>
+              <p>
+                Zero-latency local database storage preserving watchlists, paper portfolio
+                transactions, historical agent forecasts, and custom system settings in
+                <code>data/mindspace.sqlite</code>.
+              </p>
+            </div>
+            <div class="feature-box">
+              <div class="feature-icon">🌤️</div>
+              <h3>System-Synced 3D Weather</h3>
+              <p>
+                The 3D office window reflects your exact local system time, sunlight azimuth,
+                dawn/dusk transitions, rain, and starry night skies matched to your physical
+                timezone.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: How It Works Workflow -->
+        <section id="workflow">
+          <div class="section-head">
+            <div class="eyebrow">THE 4-STEP RESEARCH FLOW</div>
+            <h2>From raw quote to disciplined execution.</h2>
+            <p>
+              Mindspace turns chaotic market signals into a structured, repeatable analytical
+              process.
+            </p>
+          </div>
+
+          <div class="workflow-grid">
+            <div class="step-box">
+              <div class="step-num">01 / DISCOVER</div>
+              <h3>Search & Select</h3>
+              <p>
+                Search any stock across Indian (NSE/BSE) or US exchanges. Review live status,
+                candles, and market session indicators.
+              </p>
+            </div>
+            <div class="step-box">
+              <div class="step-num">02 / ANALYZE</div>
+              <h3>Summon 4 Agents</h3>
+              <p>
+                Bull, Bear, Stag, and Rabbit sit at their terminals to crunch indicators and form an
+                institutional consensus.
+              </p>
+            </div>
+            <div class="step-box">
+              <div class="step-num">03 / ROUNDTABLE</div>
+              <h3>Debate & Ask Q&A</h3>
+              <p>
+                Move to the 3D lounge to hear them debate risk/reward scenarios or ask custom
+                questions in the discussion drawer.
+              </p>
+            </div>
+            <div class="step-box">
+              <div class="step-num">04 / SIMULATE</div>
+              <h3>Paper Trade</h3>
+              <p>
+                Test the thesis in paper trading by entering the exact share quantity, validating
+                targets with zero financial risk.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Bottom Launch CTA -->
+        <section>
+          <div class="cta-banner">
+            <div>
+              <div class="eyebrow">STEP ONTO THE EXCHANGE FLOOR</div>
+              <h2>Ready to see market intelligence in 3D?</h2>
+              <p>
+                Launch Mindspace now to experience real-time market data, four autonomous Roblox AI
+                agents, and Groww-style simulation trading.
+              </p>
+            </div>
+            <button
+              class="btn"
+              style="padding: 16px 28px; font-size: 15px"
+              onclick="launchMindspaceApp(event)"
+            >
+              Try out Mindspace ↗
+            </button>
+          </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+          <div class="footer-brand">
+            <img src="logo.png" alt="Mindspace" onerror="this.src = '/logo.png'" />
+            <span>MINDSPACE PLATFORM</span>
+          </div>
+          <span>AI-Assisted Market Research · 3D Agentic Simulation · Session-Aware Analytics</span>
+          <span>Educational and simulation platform. Not financial advice.</span>
+        </footer>
+      </div>
+    </main>
+
+    <!-- Deep-Dive Modal / 3D Inspection Chamber -->
+    <div class="agent-modal-overlay" id="agent-modal" onclick="closeAgentModal(event)">
+      <div class="agent-modal-box" id="agent-modal-box" onclick="event.stopPropagation()">
+        <button class="modal-close-btn" onclick="closeAgentModal(event)" title="Close Inspector">
+          ✕
+        </button>
+
+        <!-- Left: 3D Roblox Agent Inspection Chamber -->
+        <div class="modal-3d-stage">
+          <div class="modal-stage-hint" id="modal-hint">● 3D AGENT INSPECTION CHAMBER</div>
+          <canvas id="modal-canvas"></canvas>
+          <div class="modal-stage-controls">
+            <button class="anim-btn" onclick="triggerAgentAction('victory')">
+              🏆 Victory Pose
+            </button>
+            <button class="anim-btn" onclick="triggerAgentAction('coffee')">☕ Sip Coffee</button>
+            <button class="anim-btn" onclick="triggerAgentAction('scan')">⚡ Quick Scan</button>
+            <button class="anim-btn" onclick="triggerAgentAction('reset')">🔄 Reset Pose</button>
+          </div>
+        </div>
+
+        <!-- Right: Detailed Quantitative Dossier -->
+        <div class="modal-info-panel">
+          <div class="dossier-header">
+            <div class="dossier-title-area">
+              <span class="dossier-badge" id="modal-role-badge">GROWTH & MOMENTUM</span>
+              <h2 id="modal-agent-name">BULL AGENT</h2>
+              <p class="dossier-tagline" id="modal-agent-tagline">
+                Aggressive trend rider detecting high-conviction breakout opportunities.
+              </p>
+            </div>
+          </div>
+
+          <div class="dossier-block">
+            <h4>🎯 Core Market Identity & Philosophy</h4>
+            <p id="modal-philosophy">
+              Bull builds the constructive case. It scans price action, moving averages, and order
+              volume to establish whether buying pressure is institutional or transient.
+            </p>
+          </div>
+
+          <div class="dossier-block">
+            <h4>📐 Mathematical & Indicator Toolkit</h4>
+            <div class="spec-list" id="modal-indicators">
+              <!-- Injected dynamically -->
+            </div>
+          </div>
+
+          <div class="dossier-block">
+            <h4>💼 Real-World Trading Floor Responsibilities</h4>
+            <div class="spec-list" id="modal-jobs">
+              <!-- Injected dynamically -->
+            </div>
+          </div>
+
+          <div class="dossier-block">
+            <h4>💬 3D Roundtable & User Q&A Behavior</h4>
+            <p id="modal-roundtable">
+              In the 3D coffee table lounge, Bull advocates for letting winning runners ride with
+              trailing stops, pyramiding on confirmed volume, and identifying bullish flags before
+              the broader market reacts.
+            </p>
+          </div>
+
+          <div class="dossier-block">
+            <h4>⚠️ Invalidation & Abort Signals</h4>
+            <p id="modal-invalidation" style="color: #ff9da9">
+              Immediate thesis reversal if price closes below the 20-day EMA on heavy volume or if
+              Bear flags institutional distribution.
+            </p>
+          </div>
+
+          <button
+            class="btn"
+            style="width: 100%; margin-top: 8px"
+            onclick="launchMindspaceApp(event)"
+          >
+            Launch Mindspace with This Agent ↗
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive JavaScript Engine (Three.js 3D Roblox Models, OrbitControls & Dynamic Dossiers) -->
+    <script>
+      // 1. Navigation / App Launcher Redirection
+      function launchMindspaceApp(e) {
+        if (e) e.preventDefault();
+        try {
+          localStorage.setItem("mindspace_entry_source", "landing");
+        } catch (err) {}
+
+        // If embedded inside iframe in web app parent:
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "CLOSE_LANDING_AND_ENTER_APP" }, "*");
+          return;
+        }
+
+        // If user opened this file directly from local disk (file:///), redirect to local dev server http://localhost:3000
+        if (window.location.protocol === "file:") {
+          window.location.href = "http://localhost:3000/?view=app";
+        } else {
+          // If served via web server / domain, redirect to application root
+          window.location.href = window.location.origin + "/?view=app";
+        }
+      }
+
+      // 2. Comprehensive Agent Dossier Database
+      const AGENT_DOSSIERS = {
+        bull: {
+          name: "BULL AGENT",
+          role: "Growth & Momentum Scout",
+          color: "#00e59a",
+          glow: "rgba(0, 229, 154, 0.4)",
+          tagline:
+            "Aggressive breakout identifier riding trend acceleration and volume expansions.",
+          philosophy:
+            "Bull identifies constructive accumulation and momentum expansions. It verifies that upward price movements are backed by genuine institutional volume rather than low-liquidity spikes, calculating upside price targets across 1-day, 1-week, and 1-month horizons.",
+          indicators: [
+            {
+              label: "EMA Ribbon",
+              detail: "9-period and 21-period Exponential Moving Average golden crossovers.",
+            },
+            {
+              label: "RSI Momentum",
+              detail:
+                "Relative Strength Index > 55 with positive slope, confirming bullish control.",
+            },
+            {
+              label: "Volume Expansion",
+              detail: "Tick volume exceeding 1.5x of the 20-day moving average.",
+            },
+            {
+              label: "MACD Histogram",
+              detail: "Accelerating green bars above zero baseline with signal line divergence.",
+            },
+          ],
+          jobs: [
+            {
+              label: "Upside Target Projection",
+              detail:
+                "Projects 1D (+1.5% to +3.5%), 1W (+4% to +9%), and 1M rally targets using Fibonacci expansions.",
+            },
+            {
+              label: "Breakout Confirmation",
+              detail: "Scans for 20-day and 52-week high breakouts accompanied by volume surges.",
+            },
+            {
+              label: "Pyramid Entry Advice",
+              detail: "Recommends staggered entry tranches as price crosses key resistance zones.",
+            },
+          ],
+          roundtable:
+            "During 3D lounge discussions, Bull provides actionable growth setups, teaches how to trail stop-losses along the 9 EMA, and encourages discipline to ride big winners without taking premature profits.",
+          invalidation:
+            "Bull instantly aborts if price prints a bearish engulfing candle on 2x volume, breaks below the 21-day EMA, or fails resistance three consecutive times.",
+        },
+        bear: {
+          name: "BEAR AGENT",
+          role: "Risk Officer & Hedging Guardian",
+          color: "#ff3b57",
+          glow: "rgba(255, 59, 87, 0.4)",
+          tagline:
+            "Capital preservation guardian stress-testing optimistic assumptions and setting stop-losses.",
+          philosophy:
+            "Bear is your safety net. It exists to protect your capital from market euphoria and institutional distribution traps. It assumes every trade has downside risk and calculates the exact price at which an idea is invalidated.",
+          indicators: [
+            {
+              label: "Overbought Filter",
+              detail: "RSI > 70 with bearish divergence (higher price highs, lower RSI peaks).",
+            },
+            {
+              label: "Bollinger Resistance",
+              detail: "Price piercing upper 2-standard-deviation band with declining momentum.",
+            },
+            {
+              label: "ATR Risk Bands",
+              detail:
+                "Average True Range multiple calculation for non-negotiable stop-loss levels.",
+            },
+            {
+              label: "Order Flow Delta",
+              detail: "Net aggressive selling on top-5 ask books signaling institutional exits.",
+            },
+          ],
+          jobs: [
+            {
+              label: "Stop-Loss Calculation",
+              detail:
+                "Computes non-negotiable hard stop-loss levels ensuring maximum portfolio loss never exceeds 1% to 2%.",
+            },
+            {
+              label: "Drawdown Stress-Testing",
+              detail:
+                "Models worst-case scenario pullbacks based on macroeconomic volatility and support breakdowns.",
+            },
+            {
+              label: "Hedging Advisory",
+              detail:
+                "Recommends protective put options or cash conservation during high-VIX environments.",
+            },
+          ],
+          roundtable:
+            "In the coffee table discussions, Bear keeps the team grounded. It prevents FOMO, teaches trade sizing rules, identifies distribution patterns, and explains why cutting losers quickly is the #1 secret to trading longevity.",
+          invalidation:
+            "Bear flips neutral/constructive if a stock reclaims overhead resistance on 3x average volume and consolidates above it for 3 consecutive daily sessions.",
+        },
+        stag: {
+          name: "STAG AGENT",
+          role: "Macro Valuation & Asset Allocator",
+          color: "#38bdf8",
+          glow: "rgba(56, 189, 248, 0.4)",
+          tagline:
+            "Long-term fundamental value strategist focusing on balance sheets and intrinsic worth.",
+          philosophy:
+            "Stag ignores short-term noise. It evaluates companies based on intrinsic valuation multiples, dividend sustainability, balance sheet health, and sector benchmarks to recommend sustainable wealth accumulation.",
+          indicators: [
+            {
+              label: "P/E & P/B Metrics",
+              detail:
+                "Compares trailing and forward Price-to-Earnings against 5-year sector medians.",
+            },
+            {
+              label: "200-Day SMA Regime",
+              detail:
+                "Evaluates multi-month macro trend stability and institutional base building.",
+            },
+            {
+              label: "Margin of Safety",
+              detail:
+                "Calculates discounted cash flow (DCF) fair value bands with a minimum 15% discount.",
+            },
+            {
+              label: "Dividend Coverage",
+              detail: "Free cash flow to dividend payout ratio ensuring dividend safety.",
+            },
+          ],
+          jobs: [
+            {
+              label: "Fair Value Appraisal",
+              detail:
+                "Estimates intrinsic valuation targets across 6-month, 1-year, and 5-year investment horizons.",
+            },
+            {
+              label: "Portfolio Rebalancing",
+              detail:
+                "Identifies over-weighted sectors and recommends reallocating profits into undervalued assets.",
+            },
+            {
+              label: "SIP Optimization",
+              detail:
+                "Calculates optimal systematic investment pacing for long-term index and blue-chip accumulation.",
+            },
+          ],
+          roundtable:
+            "During 3D lounge debates, Stag advocates for patience, compounding interest, dollar-cost averaging, and filtering out daily news headlines to focus on fundamental business earnings.",
+          invalidation:
+            "Stag revises recommendations downward if debt-to-equity spikes dangerously, return on equity (ROE) drops below 10%, or management dilutes shareholder equity.",
+        },
+        rabbit: {
+          name: "RABBIT AGENT",
+          role: "HFT Order Flow & Execution Specialist",
+          color: "#ffd166",
+          glow: "rgba(255, 209, 102, 0.4)",
+          tagline:
+            "Microstructure scalper monitoring Level-2 order book depth and VWAP liquidity pockets.",
+          philosophy:
+            "Rabbit watches the tape at microsecond speed. It analyzes bid/ask queues, spread friction, and volume-weighted average price (VWAP) deviations to achieve flawless order execution with zero slippage.",
+          indicators: [
+            {
+              label: "Level-2 Order Book",
+              detail: "Real-time top 5 bid vs. ask depth ratio to detect hidden liquidity walls.",
+            },
+            {
+              label: "VWAP Bands",
+              detail:
+                "Intraday Volume-Weighted Average Price standard deviation bands (+1σ / -1σ).",
+            },
+            {
+              label: "Bid-Ask Spread",
+              detail: "Measures spread tightness and market maker depth before order routing.",
+            },
+            {
+              label: "Opening Range Break",
+              detail: "First 15-minute high/low range expansion with tick volume confirmation.",
+            },
+          ],
+          jobs: [
+            {
+              label: "Precision Limit Entries",
+              detail:
+                "Pinpoints the exact limit price to front-run institutional bid walls and avoid market order slippage.",
+            },
+            {
+              label: "Intraday Scalp Targets",
+              detail:
+                "Formulates tight 15-minute and hourly take-profit levels for fast paper trading executions.",
+            },
+            {
+              label: "Liquidity Timing",
+              detail:
+                "Advises whether to wait for lunch-hour spread compression or trade high-volume opening/closing auctions.",
+            },
+          ],
+          roundtable:
+            "In the 3D discussion lounge, Rabbit shares tactical microstructure tricks: how to avoid market orders during volatile opening bells, how to read order depth imbalances, and how to execute with near-zero slippage.",
+          invalidation:
+            "Rabbit cancels execution signals if the bid-ask spread widens beyond 0.25% or if an anticipated bid wall is suddenly pulled (spoofing detection).",
+        },
+      };
+
+      // 3. Procedural Canvas Face Texture Generator (Roblox Style)
+      function createRobloxFaceTexture(skinHex, agentId) {
+        const c = document.createElement("canvas");
+        c.width = 256;
+        c.height = 256;
+        const ctx = c.getContext("2d");
+
+        // Base skin tone
+        ctx.fillStyle = skinHex;
+        ctx.fillRect(0, 0, 256, 256);
+
+        // Cute cheek blush
+        ctx.fillStyle = "rgba(255, 110, 110, 0.22)";
+        ctx.beginPath();
+        ctx.arc(62, 158, 22, 0, Math.PI * 2);
+        ctx.arc(194, 158, 22, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyebrows
+        ctx.strokeStyle = "#18120e";
+        ctx.lineWidth = 6;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        if (agentId === "bull") {
+          ctx.moveTo(52, 78);
+          ctx.lineTo(96, 70);
+          ctx.moveTo(204, 78);
+          ctx.lineTo(160, 70);
+        } else if (agentId === "bear") {
+          ctx.moveTo(52, 70);
+          ctx.lineTo(96, 80);
+          ctx.moveTo(204, 70);
+          ctx.lineTo(160, 80);
+        } else if (agentId === "stag") {
+          ctx.moveTo(54, 75);
+          ctx.lineTo(95, 75);
+          ctx.moveTo(202, 75);
+          ctx.lineTo(161, 75);
+        } else {
+          ctx.moveTo(52, 72);
+          ctx.quadraticCurveTo(74, 58, 96, 70);
+          ctx.moveTo(204, 72);
+          ctx.quadraticCurveTo(182, 58, 160, 70);
+        }
+        ctx.stroke();
+
+        // Eyes (Large glossy cartoon anime/Roblox eyes)
+        const drawEye = (x, y, accentHex) => {
+          // Sclera
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.ellipse(x, y, 22, 28, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#111512";
+          ctx.lineWidth = 3.5;
+          ctx.stroke();
+
+          // Iris
+          ctx.fillStyle = accentHex;
+          ctx.beginPath();
+          ctx.arc(x, y + 2, 14, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Pupil
+          ctx.fillStyle = "#0a0e0c";
+          ctx.beginPath();
+          ctx.arc(x, y + 2, 8.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Highlights
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(x - 5, y - 5, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x + 5, y + 6, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        };
+
+        const eyeAccent =
+          agentId === "bull"
+            ? "#00e59a"
+            : agentId === "bear"
+              ? "#ff3b57"
+              : agentId === "stag"
+                ? "#38bdf8"
+                : "#ffd166";
+        drawEye(74, 114, eyeAccent);
+        drawEye(182, 114, eyeAccent);
+
+        // Mouth
+        ctx.strokeStyle = "#18120e";
+        ctx.lineWidth = 5.5;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        if (agentId === "bull") {
+          ctx.arc(128, 168, 22, 0.15 * Math.PI, 0.85 * Math.PI, false);
+        } else if (agentId === "bear") {
+          ctx.moveTo(112, 185);
+          ctx.lineTo(144, 185);
+        } else if (agentId === "stag") {
+          ctx.arc(128, 172, 18, 0.2 * Math.PI, 0.8 * Math.PI, false);
+        } else {
+          ctx.arc(122, 180, 10, 0, Math.PI, false);
+          ctx.arc(134, 180, 10, 0, Math.PI, false);
+        }
+        ctx.stroke();
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.needsUpdate = true;
+        return tex;
+      }
+
+      // 4. Procedural Floating Name Tag Sprite
+      function createNameTagSprite(name, role, colorHex) {
+        const c = document.createElement("canvas");
+        c.width = 380;
+        c.height = 96;
+        const ctx = c.getContext("2d");
+
+        // Rounded pill container
+        ctx.fillStyle = "rgba(5, 12, 8, 0.92)";
+        ctx.strokeStyle = colorHex;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.roundRect(4, 4, 372, 88, 20);
+        ctx.fill();
+        ctx.stroke();
+
+        // Pulsing beacon dot
+        ctx.fillStyle = colorHex;
+        ctx.beginPath();
+        ctx.arc(36, 48, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Name
+        ctx.font = "900 34px Inter, system-ui, sans-serif";
+        ctx.fillStyle = "#f0f8f3";
+        ctx.textAlign = "left";
+        ctx.fillText(name, 62, 45);
+
+        // Role subtitle
+        ctx.font = "700 19px Inter, system-ui, sans-serif";
+        ctx.fillStyle = colorHex;
+        ctx.fillText(role, 62, 75);
+
+        const sprite = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: new THREE.CanvasTexture(c),
+            transparent: true,
+            depthTest: false,
+          }),
+        );
+        sprite.scale.set(1.4, 0.35, 1);
+        return sprite;
+      }
+
+      // 5. Construct a Full Roblox 3D Agent Character Model (Matching Characters.tsx)
+      function buildRobloxAgent(agentId, isDetailedChamber = false) {
+        const group = new THREE.Group();
+        group.name = agentId;
+
+        const configs = {
+          bull: {
+            skin: "#c98850",
+            hair: "#2a1c10",
+            suit: "#17191d",
+            accent: "#00e59a",
+            feature: "horns",
+            name: "BULL",
+            role: "MOMENTUM SCOUT",
+          },
+          bear: {
+            skin: "#9c6636",
+            hair: "#241508",
+            suit: "#1a1418",
+            accent: "#ff3b57",
+            feature: "ears",
+            name: "BEAR",
+            role: "RISK GUARDIAN",
+          },
+          stag: {
+            skin: "#b07a42",
+            hair: "#33220f",
+            suit: "#15181c",
+            accent: "#38bdf8",
+            feature: "antlers",
+            name: "STAG",
+            role: "MACRO VALUE",
+          },
+          rabbit: {
+            skin: "#e8e4dd",
+            hair: "#dcd6cc",
+            suit: "#191b1f",
+            accent: "#ffd166",
+            feature: "rabbitEars",
+            name: "RABBIT",
+            role: "HFT EXECUTION",
+          },
+        };
+        const cfg = configs[agentId];
+
+        const matSuit = new THREE.MeshStandardMaterial({ color: cfg.suit, roughness: 0.55 });
+        const matSkin = new THREE.MeshStandardMaterial({ color: cfg.skin, roughness: 0.7 });
+        const matHair = new THREE.MeshStandardMaterial({ color: cfg.hair, roughness: 0.85 });
+        const matAccent = new THREE.MeshStandardMaterial({
+          color: cfg.accent,
+          roughness: 0.4,
+          emissive: cfg.accent,
+          emissiveIntensity: 0.15,
+        });
+        const matShirt = new THREE.MeshStandardMaterial({ color: "#e8e6e2", roughness: 0.7 });
+        const matShoes = new THREE.MeshStandardMaterial({ color: "#0d0f11", roughness: 0.4 });
+
+        // Torso
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.68, 0.36), matSuit);
+        torso.position.set(0, 0.98, 0);
+        torso.castShadow = true;
+        group.add(torso);
+
+        // Shirt & Necktie
+        const shirtBib = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.5, 0.01), matShirt);
+        shirtBib.position.set(0, 1.04, 0.185);
+        group.add(shirtBib);
+
+        const tie = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.44, 0.01), matAccent);
+        tie.position.set(0, 1.02, 0.196);
+        group.add(tie);
+
+        // Suit Lapel hints
+        const lapel = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.14, 0.01), matSuit);
+        lapel.position.set(0, 1.18, 0.186);
+        group.add(lapel);
+
+        // Head Group (pivots for looking around)
+        const headGroup = new THREE.Group();
+        headGroup.position.set(0, 1.58, 0);
+        group.add(headGroup);
+
+        const headBox = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.46, 0.5), matSkin);
+        headBox.castShadow = true;
+        headGroup.add(headBox);
+
+        // Face Decal Plane
+        const faceTex = createRobloxFaceTexture(cfg.skin, agentId);
+        const facePlane = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.5, 0.44),
+          new THREE.MeshBasicMaterial({ map: faceTex, transparent: true }),
+        );
+        facePlane.position.set(0, -0.02, 0.253);
+        headGroup.add(facePlane);
+
+        // Hair Cap
+        const hair = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.2, 0.53), matHair);
+        hair.position.set(0, 0.15, -0.02);
+        headGroup.add(hair);
+
+        // Animal Species Features (Horns, Ears, Antlers)
+        if (cfg.feature === "horns") {
+          [-1, 1].forEach((s) => {
+            const hornPivot = new THREE.Group();
+            hornPivot.position.set(s * 0.24, 0.26, 0);
+            hornPivot.rotation.set(-0.5, 0, s * 0.7);
+            const hornCone = new THREE.Mesh(
+              new THREE.ConeGeometry(0.075, 0.36, 12),
+              new THREE.MeshStandardMaterial({ color: "#f0e8d5", roughness: 0.45 }),
+            );
+            hornCone.position.set(0, 0.18, 0);
+            hornPivot.add(hornCone);
+            headGroup.add(hornPivot);
+          });
+        } else if (cfg.feature === "ears") {
+          [-1, 1].forEach((s) => {
+            const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 16), matSkin);
+            ear.position.set(s * 0.22, 0.3, 0);
+            ear.rotation.x = Math.PI / 2;
+            headGroup.add(ear);
+
+            const innerEar = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.055, 0.055, 0.052, 16),
+              new THREE.MeshStandardMaterial({ color: "#f3b8c4", roughness: 0.9 }),
+            );
+            innerEar.position.set(s * 0.22, 0.3, 0.005);
+            innerEar.rotation.x = Math.PI / 2;
+            headGroup.add(innerEar);
+          });
+        } else if (cfg.feature === "antlers") {
+          [-1, 1].forEach((s) => {
+            const antler = new THREE.Group();
+            antler.position.set(s * 0.18, 0.28, 0);
+            antler.rotation.set(-0.25, 0, s * 0.35);
+            const stem = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.03, 0.045, 0.52, 8),
+              new THREE.MeshStandardMaterial({ color: "#cbb28a", roughness: 0.6 }),
+            );
+            stem.position.set(0, 0.24, 0);
+            antler.add(stem);
+            const branch1 = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.02, 0.028, 0.22, 8),
+              new THREE.MeshStandardMaterial({ color: "#cbb28a", roughness: 0.6 }),
+            );
+            branch1.position.set(s * 0.09, 0.32, 0);
+            branch1.rotation.z = s * -0.9;
+            antler.add(branch1);
+            headGroup.add(antler);
+          });
+        } else if (cfg.feature === "rabbitEars") {
+          [-1, 1].forEach((s) => {
+            const earGroup = new THREE.Group();
+            earGroup.position.set(s * 0.19, 0.3, 0);
+            earGroup.rotation.set(-0.12, 0, s * 0.18);
+            const earMain = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.54, 0.05), matSkin);
+            earMain.position.set(0, 0.27, 0);
+            earGroup.add(earMain);
+            const innerInlay = new THREE.Mesh(
+              new THREE.BoxGeometry(0.06, 0.42, 0.01),
+              new THREE.MeshStandardMaterial({ color: "#f3b8c4", roughness: 0.9 }),
+            );
+            innerInlay.position.set(0, 0.27, 0.031);
+            earGroup.add(innerInlay);
+            headGroup.add(earGroup);
+          });
+        }
+
+        // Arms (with shoulder pivots)
+        const armL = new THREE.Group();
+        armL.position.set(-0.43, 1.25, 0);
+        const sleeveL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.44, 0.22), matSuit);
+        sleeveL.position.set(0, -0.27, 0);
+        armL.add(sleeveL);
+        const handL = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.18, 0.21), matSkin);
+        handL.position.set(0, -0.56, 0);
+        armL.add(handL);
+        group.add(armL);
+
+        const armR = new THREE.Group();
+        armR.position.set(0.43, 1.25, 0);
+        const sleeveR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.44, 0.22), matSuit);
+        sleeveR.position.set(0, -0.27, 0);
+        armR.add(sleeveR);
+        const handR = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.18, 0.21), matSkin);
+        handR.position.set(0, -0.56, 0);
+        armR.add(handR);
+
+        // Executive Porcelain Coffee Mug in Right Hand
+        const mug = new THREE.Group();
+        mug.position.set(0, -0.62, 0.14);
+        mug.rotation.x = 0.2;
+        const mugBody = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.065, 0.055, 0.14, 16),
+          new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.25 }),
+        );
+        mug.add(mugBody);
+        const coffee = new THREE.Mesh(
+          new THREE.CircleGeometry(0.055, 14),
+          new THREE.MeshBasicMaterial({ color: "#351c0d" }),
+        );
+        coffee.position.set(0, 0.062, 0);
+        coffee.rotation.x = -Math.PI / 2;
+        mug.add(coffee);
+        armR.add(mug);
+        group.add(armR);
+
+        // Legs (with hip pivots)
+        const legL = new THREE.Group();
+        legL.position.set(-0.17, 0.64, 0);
+        const pantL = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.5, 0.28), matSuit);
+        pantL.position.set(0, -0.31, 0);
+        legL.add(pantL);
+        const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.14, 0.32), matShoes);
+        shoeL.position.set(0, -0.6, 0.02);
+        legL.add(shoeL);
+        group.add(legL);
+
+        const legR = new THREE.Group();
+        legR.position.set(0.17, 0.64, 0);
+        const pantR = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.5, 0.28), matSuit);
+        pantR.position.set(0, -0.31, 0);
+        legR.add(pantR);
+        const shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.14, 0.32), matShoes);
+        shoeR.position.set(0, -0.6, 0.02);
+        legR.add(shoeR);
+        group.add(legR);
+
+        // Floating Name Tag Sprite
+        const nameTag = createNameTagSprite(cfg.name, cfg.role, cfg.accent);
+        nameTag.position.set(0, 2.22, 0);
+        group.add(nameTag);
+
+        // Illuminated Team Floor Ring
+        const ringMesh = new THREE.Mesh(
+          new THREE.RingGeometry(0.68, 0.74, 32),
+          new THREE.MeshBasicMaterial({ color: cfg.accent, side: THREE.DoubleSide }),
+        );
+        ringMesh.rotation.x = -Math.PI / 2;
+        ringMesh.position.set(0, 0.015, 0);
+        group.add(ringMesh);
+
+        // Attach Rig References for Animation
+        group.userData = {
+          agentId: agentId,
+          armL: armL,
+          armR: armR,
+          legL: legL,
+          legR: legR,
+          headGroup: headGroup,
+          mug: mug,
+          nameTag: nameTag,
+          ringMesh: ringMesh,
+          phase: Math.random() * Math.PI * 2,
+          baseY: 0,
+        };
+
+        // Enable raycast hits on meshes
+        group.traverse((o) => {
+          if (o.isMesh) o.userData.agent = agentId;
+        });
+
+        return group;
+      }
+
+      // 6. Interactive 3D Hero Exchange Floor Scene
+      let heroScene, heroCamera, heroRenderer, heroControls;
+      let heroAgents = {};
+      let heroSelected = "bull";
+      let heroClock = new THREE.Clock();
+
+      function initHeroScene() {
+        const canvas = document.getElementById("hero-canvas");
+        if (!canvas || !window.THREE) return;
+
+        heroRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        heroRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        heroRenderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+        heroRenderer.shadowMap.enabled = true;
+        heroRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        heroScene = new THREE.Scene();
+        heroScene.fog = new THREE.Fog(0x060907, 12, 32);
+
+        heroCamera = new THREE.PerspectiveCamera(
+          38,
+          canvas.clientWidth / canvas.clientHeight,
+          0.1,
+          100,
+        );
+        heroCamera.position.set(4.5, 4.2, 7.8);
+
+        if (window.THREE.OrbitControls) {
+          heroControls = new THREE.OrbitControls(heroCamera, canvas);
+          heroControls.enableDamping = true;
+          heroControls.dampingFactor = 0.06;
+          heroControls.target.set(0, 1.25, 0);
+          heroControls.minDistance = 3.5;
+          heroControls.maxDistance = 14;
+          heroControls.maxPolarAngle = Math.PI / 2.05;
+        }
+
+        // Lights
+        heroScene.add(new THREE.HemisphereLight(0xddffe8, 0x111c15, 1.6));
+
+        const sun = new THREE.DirectionalLight(0xffffff, 2.8);
+        sun.position.set(5, 9, 6);
+        sun.castShadow = true;
+        heroScene.add(sun);
+
+        const terminalLight = new THREE.PointLight(0x00e59a, 15, 18);
+        terminalLight.position.set(0, 3.8, -3);
+        heroScene.add(terminalLight);
+
+        // Floor (Reflective Dark Parquet Tiles)
+        const floorMat = new THREE.MeshStandardMaterial({
+          color: 0x0a140f,
+          roughness: 0.35,
+          metalness: 0.15,
+        });
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(24, 18), floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        heroScene.add(floor);
+
+        // Floor Grid Lines
+        const grid = new THREE.GridHelper(24, 24, 0x1f3c2b, 0x112318);
+        grid.position.y = 0.005;
+        heroScene.add(grid);
+
+        // Giant Background Trading Display Wall (Candlestick charts)
+        const wallCanvas = document.createElement("canvas");
+        wallCanvas.width = 1024;
+        wallCanvas.height = 360;
+        const wctx = wallCanvas.getContext("2d");
+        wctx.fillStyle = "#060d09";
+        wctx.fillRect(0, 0, 1024, 360);
+        wctx.strokeStyle = "#183324";
+        wctx.lineWidth = 2;
+        for (let x = 0; x < 1024; x += 40) {
+          wctx.beginPath();
+          wctx.moveTo(x, 0);
+          wctx.lineTo(x, 360);
+          wctx.stroke();
+        }
+        for (let y = 0; y < 360; y += 40) {
+          wctx.beginPath();
+          wctx.moveTo(0, y);
+          wctx.lineTo(1024, y);
+          wctx.stroke();
+        }
+
+        // Draw Candlesticks on giant wall
+        let prevClose = 180;
+        for (let i = 20; i < 1000; i += 24) {
+          const isUp = Math.random() > 0.42;
+          const open = prevClose;
+          const close = isUp ? open + Math.random() * 24 : open - Math.random() * 24;
+          const high = Math.max(open, close) + Math.random() * 12;
+          const low = Math.min(open, close) - Math.random() * 12;
+          prevClose = close;
+
+          wctx.strokeStyle = isUp ? "#00e59a" : "#ff3b57";
+          wctx.fillStyle = isUp ? "#00e59a" : "#ff3b57";
+          wctx.lineWidth = 2;
+          wctx.beginPath();
+          wctx.moveTo(i + 8, high);
+          wctx.lineTo(i + 8, low);
+          wctx.stroke();
+          wctx.fillRect(i + 2, Math.min(open, close), 12, Math.max(Math.abs(open - close), 3));
+        }
+
+        // Glowing ticker text on wall
+        wctx.font = "bold 22px Inter, monospace";
+        wctx.fillStyle = "#00e59a";
+        wctx.fillText(
+          "NIFTY 50  24,352.80  ▲ +1.18%   ·   RELIANCE  ₹2,846.50  ▲ +2.4%   ·   AAPL  $224.20  ▲ +0.8%",
+          30,
+          42,
+        );
+
+        const wallTex = new THREE.CanvasTexture(wallCanvas);
+        const wallMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(16, 5.5),
+          new THREE.MeshBasicMaterial({ map: wallTex }),
+        );
+        wallMesh.position.set(0, 2.75, -4.5);
+        heroScene.add(wallMesh);
+
+        // Glass Wall Frame
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0x1f3427, roughness: 0.4 });
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(16.4, 0.15, 0.2), frameMat);
+        frame.position.set(0, 5.5, -4.5);
+        heroScene.add(frame);
+
+        // Spawn the 4 Roblox Agents in Dynamic Formation
+        const positions = {
+          bull: { x: -2.8, z: 0.4 },
+          bear: { x: -0.9, z: -0.6 },
+          stag: { x: 1.0, z: -0.6 },
+          rabbit: { x: 2.8, z: 0.4 },
+        };
+
+        Object.entries(positions).forEach(([id, pos]) => {
+          const agent = buildRobloxAgent(id);
+          agent.position.set(pos.x, 0, pos.z);
+          // Turn slightly towards camera center
+          agent.rotation.y = Math.atan2(-pos.x, 6 - pos.z) * 0.55;
+          heroScene.add(agent);
+          heroAgents[id] = agent;
+        });
+
+        // Raycasting for direct character clicking in 3D scene
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        canvas.addEventListener("click", (e) => {
+          const rect = canvas.getBoundingClientRect();
+          mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(mouse, heroCamera);
+          const hits = raycaster.intersectObjects(heroScene.children, true);
+          for (const hit of hits) {
+            let curr = hit.object;
+            while (curr && !curr.userData?.agent) curr = curr.parent;
+            if (curr?.userData?.agent) {
+              selectHeroAgent(curr.userData.agent);
+              break;
+            }
+          }
+        });
+
+        // Resize observer
+        const ro = new ResizeObserver(() => {
+          if (!canvas.clientWidth || !canvas.clientHeight) return;
+          heroRenderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+          heroCamera.aspect = canvas.clientWidth / canvas.clientHeight;
+          heroCamera.updateProjectionMatrix();
+        });
+        ro.observe(canvas);
+
+        animateHero();
+        selectHeroAgent("bull");
+      }
+
+      // 7. Select Hero Agent with Camera Focus & Highlights
+      function selectHeroAgent(agentId) {
+        heroSelected = agentId;
+        document.querySelectorAll(".chip-btn[data-agent]").forEach((b) => {
+          b.classList.toggle("active", b.dataset.agent === agentId);
+        });
+        document.querySelectorAll(".agent-card").forEach((c) => {
+          c.classList.toggle("active-card", c.dataset.card === agentId);
+        });
+
+        const capt = document.getElementById("hero-caption");
+        if (capt && AGENT_DOSSIERS[agentId]) {
+          const d = AGENT_DOSSIERS[agentId];
+          capt.innerHTML = `<b>${d.name} · ${d.role}</b>${d.tagline}`;
+        }
+
+        if (heroControls && heroAgents[agentId]) {
+          const targetPos = heroAgents[agentId].position;
+          // Smoothly pan camera target to agent
+          heroControls.target.set(targetPos.x, 1.3, targetPos.z);
+        }
+      }
+
+      // Button event listeners
+      document.querySelectorAll(".chip-btn[data-agent]").forEach((b) => {
+        b.addEventListener("click", () => selectHeroAgent(b.dataset.agent));
+      });
+      const btnReset = document.getElementById("btn-reset-cam");
+      if (btnReset) {
+        btnReset.addEventListener("click", () => {
+          if (heroControls && heroCamera) {
+            heroCamera.position.set(4.5, 4.2, 7.8);
+            heroControls.target.set(0, 1.25, 0);
+            heroControls.update();
+          }
+        });
+      }
+
+      // 8. 3D Animation Loop for Hero Scene
+      function animateHero() {
+        requestAnimationFrame(animateHero);
+        const t = heroClock.getElapsedTime();
+
+        // Animate Roblox Agents (Breathing, Sway, Coffee Mug Bob)
+        Object.entries(heroAgents).forEach(([id, ag]) => {
+          const u = ag.userData;
+          const isSel = id === heroSelected;
+
+          // Idle vertical breathing
+          ag.position.y = Math.sin(t * 2.2 + u.phase) * 0.035;
+
+          // Subtle torso sway
+          ag.rotation.y += Math.sin(t * 1.2 + u.phase) * 0.001;
+
+          // Arm motion
+          if (u.armL) {
+            u.armL.rotation.x = Math.sin(t * 1.8 + u.phase) * 0.08;
+          }
+          if (u.armR) {
+            // If selected, hold coffee mug higher or gesture
+            if (isSel) {
+              u.armR.rotation.x = -0.4 + Math.sin(t * 2.5) * 0.12;
+              u.armR.rotation.z = 0.2;
+            } else {
+              u.armR.rotation.x = Math.sin(t * 1.8 + u.phase + 1) * 0.08;
+              u.armR.rotation.z = 0;
+            }
+          }
+
+          // Head looking around
+          if (u.headGroup) {
+            u.headGroup.rotation.y = Math.sin(t * 0.8 + u.phase) * 0.14;
+          }
+
+          // Floating nametag bob
+          if (u.nameTag) {
+            u.nameTag.position.y = 2.25 + Math.sin(t * 2.5 + u.phase) * 0.04;
+          }
+
+          // Ring glow
+          if (u.ringMesh) {
+            u.ringMesh.scale.setScalar(isSel ? 1 + Math.sin(t * 4) * 0.06 : 1);
+          }
+        });
+
+        if (heroControls) heroControls.update();
+        if (heroRenderer && heroScene && heroCamera) {
+          heroRenderer.render(heroScene, heroCamera);
+        }
+      }
+
+      // 9. Secondary 3D Inspector Chamber (Modal Dedicated Stage)
+      let modalScene, modalCamera, modalRenderer, modalControls;
+      let modalCurrentAgentMesh = null;
+      let modalClock = new THREE.Clock();
+      let modalActionState = "idle";
+
+      function initModal3D() {
+        const canvas = document.getElementById("modal-canvas");
+        if (!canvas || !window.THREE) return;
+
+        modalRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        modalRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        modalRenderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+        modalRenderer.shadowMap.enabled = true;
+
+        modalScene = new THREE.Scene();
+        modalCamera = new THREE.PerspectiveCamera(
+          40,
+          canvas.clientWidth / canvas.clientHeight,
+          0.1,
+          50,
+        );
+        modalCamera.position.set(0, 1.5, 3.8);
+
+        if (window.THREE.OrbitControls) {
+          modalControls = new THREE.OrbitControls(modalCamera, canvas);
+          modalControls.enableDamping = true;
+          modalControls.dampingFactor = 0.08;
+          modalControls.target.set(0, 1.15, 0);
+          modalControls.minDistance = 2.0;
+          modalControls.maxDistance = 6.0;
+        }
+
+        modalScene.add(new THREE.HemisphereLight(0xffffff, 0x112218, 1.8));
+        const spot = new THREE.DirectionalLight(0xffffff, 2.5);
+        spot.position.set(3, 6, 4);
+        modalScene.add(spot);
+
+        const floorRing = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.2, 1.25, 0.1, 32),
+          new THREE.MeshStandardMaterial({ color: 0x0e1b14, roughness: 0.4 }),
+        );
+        floorRing.position.y = -0.05;
+        modalScene.add(floorRing);
+
+        const ro = new ResizeObserver(() => {
+          if (!canvas.clientWidth || !canvas.clientHeight) return;
+          modalRenderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+          modalCamera.aspect = canvas.clientWidth / canvas.clientHeight;
+          modalCamera.updateProjectionMatrix();
+        });
+        ro.observe(canvas);
+
+        animateModal();
+      }
+
+      function loadModalAgent(agentId) {
+        if (!modalScene) initModal3D();
+        if (modalCurrentAgentMesh) modalScene.remove(modalCurrentAgentMesh);
+
+        modalCurrentAgentMesh = buildRobloxAgent(agentId, true);
+        modalCurrentAgentMesh.position.set(0, 0, 0);
+        modalScene.add(modalCurrentAgentMesh);
+        modalActionState = "idle";
+
+        if (modalControls) {
+          modalCamera.position.set(0, 1.5, 3.8);
+          modalControls.target.set(0, 1.15, 0);
+          modalControls.update();
+        }
+      }
+
+      function animateModal() {
+        requestAnimationFrame(animateModal);
+        const t = modalClock.getElapsedTime();
+
+        if (modalCurrentAgentMesh) {
+          const u = modalCurrentAgentMesh.userData;
+
+          if (modalActionState === "victory") {
+            // Victory Stance: raise arms high
+            if (u.armL) {
+              u.armL.rotation.x = -2.6;
+              u.armL.rotation.z = -0.4;
+            }
+            if (u.armR) {
+              u.armR.rotation.x = -2.6;
+              u.armR.rotation.z = 0.4;
+            }
+            if (u.headGroup) {
+              u.headGroup.rotation.x = -0.3;
+            }
+          } else if (modalActionState === "coffee") {
+            // Coffee Sip: lift right arm mug to face
+            if (u.armR) {
+              u.armR.rotation.x = -1.6;
+              u.armR.rotation.y = -0.3;
+              u.armR.rotation.z = 0.6;
+            }
+            if (u.headGroup) {
+              u.headGroup.rotation.x = 0.2;
+            }
+          } else if (modalActionState === "scan") {
+            // Rapid head scan
+            if (u.headGroup) {
+              u.headGroup.rotation.y = Math.sin(t * 8) * 0.4;
+            }
+            if (u.armL) {
+              u.armL.rotation.x = -0.6;
+            }
+            if (u.armR) {
+              u.armR.rotation.x = -0.6;
+            }
+          } else {
+            // Default idle
+            modalCurrentAgentMesh.position.y = Math.sin(t * 2.5) * 0.03;
+            if (u.armL) u.armL.rotation.set(Math.sin(t * 1.8) * 0.1, 0, 0);
+            if (u.armR) u.armR.rotation.set(-0.35 + Math.sin(t * 2) * 0.08, 0, 0.15);
+            if (u.headGroup) u.headGroup.rotation.set(0, Math.sin(t * 1.2) * 0.15, 0);
+          }
+        }
+
+        if (modalControls) modalControls.update();
+        if (modalRenderer && modalScene && modalCamera) {
+          modalRenderer.render(modalScene, modalCamera);
+        }
+      }
+
+      function triggerAgentAction(action) {
+        modalActionState = action;
+        if (action !== "idle" && action !== "reset") {
+          setTimeout(() => {
+            modalActionState = "idle";
+          }, 4000);
+        }
+      }
+
+      // 10. Open & Populate Full Modal Dossier
+      function openAgentModal(agentId) {
+        const d = AGENT_DOSSIERS[agentId];
+        if (!d) return;
+
+        const modal = document.getElementById("agent-modal");
+        const box = document.getElementById("agent-modal-box");
+        box.style.setProperty("--modal-accent", d.color);
+        box.style.setProperty("--modal-glow", d.glow);
+
+        document.getElementById("modal-agent-name").textContent = d.name;
+        document.getElementById("modal-agent-name").style.color = d.color;
+        document.getElementById("modal-role-badge").textContent = d.role;
+        document.getElementById("modal-role-badge").style.borderColor = d.color;
+        document.getElementById("modal-role-badge").style.color = d.color;
+        document.getElementById("modal-agent-tagline").textContent = d.tagline;
+        document.getElementById("modal-philosophy").textContent = d.philosophy;
+        document.getElementById("modal-roundtable").textContent = d.roundtable;
+        document.getElementById("modal-invalidation").textContent = d.invalidation;
+
+        // Populate Indicators
+        const indList = document.getElementById("modal-indicators");
+        indList.innerHTML = d.indicators
+          .map(
+            (i) => `
+        <div class="spec-item">
+          <b>${i.label}:</b> <span>${i.detail}</span>
+        </div>
+      `,
+          )
+          .join("");
+
+        // Populate Responsibilities
+        const jobList = document.getElementById("modal-jobs");
+        jobList.innerHTML = d.jobs
+          .map(
+            (j) => `
+        <div class="spec-item">
+          <b>${j.label}:</b> <span>${j.detail}</span>
+        </div>
+      `,
+          )
+          .join("");
+
+        loadModalAgent(agentId);
+        modal.classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeAgentModal(e) {
+        if (e) e.stopPropagation();
+        const modal = document.getElementById("agent-modal");
+        modal.classList.remove("open");
+        document.body.style.overflow = "";
+      }
+
+      // Escape key listener for closing modal
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeAgentModal();
+      });
+
+      // Initialize scenes once DOM is ready
+      window.addEventListener("DOMContentLoaded", () => {
+        initHeroScene();
+      });
+    </script>
+  </body>
+</html>

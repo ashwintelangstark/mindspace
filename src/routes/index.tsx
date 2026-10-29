@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Game from "@/game/scene/Game";
 import { SceneOverlay } from "@/components/stock/SceneOverlay";
 import { StockDrawer } from "@/components/stock/StockDrawer";
@@ -38,6 +38,44 @@ function MindspaceExchangeFloor() {
   const [isSimulationOpen, setIsSimulationOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
 
+  // Check URL or previous entry state: by default, landing page is presented until user clicks "Try out Mindspace"
+  const [isLandingOpen, setIsLandingOpen] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("view") === "app" || params.get("app") === "true") return false;
+      if (params.get("view") === "landing") return true;
+      // If user previously clicked "Try out Mindspace", bypass landing straight to trading floor
+      const entered = localStorage.getItem("mindspace_entered_app");
+      return !entered;
+    }
+    return false;
+  });
+
+  // Listen for message from landing page iframe when "Try out Mindspace ↗" is clicked
+  useEffect(() => {
+    const handleMsg = (e: MessageEvent) => {
+      if (e.data?.type === "CLOSE_LANDING_AND_ENTER_APP") {
+        setIsLandingOpen(false);
+        try {
+          localStorage.setItem("mindspace_entered_app", "1");
+        } catch {
+          // ignore storage error in restricted contexts
+        }
+      }
+    };
+    window.addEventListener("message", handleMsg);
+    return () => window.removeEventListener("message", handleMsg);
+  }, []);
+
+  const handleEnterApp = () => {
+    setIsLandingOpen(false);
+    try {
+      localStorage.setItem("mindspace_entered_app", "1");
+    } catch {
+      // ignore storage error in restricted contexts
+    }
+  };
+
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#030706] text-[#f0f7f3] flex flex-col">
       {/* Main Top Area: Left 3D Office + Right Intelligence Drawer */}
@@ -45,7 +83,11 @@ function MindspaceExchangeFloor() {
         {/* Left: 3D Stock Exchange Office */}
         <div className="relative flex-1 h-full min-h-[360px] overflow-hidden">
           <Game />
-          <SceneOverlay isDrawerOpen={isDrawerOpen} onOpenDrawer={() => setIsDrawerOpen(true)} />
+          <SceneOverlay
+            isDrawerOpen={isDrawerOpen}
+            onOpenDrawer={() => setIsDrawerOpen(true)}
+            onOpenLanding={() => setIsLandingOpen(true)}
+          />
         </div>
 
         {/* Right: Stock Prediction Drawer */}
@@ -61,6 +103,33 @@ function MindspaceExchangeFloor() {
 
       {/* Bottom: Live Stock Market Overview Marquee Bar */}
       <LiveTickerBar />
+
+      {/* Full-Screen Landing Page View */}
+      {isLandingOpen && (
+        <div className="fixed inset-0 z-50 bg-[#050806] flex flex-col">
+          {/* Quick bar at top with Enter 3D Floor button */}
+          <div className="h-11 bg-[#09110c] border-b border-[#182b20] px-4 flex items-center justify-between text-xs text-[#9db2a5] z-10 shadow-md">
+            <div className="flex items-center gap-2.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#00e59a] shadow-[0_0_8px_#00e59a] animate-pulse" />
+              <span className="font-bold text-[#f0f7f3] tracking-wider text-[11px] font-mono">
+                MINDSPACE // LANDING & 3D AGENT DOSSIERS
+              </span>
+            </div>
+            <button
+              onClick={handleEnterApp}
+              className="px-3.5 py-1.5 rounded-lg bg-[#00e59a] text-[#030d07] font-black text-xs hover:bg-[#0fffab] transition-all shadow-[0_0_12px_rgba(0,229,154,0.35)] flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Enter 3D Trading Floor</span>
+              <span>↗</span>
+            </button>
+          </div>
+          <iframe
+            src="/landing.html"
+            title="Mindspace Landing Page"
+            className="flex-1 w-full h-full border-0"
+          />
+        </div>
+      )}
 
       {/* Modals */}
       <StockExplorerModal

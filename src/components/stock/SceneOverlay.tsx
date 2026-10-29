@@ -7,9 +7,10 @@ import { AgentLiveAlert } from "@/types/stock";
 interface SceneOverlayProps {
   onOpenDrawer?: () => void;
   isDrawerOpen?: boolean;
+  onOpenLanding?: () => void;
 }
 
-export function SceneOverlay({ onOpenDrawer, isDrawerOpen }: SceneOverlayProps) {
+export function SceneOverlay({ onOpenDrawer, isDrawerOpen, onOpenLanding }: SceneOverlayProps) {
   const [taskState, setTaskState] = useState<TaskState>({
     isActive: false,
     symbol: "",
@@ -127,6 +128,22 @@ export function SceneOverlay({ onOpenDrawer, isDrawerOpen }: SceneOverlayProps) 
               </div>
             ))}
           </div>
+
+          {/* Quick link to Landing Page & Agent Dossiers */}
+          {onOpenLanding && (
+            <div className="mt-2.5 pt-2 border-t border-[#155238]">
+              <button
+                onClick={onOpenLanding}
+                className="w-full py-1.5 px-2.5 rounded-lg bg-[#071710] hover:bg-[#0c2419] border border-[#1d4c36] hover:border-[#00e59a] text-[11px] text-[#00e59a] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm group"
+              >
+                <span>🌐</span>
+                <span className="group-hover:text-white transition">
+                  Landing Page & 3D Dossiers
+                </span>
+                <span className="text-[10px] text-gray-400">↗</span>
+              </button>
+            </div>
+          )}
 
           {taskState.isActive && (
             <div className="mt-2.5 pt-2 border-t border-[#155238]">

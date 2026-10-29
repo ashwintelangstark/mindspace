@@ -37,7 +37,7 @@ function AnimalFeature({ feature, skin }: { feature: Feature; skin: string }) {
         <group>
           {[-1, 1].map((s) => (
             <group key={s} position={[s * 0.24, 0.26, 0]} rotation={[-0.5, 0, s * 0.7]}>
-              <mesh>
+              <mesh position={[0, 0.17, 0]}>
                 <coneGeometry args={[0.07, 0.34, 8]} />
                 <meshStandardMaterial color="#e8ddc8" roughness={0.5} />
               </mesh>
@@ -81,7 +81,7 @@ function AnimalFeature({ feature, skin }: { feature: Feature; skin: string }) {
       return (
         <group>
           {[-1, 1].map((s) => (
-            <group key={s} position={[s * 0.14, 0.3, 0]} rotation={[-0.12, 0, s * 0.12]}>
+            <group key={s} position={[s * 0.19, 0.3, 0]} rotation={[-0.12, 0, s * 0.2]}>
               <mesh position={[0, 0.26, 0]}>
                 <boxGeometry args={[0.11, 0.52, 0.05]} />
                 <meshStandardMaterial color={skin} roughness={0.8} />

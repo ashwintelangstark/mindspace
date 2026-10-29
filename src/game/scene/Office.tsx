@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import * as THREE from "three";
 import { makeBoardTexture, makeChartTexture, makeCityTexture, makeTickerTexture } from "./textures";
 
 // Layout constants (1 unit = 1 m). Room: x in [-8, 8], z in [-6, 6].

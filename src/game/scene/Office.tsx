@@ -1,12 +1,28 @@
-import { useMemo } from "react";
-import { makeBoardTexture, makeChartTexture, makeCityTexture, makeTickerTexture } from "./textures";
+import { useEffect, useMemo } from "react";
+import {
+  drawBoardCanvas,
+  drawTickerCanvas,
+  makeBoardTexture,
+  makeChartTexture,
+  makeCityTexture,
+  makeTickerTexture,
+} from "./textures";
+import { subscribeMarketEngine } from "@/lib/market-engine";
 
 // Layout constants (1 unit = 1 m). Room: x in [-8, 8], z in [-6, 6].
 const ROOM_W = 16;
 const ROOM_D = 12;
 const WALL_H = 4.4;
 
-function WallTrim({ position, rotation, length }: { position: [number, number, number]; rotation?: number; length: number }) {
+function WallTrim({
+  position,
+  rotation,
+  length,
+}: {
+  position: [number, number, number];
+  rotation?: number;
+  length: number;
+}) {
   return (
     <mesh position={position} rotation={[0, rotation ?? 0, 0]}>
       <boxGeometry args={[length, 0.035, 0.035]} />
@@ -15,7 +31,15 @@ function WallTrim({ position, rotation, length }: { position: [number, number, n
   );
 }
 
-function Desk({ position, rotation, chartUp }: { position: [number, number, number]; rotation: number; chartUp: boolean }) {
+function Desk({
+  position,
+  rotation,
+  chartUp,
+}: {
+  position: [number, number, number];
+  rotation: number;
+  chartUp: boolean;
+}) {
   const up = useMemo(() => makeChartTexture(chartUp ? "up" : "down"), [chartUp]);
   const flat = useMemo(() => makeChartTexture("flat"), [chartUp]);
 
@@ -101,8 +125,27 @@ function Plant({ position, scale = 1 }: { position: [number, number, number]; sc
   );
 }
 
-function TickerBoard({ position, rotation }: { position: [number, number, number]; rotation: number }) {
-  const tex = useMemo(() => makeTickerTexture(), []);
+function TickerBoard({
+  position,
+  rotation,
+  sideIndex = 0,
+}: {
+  position: [number, number, number];
+  rotation: number;
+  sideIndex?: number;
+}) {
+  const tex = useMemo(() => makeTickerTexture(sideIndex), [sideIndex]);
+
+  useEffect(() => {
+    const unsub = subscribeMarketEngine((snap) => {
+      if (tex.image) {
+        drawTickerCanvas(tex.image as HTMLCanvasElement, snap, sideIndex);
+        tex.needsUpdate = true;
+      }
+    });
+    return unsub;
+  }, [tex, sideIndex]);
+
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       <mesh>
@@ -120,6 +163,16 @@ function TickerBoard({ position, rotation }: { position: [number, number, number
 export function Office() {
   const city = useMemo(() => makeCityTexture(), []);
   const board = useMemo(() => makeBoardTexture(), []);
+
+  useEffect(() => {
+    const unsub = subscribeMarketEngine((snap) => {
+      if (board.image) {
+        drawBoardCanvas(board.image as HTMLCanvasElement, snap);
+        board.needsUpdate = true;
+      }
+    });
+    return unsub;
+  }, [board]);
 
   return (
     <group>
@@ -188,10 +241,26 @@ export function Office() {
             <planeGeometry args={[ROOM_D, WALL_H]} />
             <meshStandardMaterial color="#111318" roughness={0.8} />
           </mesh>
-          <TickerBoard position={[side * 7.9, 2.1, -2.6]} rotation={-side * Math.PI * 0.5} />
-          <TickerBoard position={[side * 7.9, 2.1, 2.2]} rotation={-side * Math.PI * 0.5} />
-          <WallTrim position={[side * 7.95, 3.95, 0]} rotation={Math.PI * 0.5} length={ROOM_D - 0.6} />
-          <WallTrim position={[side * 7.95, 0.35, 0]} rotation={Math.PI * 0.5} length={ROOM_D - 0.6} />
+          <TickerBoard
+            position={[side * 7.9, 2.1, -2.6]}
+            rotation={-side * Math.PI * 0.5}
+            sideIndex={side === -1 ? 0 : 1}
+          />
+          <TickerBoard
+            position={[side * 7.9, 2.1, 2.2]}
+            rotation={-side * Math.PI * 0.5}
+            sideIndex={side === -1 ? 0 : 1}
+          />
+          <WallTrim
+            position={[side * 7.95, 3.95, 0]}
+            rotation={Math.PI * 0.5}
+            length={ROOM_D - 0.6}
+          />
+          <WallTrim
+            position={[side * 7.95, 0.35, 0]}
+            rotation={Math.PI * 0.5}
+            length={ROOM_D - 0.6}
+          />
         </group>
       ))}
 
@@ -221,7 +290,11 @@ export function Office() {
 
       {/* ---- lounge: sofas + coffee table ---- */}
       {[-1, 1].map((side) => (
-        <group key={`sofa${side}`} position={[side * 2.2, 0, 2.4]} rotation={[0, -side * Math.PI * 0.5, 0]}>
+        <group
+          key={`sofa${side}`}
+          position={[side * 2.2, 0, 2.4]}
+          rotation={[0, -side * Math.PI * 0.5, 0]}
+        >
           <mesh position={[0, 0.32, 0]}>
             <boxGeometry args={[2.4, 0.5, 0.95]} />
             <meshStandardMaterial color="#131519" roughness={0.65} />
@@ -249,6 +322,28 @@ export function Office() {
         <meshStandardMaterial color="#101317" roughness={0.4} metalness={0.5} />
       </mesh>
 
+      {/* Coffee mugs and coffee bar tray on lounge table */}
+      <group position={[0, 0.32, 3.6]}>
+        {/* Tray */}
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[0.55, 0.02, 0.38]} />
+          <meshStandardMaterial color="#2d3238" roughness={0.3} metalness={0.8} />
+        </mesh>
+        {/* Coffee cups */}
+        {[-0.14, 0.14].map((mx, mi) => (
+          <group key={mi} position={[mx, 0.07, 0]}>
+            <mesh>
+              <cylinderGeometry args={[0.05, 0.04, 0.11, 10]} />
+              <meshStandardMaterial color="#f0f2f0" roughness={0.4} />
+            </mesh>
+            <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.04, 10]} />
+              <meshBasicMaterial color="#30180a" />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
       {/* ---- plants ---- */}
       <Plant position={[-7.2, 0, -5.1]} scale={1.3} />
       <Plant position={[7.2, 0, -5.1]} scale={1.3} />
@@ -263,4 +358,3 @@ export function Office() {
     </group>
   );
 }
-

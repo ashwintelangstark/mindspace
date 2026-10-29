@@ -15,6 +15,11 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.env
+.env.*
+!.env.example
+data/*.sqlite-shm
+data/*.sqlite-wal
 
 # Wrangler / Cloudflare
 .wrangler/
@@ -30,3 +35,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.meta-panel-trigger
+meta.bat

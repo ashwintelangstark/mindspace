@@ -1,51 +1,83 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import Game from "@/game/scene/Game";
+import { SceneOverlay } from "@/components/stock/SceneOverlay";
+import { StockDrawer } from "@/components/stock/StockDrawer";
+import { LiveTickerBar } from "@/components/stock/LiveTickerBar";
+import { StockExplorerModal } from "@/components/stock/StockExplorerModal";
+import { TradingSimulationModal } from "@/components/stock/TradingSimulationModal";
+import { StockQuote } from "@/types/stock";
 
 export const Route = createFileRoute("/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "SIL Science — Roblox Stock Exchange Floor" },
+      { title: "MINDSPACE — AI-Powered Stock Market Intelligence" },
       {
         name: "description",
         content:
-          "A 3D trading-floor scene with Bull, Bear, Stag and Rabbit roaming a stock exchange office at sunset, built with React and three.js.",
+          "A 3D stock exchange office with Bull, Bear, Stag and Rabbit AI agents predicting market trends with 91% accuracy, target withdrawal timing, and Groww-style trading simulation.",
       },
-      { property: "og:title", content: "SIL Science — Roblox Stock Exchange Floor" },
+      { property: "og:title", content: "MINDSPACE — AI-Powered Stock Market Intelligence" },
       {
         property: "og:description",
-        content: "Bull, Bear, Stag and Rabbit roam a glowing stock exchange office with a sunset skyline view.",
+        content:
+          "Four AI agents (Bull, Bear, Stag, Rabbit) roam the 3D exchange office, drink coffee, sit at terminals, and compute 91% accuracy stock predictions.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: ExchangeFloor,
+  component: MindspaceExchangeFloor,
 });
 
-function ExchangeFloor() {
-  return (
-    <div className="relative h-screen w-screen overflow-hidden bg-background text-foreground">
-      <Game />
+function MindspaceExchangeFloor() {
+  // No default stock is pre-selected — user searches and chooses their stock
+  const [currentStock, setCurrentStock] = useState<StockQuote | null>(null);
+  const [isExplorerOpen, setIsExplorerOpen] = useState(false);
+  const [isSimulationOpen, setIsSimulationOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
 
-      {/* HUD overlay */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-5">
-        <div className="flex items-start justify-between">
-          <div className="rounded-lg border border-border bg-card/70 px-4 py-2 backdrop-blur">
-            <p className="text-sm font-bold tracking-widest text-foreground">SIL SCIENCE</p>
-            <p className="text-xs text-muted-foreground">Stock Exchange Floor</p>
-          </div>
-          <div className="rounded-lg border border-border bg-card/70 px-3 py-2 text-right backdrop-blur">
-            <p className="text-xs font-semibold text-foreground">Bull · Bear · Stag · Rabbit</p>
-            <p className="text-[11px] text-muted-foreground">on the floor today</p>
-          </div>
+  return (
+    <div className="relative h-screen w-screen overflow-hidden bg-[#030706] text-[#f0f7f3] flex flex-col">
+      {/* Main Top Area: Left 3D Office + Right Intelligence Drawer */}
+      <div className="flex-1 relative flex flex-col lg:flex-row overflow-hidden">
+        {/* Left: 3D Stock Exchange Office */}
+        <div className="relative flex-1 h-full min-h-[360px] overflow-hidden">
+          <Game />
+          <SceneOverlay isDrawerOpen={isDrawerOpen} onOpenDrawer={() => setIsDrawerOpen(true)} />
         </div>
-        <div className="flex justify-center">
-          <div className="rounded-full border border-border bg-card/70 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
-            Drag to look around · Scroll to zoom · The traders roam on their own
-          </div>
-        </div>
+
+        {/* Right: Stock Prediction Drawer */}
+        <StockDrawer
+          currentStock={currentStock}
+          onSelectStock={setCurrentStock}
+          onOpenExplorer={() => setIsExplorerOpen(true)}
+          onOpenSimulation={() => setIsSimulationOpen(true)}
+          isOpen={isDrawerOpen}
+          onToggleOpen={() => setIsDrawerOpen(!isDrawerOpen)}
+        />
       </div>
+
+      {/* Bottom: Live Stock Market Overview Marquee Bar */}
+      <LiveTickerBar />
+
+      {/* Modals */}
+      <StockExplorerModal
+        isOpen={isExplorerOpen}
+        onClose={() => setIsExplorerOpen(false)}
+        onSelectStock={(s) => {
+          setCurrentStock(s);
+          setIsDrawerOpen(true);
+        }}
+      />
+
+      <TradingSimulationModal
+        isOpen={isSimulationOpen}
+        onClose={() => setIsSimulationOpen(false)}
+        currentStock={currentStock}
+        onSelectStock={(s) => setCurrentStock(s)}
+      />
     </div>
   );
 }

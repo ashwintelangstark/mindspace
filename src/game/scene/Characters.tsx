@@ -4,9 +4,6 @@ import { useFrame } from "@react-three/fiber";
 import { agents, stepRoam } from "../sim/roam";
 import { makeFaceTexture, makeNameTagTexture } from "./textures";
 
-// Roblox-style blocky traders. Per-frame values live in refs; the single
-// useFrame in <Characters> steps the sim and drives every rig.
-
 type Feature = "horns" | "ears" | "antlers" | "rabbitEars";
 
 interface Look {
@@ -20,8 +17,20 @@ interface Look {
 const LOOKS: Record<string, Look> = {
   bull: { skin: "#c98850", hair: "#2a1c10", suit: "#17191d", accent: "#2ecc7f", feature: "horns" },
   bear: { skin: "#9c6636", hair: "#241508", suit: "#1a1418", accent: "#e05555", feature: "ears" },
-  stag: { skin: "#b07a42", hair: "#33220f", suit: "#15181c", accent: "#2ecc7f", feature: "antlers" },
-  rabbit: { skin: "#e8e4dd", hair: "#dcd6cc", suit: "#191b1f", accent: "#2ecc7f", feature: "rabbitEars" },
+  stag: {
+    skin: "#b07a42",
+    hair: "#33220f",
+    suit: "#15181c",
+    accent: "#2ecc7f",
+    feature: "antlers",
+  },
+  rabbit: {
+    skin: "#e8e4dd",
+    hair: "#dcd6cc",
+    suit: "#191b1f",
+    accent: "#2ecc7f",
+    feature: "rabbitEars",
+  },
 };
 
 let cachedFace: THREE.CanvasTexture | null = null;
@@ -97,6 +106,28 @@ function AnimalFeature({ feature, skin }: { feature: Feature; skin: string }) {
   }
 }
 
+function CoffeeMug() {
+  return (
+    <group position={[0, -0.62, 0.12]} rotation={[0.2, 0, 0]}>
+      {/* Mug body */}
+      <mesh>
+        <cylinderGeometry args={[0.065, 0.055, 0.14, 12]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.3} metalness={0.1} />
+      </mesh>
+      {/* Coffee inside */}
+      <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.055, 12]} />
+        <meshBasicMaterial color="#3b1f0c" />
+      </mesh>
+      {/* Mug handle */}
+      <mesh position={[0.07, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <torusGeometry args={[0.04, 0.012, 8, 16, Math.PI]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.3} />
+      </mesh>
+    </group>
+  );
+}
+
 function Trader({ index }: { index: number }) {
   const agent = agents[index]!;
   const look = LOOKS[agent.id]!;
@@ -108,9 +139,9 @@ function Trader({ index }: { index: number }) {
   const legL = useRef<THREE.Group>(null);
   const legR = useRef<THREE.Group>(null);
   const body = useRef<THREE.Group>(null);
+  const mugRef = useRef<THREE.Group>(null);
 
-  // rig registry read by the single <Characters> stepper
-  rigs[index] = { armL, armR, legL, legR, body };
+  rigs[index] = { armL, armR, legL, legR, body, mugRef };
 
   return (
     <group>
@@ -178,6 +209,10 @@ function Trader({ index }: { index: number }) {
           <boxGeometry args={[0.19, 0.18, 0.21]} />
           <meshStandardMaterial color={look.skin} roughness={0.7} />
         </mesh>
+        {/* Coffee mug in right hand */}
+        <group ref={mugRef} visible={false}>
+          <CoffeeMug />
+        </group>
       </group>
 
       {/* legs (pivot at hip) */}
@@ -211,6 +246,7 @@ interface Rig {
   legL: RefObject<THREE.Group | null>;
   legR: RefObject<THREE.Group | null>;
   body: RefObject<THREE.Group | null>;
+  mugRef: RefObject<THREE.Group | null>;
 }
 
 const rigs: Rig[] = [];
@@ -218,7 +254,12 @@ const rigs: Rig[] = [];
 export function Characters() {
   const roots = useRef<(THREE.Group | null)[]>([null, null, null, null]);
 
-  useEffect(() => () => { rigs.length = 0; }, []);
+  useEffect(
+    () => () => {
+      rigs.length = 0;
+    },
+    [],
+  );
 
   // The one stepper: advance the sim, then write pose straight to the rigs.
   useFrame((_, rawDelta) => {
@@ -228,6 +269,62 @@ export function Characters() {
     agents.forEach((agent, i) => {
       const root = roots.current[i];
       if (!root) return;
+      const rig = rigs[i];
+
+      // 1. Sitting and working at desk
+      if (agent.state === "work_at_desk") {
+        root.position.set(agent.x, -0.22, agent.z);
+        root.rotation.y = agent.angle;
+
+        if (rig) {
+          if (rig.mugRef.current) rig.mugRef.current.visible = false;
+          // Legs bent forward 90 degrees sitting
+          if (rig.legL.current) rig.legL.current.rotation.x = -Math.PI * 0.48;
+          if (rig.legR.current) rig.legR.current.rotation.x = -Math.PI * 0.48;
+          // Arms reaching forward onto desk typing
+          const typePhase = agent.workPhase;
+          if (rig.armL.current) {
+            rig.armL.current.rotation.x = -1.25 + Math.sin(typePhase * 7) * 0.12;
+            rig.armL.current.rotation.z = 0.2;
+          }
+          if (rig.armR.current) {
+            rig.armR.current.rotation.x = -1.25 + Math.cos(typePhase * 7) * 0.12;
+            rig.armR.current.rotation.z = -0.2;
+          }
+          if (rig.body.current) {
+            rig.body.current.rotation.y = Math.sin(typePhase * 2) * 0.04;
+          }
+        }
+        return;
+      }
+
+      // 2. Drinking coffee
+      if (agent.state === "drink_coffee") {
+        root.position.set(agent.x, 0, agent.z);
+        root.rotation.y = agent.angle;
+
+        if (rig) {
+          if (rig.mugRef.current) rig.mugRef.current.visible = true;
+          if (rig.legL.current) rig.legL.current.rotation.x = 0;
+          if (rig.legR.current) rig.legR.current.rotation.x = 0;
+          // Right arm lifting mug to mouth
+          const sipAnim = Math.sin(agent.coffeePhase * 1.8);
+          if (rig.armR.current) {
+            rig.armR.current.rotation.x = -2.15 + sipAnim * 0.2;
+            rig.armR.current.rotation.z = -0.35;
+          }
+          if (rig.armL.current) {
+            rig.armL.current.rotation.x = 0.1;
+            rig.armL.current.rotation.z = 0;
+          }
+          if (rig.body.current) {
+            rig.body.current.rotation.y = 0;
+          }
+        }
+        return;
+      }
+
+      // 3. Walking
       const walking = agent.state === "walk";
       const swing = walking ? Math.sin(agent.walkPhase) * 0.6 : 0;
       const bob = walking ? Math.abs(Math.sin(agent.walkPhase)) * 0.035 : 0;
@@ -235,16 +332,22 @@ export function Characters() {
       root.position.set(agent.x, bob, agent.z);
       root.rotation.y = agent.angle;
 
-      const rig = rigs[i];
       if (rig) {
+        if (rig.mugRef.current) rig.mugRef.current.visible = false;
         if (rig.legL.current) rig.legL.current.rotation.x = swing;
         if (rig.legR.current) rig.legR.current.rotation.x = -swing;
-        if (rig.armL.current) rig.armL.current.rotation.x = -swing * 0.85;
-        if (rig.armR.current) rig.armR.current.rotation.x = swing * 0.85;
+        if (rig.armL.current) {
+          rig.armL.current.rotation.x = -swing * 0.85;
+          rig.armL.current.rotation.z = 0;
+        }
+        if (rig.armR.current) {
+          rig.armR.current.rotation.x = swing * 0.85;
+          rig.armR.current.rotation.z = 0;
+        }
         if (rig.body.current) rig.body.current.rotation.y = Math.sin(agent.walkPhase * 0.5) * 0.05;
       }
 
-      // idle sway when standing still
+      // 4. Idle standing
       if (!walking) {
         const t = performance.now() / 1000;
         if (rig?.armL.current) rig.armL.current.rotation.x = Math.sin(t + i) * 0.05;

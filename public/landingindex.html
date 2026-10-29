@@ -249,10 +249,14 @@
           box-shadow 0.4s ease;
       }
       #hero-canvas {
-        width: 100%;
-        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
         display: block;
         cursor: grab;
+        z-index: 1;
       }
       #hero-canvas:active {
         cursor: grabbing;
@@ -457,10 +461,14 @@
         margin-bottom: 16px;
       }
       .card-agent-canvas {
-        width: 100%;
-        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
         display: block;
         cursor: grab;
+        z-index: 1;
       }
       .card-agent-canvas:active {
         cursor: grabbing;
@@ -469,6 +477,7 @@
         position: absolute;
         top: 8px;
         left: 10px;
+        z-index: 5;
         font-family: "JetBrains Mono", monospace;
         font-size: 9px;
         letter-spacing: 0.1em;
@@ -483,6 +492,7 @@
         position: absolute;
         bottom: 8px;
         right: 10px;
+        z-index: 5;
         font-size: 9.5px;
         color: #7d9685;
         background: rgba(4, 9, 6, 0.85);
@@ -567,7 +577,8 @@
       }
       .agent-modal-box {
         width: min(1080px, 96vw);
-        max-height: 92vh;
+        height: min(680px, 88vh);
+        max-height: 88vh;
         background: #0b120e;
         border: 1px solid var(--modal-accent, #2a4032);
         border-radius: 28px;
@@ -575,8 +586,10 @@
           0 35px 85px rgba(0, 0, 0, 0.9),
           0 0 50px var(--modal-glow, rgba(0, 229, 154, 0.25));
         display: grid;
-        grid-template-columns: 1.1fr 1.3fr;
+        grid-template-columns: 450px 1fr;
+        grid-template-rows: 100%;
         overflow: hidden;
+        position: relative;
         transform: scale(0.88) translateY(24px);
         transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
@@ -584,20 +597,29 @@
         transform: scale(1) translateY(0);
       }
       .modal-3d-stage {
-        background: radial-gradient(circle at 50% 60%, #11261b 0%, #060a08 75%);
+        background: radial-gradient(
+          circle at 50% 52%,
+          var(--modal-stage-glow, rgba(0, 229, 154, 0.22)) 0%,
+          #0c1e15 48%,
+          #050907 85%
+        );
         position: relative;
         border-right: 1px solid #1a2a20;
-        display: flex;
-        flex-direction: column;
-        min-height: 480px;
-        height: 100%;
-      }
-      #modal-canvas {
         width: 100%;
         height: 100%;
-        min-height: 480px;
+        min-height: 460px;
+        max-height: 680px;
+        overflow: hidden;
+      }
+      #modal-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
         display: block;
         cursor: grab;
+        z-index: 2;
       }
       #modal-canvas:active {
         cursor: grabbing;
@@ -605,52 +627,88 @@
       .modal-stage-controls {
         position: absolute;
         bottom: 16px;
-        left: 16px;
-        right: 16px;
+        left: 14px;
+        right: 14px;
         display: flex;
         justify-content: center;
         gap: 6px;
         flex-wrap: wrap;
-        z-index: 10;
+        z-index: 20;
       }
       .anim-btn {
-        background: rgba(6, 11, 8, 0.88);
-        border: 1px solid #23382b;
-        color: #c7ded0;
-        padding: 7px 13px;
+        background: rgba(6, 11, 8, 0.92);
+        border: 1px solid #284232;
+        color: #d6ece0;
+        padding: 7px 12px;
         border-radius: 9px;
         font-size: 11px;
         font-weight: 700;
         cursor: pointer;
         transition: all 0.2s;
+        backdrop-filter: blur(8px);
       }
       .anim-btn:hover {
-        background: var(--bull);
+        background: var(--modal-accent, var(--bull));
         color: #040c07;
-        border-color: var(--bull);
+        border-color: var(--modal-accent, var(--bull));
+      }
+      .modal-stage-top {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        z-index: 20;
+        pointer-events: none;
       }
       .modal-stage-hint {
-        position: absolute;
-        top: 16px;
-        left: 16px;
         font-size: 10px;
         letter-spacing: 0.1em;
-        color: #799182;
+        color: #a9c4b4;
         font-family: "JetBrains Mono", monospace;
-        background: rgba(5, 9, 7, 0.8);
-        padding: 5px 9px;
+        background: rgba(5, 9, 7, 0.88);
+        padding: 5px 10px;
         border-radius: 7px;
-        border: 1px solid #192b1f;
-        z-index: 10;
+        border: 1px solid var(--modal-accent, #192b1f);
+      }
+      .modal-mini-switcher {
+        display: flex;
+        gap: 4px;
+        pointer-events: auto;
+        background: rgba(5, 9, 7, 0.88);
+        padding: 3px;
+        border-radius: 8px;
+        border: 1px solid #1e3325;
+      }
+      .modal-mini-btn {
+        background: transparent;
+        border: 1px solid transparent;
+        color: #9ab0a2;
+        font-size: 11px;
+        padding: 3px 7px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: all 0.18s;
+      }
+      .modal-mini-btn.active,
+      .modal-mini-btn:hover {
+        background: #13261b;
+        color: #fff;
+        border-color: var(--modal-accent, var(--bull));
       }
 
       .modal-info-panel {
-        padding: 34px 38px;
+        padding: 32px 36px;
         overflow-y: auto;
-        max-height: 90vh;
+        height: 100%;
+        max-height: 100%;
         display: flex;
         flex-direction: column;
-        gap: 22px;
+        gap: 20px;
       }
       .modal-close-btn {
         position: absolute;
@@ -980,10 +1038,15 @@
         }
         .agent-modal-box {
           grid-template-columns: 1fr;
-          max-height: 94vh;
+          grid-template-rows: 340px 1fr;
+          height: 92vh;
+          max-height: 92vh;
         }
-        #modal-canvas {
-          min-height: 320px;
+        .modal-3d-stage {
+          min-height: 340px;
+          max-height: 340px;
+          border-right: none;
+          border-bottom: 1px solid #1a2a20;
         }
         .discussion-section {
           grid-template-columns: 1fr;
@@ -1589,9 +1652,45 @@
         </button>
 
         <!-- Left: 3D Roblox Agent Inspection Chamber -->
-        <div class="modal-3d-stage">
-          <div class="modal-stage-hint" id="modal-hint">● 3D AGENT INSPECTION CHAMBER</div>
-          <canvas id="modal-canvas"></canvas>
+        <div class="modal-3d-stage" id="modal-3d-stage">
+          <div class="modal-stage-top">
+            <div class="modal-stage-hint" id="modal-hint">● 3D AGENT INSPECTION CHAMBER</div>
+            <div class="modal-mini-switcher">
+              <button
+                class="modal-mini-btn active"
+                data-modal-agent="bull"
+                onclick="openAgentModal('bull')"
+                title="Inspect Bull Agent"
+              >
+                🐂 Bull
+              </button>
+              <button
+                class="modal-mini-btn"
+                data-modal-agent="bear"
+                onclick="openAgentModal('bear')"
+                title="Inspect Bear Agent"
+              >
+                🐻 Bear
+              </button>
+              <button
+                class="modal-mini-btn"
+                data-modal-agent="stag"
+                onclick="openAgentModal('stag')"
+                title="Inspect Stag Agent"
+              >
+                🦌 Stag
+              </button>
+              <button
+                class="modal-mini-btn"
+                data-modal-agent="rabbit"
+                onclick="openAgentModal('rabbit')"
+                title="Inspect Rabbit Agent"
+              >
+                🐇 Rabbit
+              </button>
+            </div>
+          </div>
+          <canvas id="modal-canvas" width="450" height="620"></canvas>
           <div class="modal-stage-controls">
             <button class="anim-btn" onclick="triggerAgentAction('victory')">
               🏆 Victory Pose
@@ -2314,7 +2413,7 @@
       let heroCurrentMesh = null;
       let heroSpotLight = null;
       let heroSelected = "bull";
-      let heroClock = new THREE.Clock();
+      const getElapsed = () => performance.now() * 0.001;
 
       function initHeroScene() {
         const canvas = document.getElementById("hero-canvas");
@@ -2534,7 +2633,7 @@
       // 8. 3D Animation Loop for Hero Single-Agent Scene
       function animateHero() {
         requestAnimationFrame(animateHero);
-        const t = heroClock.getElapsedTime();
+        const t = getElapsed();
 
         if (heroCurrentMesh) {
           const u = heroCurrentMesh.userData;
@@ -2636,17 +2735,19 @@
           ro.observe(box);
         });
 
-        animateCardScenes();
+        if (Object.keys(cardScenes).length > 0) {
+          animateCardScenes();
+        }
       }
 
       function animateCardScenes() {
         requestAnimationFrame(animateCardScenes);
-        const t = heroClock.getElapsedTime();
+        const t = getElapsed();
 
         Object.entries(cardScenes).forEach(([id, item]) => {
           const canvas = item.canvas;
-          const w = canvas.clientWidth;
-          const h = canvas.clientHeight;
+          const w = item.box ? item.box.clientWidth : canvas.clientWidth;
+          const h = item.box ? item.box.clientHeight : canvas.clientHeight;
           if (
             w > 0 &&
             h > 0 &&
@@ -2680,19 +2781,18 @@
       // 10. Secondary 3D Inspector Chamber (Modal Dedicated Stage)
       let modalScene, modalCamera, modalRenderer, modalControls;
       let modalCurrentAgentMesh = null;
-      let modalClock = new THREE.Clock();
+      let modalAccentLight = null;
+      let modalFillLight = null;
+      let modalScanRing = null;
+      let modalCapsuleAccentMats = [];
       let modalActionState = "idle";
 
       function getModalDimensions() {
-        const canvas = document.getElementById("modal-canvas");
-        if (!canvas) return { w: 480, h: 500 };
-        const stage = canvas.parentElement;
-        const stageW = stage ? stage.clientWidth : 0;
-        const stageH = stage ? stage.clientHeight : 0;
-        const canvasW = canvas.clientWidth;
-        const canvasH = canvas.clientHeight;
-        const w = Math.max(stageW, canvasW, 440);
-        const h = Math.max(stageH, canvasH, 480);
+        const stage = document.getElementById("modal-3d-stage");
+        const rawW = stage ? stage.clientWidth : 450;
+        const rawH = stage ? stage.clientHeight : 620;
+        const w = Math.min(Math.max(rawW || 450, 320), 640);
+        const h = Math.min(Math.max(rawH || 620, 340), 720);
         return { w, h };
       }
 
@@ -2708,38 +2808,98 @@
         modalRenderer.shadowMap.enabled = true;
 
         modalScene = new THREE.Scene();
-        modalCamera = new THREE.PerspectiveCamera(40, w / h, 0.1, 50);
-        modalCamera.position.set(0, 1.45, 3.8);
+        modalCamera = new THREE.PerspectiveCamera(38, w / h, 0.1, 50);
+        modalCamera.position.set(0, 1.32, 3.45);
 
         if (window.THREE.OrbitControls) {
           modalControls = new THREE.OrbitControls(modalCamera, canvas);
           modalControls.enableDamping = true;
           modalControls.dampingFactor = 0.08;
-          modalControls.target.set(0, 1.15, 0);
+          modalControls.target.set(0, 1.12, 0);
           modalControls.minDistance = 2.0;
-          modalControls.maxDistance = 6.0;
+          modalControls.maxDistance = 5.8;
+          modalControls.maxPolarAngle = Math.PI / 1.95;
         }
 
-        // Strong, vivid studio lighting
+        // Vivid multi-point studio lighting for 3D character clarity
+        modalScene.add(new THREE.AmbientLight(0xffffff, 1.2));
         modalScene.add(new THREE.HemisphereLight(0xffffff, 0x182c20, 2.4));
-        const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
-        keyLight.position.set(3, 6, 4);
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+        keyLight.position.set(3, 6, 5);
         modalScene.add(keyLight);
-        const fillLight = new THREE.DirectionalLight(0x00e59a, 1.8);
-        fillLight.position.set(-3, 2, 2);
-        modalScene.add(fillLight);
-        const backLight = new THREE.DirectionalLight(0xffffff, 1.2);
+
+        modalFillLight = new THREE.DirectionalLight(0x00e59a, 2.0);
+        modalFillLight.position.set(-3, 2.5, 3);
+        modalScene.add(modalFillLight);
+
+        const backLight = new THREE.DirectionalLight(0xffffff, 1.5);
         backLight.position.set(0, 4, -4);
         modalScene.add(backLight);
 
-        const podium = new THREE.Mesh(
-          new THREE.CylinderGeometry(1.2, 1.25, 0.1, 32),
-          new THREE.MeshStandardMaterial({ color: 0x12241a, roughness: 0.35 }),
-        );
-        podium.position.y = -0.05;
-        modalScene.add(podium);
+        modalAccentLight = new THREE.PointLight(0x00e59a, 8, 8);
+        modalAccentLight.position.set(0, 2.5, 1.2);
+        modalScene.add(modalAccentLight);
 
-        const stage = canvas.parentElement;
+        // 3D Inspection Chamber Capsule Pod Geometry
+        const podiumBase = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.18, 1.28, 0.12, 40),
+          new THREE.MeshStandardMaterial({ color: 0x0d1d15, roughness: 0.3, metalness: 0.4 }),
+        );
+        podiumBase.position.y = -0.06;
+        modalScene.add(podiumBase);
+
+        const podiumTop = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.98, 1.04, 0.06, 40),
+          new THREE.MeshStandardMaterial({ color: 0x142a1e, roughness: 0.25, metalness: 0.5 }),
+        );
+        podiumTop.position.y = 0.01;
+        modalScene.add(podiumTop);
+
+        // Glowing Chamber Capsule Rings & Wireframe Cylinder
+        modalCapsuleAccentMats = [];
+
+        const ringMat1 = new THREE.MeshBasicMaterial({
+          color: 0x00e59a,
+          side: THREE.DoubleSide,
+        });
+        modalCapsuleAccentMats.push(ringMat1);
+        const baseGlowRing = new THREE.Mesh(new THREE.RingGeometry(1.02, 1.1, 48), ringMat1);
+        baseGlowRing.rotation.x = -Math.PI / 2;
+        baseGlowRing.position.y = 0.045;
+        modalScene.add(baseGlowRing);
+
+        const topHaloRing = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.022, 12, 48), ringMat1);
+        topHaloRing.rotation.x = Math.PI / 2;
+        topHaloRing.position.y = 2.48;
+        modalScene.add(topHaloRing);
+
+        const scanMat = new THREE.MeshBasicMaterial({
+          color: 0x00e59a,
+          transparent: true,
+          opacity: 0.65,
+        });
+        modalCapsuleAccentMats.push(scanMat);
+        modalScanRing = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.014, 12, 48), scanMat);
+        modalScanRing.rotation.x = Math.PI / 2;
+        modalScanRing.position.y = 1.1;
+        modalScene.add(modalScanRing);
+
+        const cageMat = new THREE.MeshBasicMaterial({
+          color: 0x00e59a,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.09,
+        });
+        modalCapsuleAccentMats.push(cageMat);
+        const capsuleCage = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.05, 1.05, 2.44, 18, 4, true),
+          cageMat,
+        );
+        capsuleCage.position.y = 1.24;
+        modalScene.add(capsuleCage);
+
+        const stage = document.getElementById("modal-3d-stage");
         if (stage && typeof ResizeObserver !== "undefined") {
           const ro = new ResizeObserver(() => {
             resizeModalCanvas();
@@ -2758,6 +2918,9 @@
           modalRenderer.setSize(w, h, false);
           modalCamera.aspect = w / h;
           modalCamera.updateProjectionMatrix();
+          if (modalScene) {
+            modalRenderer.render(modalScene, modalCamera);
+          }
         }
       }
 
@@ -2765,19 +2928,29 @@
         if (!modalRenderer) initModal3D();
         if (!modalScene) return;
 
+        const d = AGENT_DOSSIERS[agentId] || AGENT_DOSSIERS.bull;
+
+        // Remove any previous agent mesh from the modal scene
         if (modalCurrentAgentMesh) {
           modalScene.remove(modalCurrentAgentMesh);
+          modalCurrentAgentMesh = null;
         }
 
+        // Update capsule lights and holographic rings to match agent color
+        if (modalAccentLight) modalAccentLight.color.set(d.color);
+        if (modalFillLight) modalFillLight.color.set(d.color);
+        modalCapsuleAccentMats.forEach((m) => m.color.set(d.color));
+
+        // Build & mount the selected 3D Roblox character inside the inspection capsule
         modalCurrentAgentMesh = buildRobloxAgent(agentId);
-        modalCurrentAgentMesh.position.set(0, 0, 0);
-        modalCurrentAgentMesh.scale.set(1.18, 1.18, 1.18);
+        modalCurrentAgentMesh.position.set(0, 0.04, 0);
+        modalCurrentAgentMesh.scale.set(1.22, 1.22, 1.22);
         modalScene.add(modalCurrentAgentMesh);
         modalActionState = "idle";
 
         if (modalControls && modalCamera) {
-          modalCamera.position.set(0, 1.45, 3.8);
-          modalControls.target.set(0, 1.15, 0);
+          modalCamera.position.set(0, 1.32, 3.45);
+          modalControls.target.set(0, 1.12, 0);
           modalControls.update();
         }
 
@@ -2788,22 +2961,30 @@
         requestAnimationFrame(animateModal);
         if (!modalRenderer || !modalScene || !modalCamera) return;
 
-        // Auto-fit check: ensure aspect ratio is ALWAYS valid and buffer matches display size
+        // Keep WebGL drawing buffer strictly synced to bounded stage dimensions
         const canvas = modalRenderer.domElement;
         const { w, h } = getModalDimensions();
-        const curTargetW = Math.floor(w * Math.min(window.devicePixelRatio, 2));
-        const curTargetH = Math.floor(h * Math.min(window.devicePixelRatio, 2));
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const curTargetW = Math.floor(w * dpr);
+        const curTargetH = Math.floor(h * dpr);
         if (canvas.width !== curTargetW || canvas.height !== curTargetH) {
           modalRenderer.setSize(w, h, false);
           modalCamera.aspect = w / h;
           modalCamera.updateProjectionMatrix();
         }
 
-        const t = modalClock.getElapsedTime();
+        const t = getElapsed();
+
+        // Animate holographic inspection scanner ring
+        if (modalScanRing) {
+          modalScanRing.position.y = 1.15 + Math.sin(t * 1.6) * 0.85;
+        }
+
         if (modalCurrentAgentMesh) {
           const u = modalCurrentAgentMesh.userData;
 
           if (modalActionState === "victory") {
+            modalCurrentAgentMesh.rotation.y = Math.sin(t * 3) * 0.35;
             if (u.armL) {
               u.armL.rotation.x = -2.6;
               u.armL.rotation.z = -0.4;
@@ -2813,7 +2994,7 @@
               u.armR.rotation.z = 0.4;
             }
             if (u.headGroup) {
-              u.headGroup.rotation.x = -0.3;
+              u.headGroup.rotation.x = -0.25;
             }
           } else if (modalActionState === "coffee") {
             if (u.armR) {
@@ -2826,7 +3007,7 @@
             }
           } else if (modalActionState === "scan") {
             if (u.headGroup) {
-              u.headGroup.rotation.y = Math.sin(t * 8) * 0.4;
+              u.headGroup.rotation.y = Math.sin(t * 8) * 0.45;
             }
             if (u.armL) {
               u.armL.rotation.x = -0.6;
@@ -2835,10 +3016,11 @@
               u.armR.rotation.x = -0.6;
             }
           } else {
-            modalCurrentAgentMesh.position.y = Math.sin(t * 2.5) * 0.03;
+            modalCurrentAgentMesh.position.y = 0.04 + Math.sin(t * 2.5) * 0.03;
+            modalCurrentAgentMesh.rotation.y = Math.sin(t * 0.85) * 0.28;
             if (u.armL) u.armL.rotation.set(Math.sin(t * 1.8) * 0.1, 0, 0);
             if (u.armR) u.armR.rotation.set(-0.35 + Math.sin(t * 2) * 0.08, 0, 0.15);
-            if (u.headGroup) u.headGroup.rotation.set(0, Math.sin(t * 1.2) * 0.15, 0);
+            if (u.headGroup) u.headGroup.rotation.set(0, Math.sin(t * 1.2) * 0.16, 0);
           }
         }
 
@@ -2862,8 +3044,17 @@
 
         const modal = document.getElementById("agent-modal");
         const box = document.getElementById("agent-modal-box");
+        const stage = document.getElementById("modal-3d-stage");
         box.style.setProperty("--modal-accent", d.color);
         box.style.setProperty("--modal-glow", d.glow);
+        if (stage) {
+          stage.style.setProperty("--modal-stage-glow", d.glow);
+        }
+
+        // Highlight active mini switcher button inside chamber
+        document.querySelectorAll(".modal-mini-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.modalAgent === agentId);
+        });
 
         document.getElementById("modal-agent-name").textContent = d.name;
         document.getElementById("modal-agent-name").style.color = d.color;
@@ -2902,11 +3093,11 @@
         modal.classList.add("open");
         document.body.style.overflow = "hidden";
 
-        // Initialize and render 3D character in modal
+        // Load and render 3D Roblox character inside chamber immediately
         loadModalAgent(agentId);
 
         // Successive frame resizes to match modal animation scaling
-        [20, 60, 150, 300, 500].forEach((ms) => {
+        [16, 50, 120, 250, 450].forEach((ms) => {
           setTimeout(() => {
             resizeModalCanvas();
           }, ms);
@@ -2944,7 +3135,7 @@
         reveals.forEach((el) => observer.observe(el));
       }
 
-      // Resilient Initialization Engine
+      // Resilient Initialization Engine — Pre-warms Hero, Modal Chamber & 4 Card Canvases
       function boot3DScenes() {
         if (typeof window.THREE === "undefined") {
           if (!window._threeRetryCount) window._threeRetryCount = 0;
@@ -2954,6 +3145,10 @@
           return;
         }
         if (!heroRenderer) initHeroScene();
+        if (!modalRenderer) {
+          initModal3D();
+          loadModalAgent("bull");
+        }
         if (Object.keys(cardScenes).length === 0) initCardCanvases();
         setupScrollAnimations();
       }

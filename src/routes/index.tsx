@@ -108,7 +108,7 @@ function MindspaceExchangeFloor() {
       {isLandingOpen && (
         <div className="fixed inset-0 z-50 bg-[#050806]">
           <iframe
-            src="/landing.html"
+            src="/landing.html?v=5"
             title="Mindspace Landing Page"
             className="w-full h-full border-0 block"
           />

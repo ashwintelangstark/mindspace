@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { agents, stepRoam } from "../sim/roam";
@@ -206,11 +206,11 @@ function Trader({ index }: { index: number }) {
 }
 
 interface Rig {
-  armL: React.RefObject<THREE.Group | null>;
-  armR: React.RefObject<THREE.Group | null>;
-  legL: React.RefObject<THREE.Group | null>;
-  legR: React.RefObject<THREE.Group | null>;
-  body: React.RefObject<THREE.Group | null>;
+  armL: RefObject<THREE.Group | null>;
+  armR: RefObject<THREE.Group | null>;
+  legL: RefObject<THREE.Group | null>;
+  legR: RefObject<THREE.Group | null>;
+  body: RefObject<THREE.Group | null>;
 }
 
 const rigs: Rig[] = [];

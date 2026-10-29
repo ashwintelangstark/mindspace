@@ -4,7 +4,13 @@ import { generateDeterministicPrediction, runOpenSourceMLPipeline } from "@/lib/
 import { getLiveStockQuote, getMarketSnapshot, getExchangeMarketStatus } from "@/lib/market-engine";
 import { getSystemSkyAndWeather } from "@/game/scene/textures";
 import { handleSqliteAction } from "@/lib/sqlite-server";
-import { stopAnalyzingAndRelax, agents, assignTaskToAgents } from "@/game/sim/roam";
+import {
+  stopAnalyzingAndRelax,
+  agents,
+  assignTaskToAgents,
+  gatherAgentsForDiscussion,
+} from "@/game/sim/roam";
+import { fetchAgentDiscussion } from "@/lib/agent-discussions";
 
 describe("Mindspace Open-Source ML Ensemble, SQLite & No-Preset Verification", () => {
   it("starts with no default stock selected and zero preset wallet cash in SQLite", async () => {
@@ -82,6 +88,34 @@ describe("Mindspace Open-Source ML Ensemble, SQLite & No-Preset Verification", (
     stopAnalyzingAndRelax();
     for (const agent of agents) {
       expect(agent.actionStatus).toBe("Relaxing · Off-desk");
+    }
+  });
+
+  it("generates agent discussion tips and answers user questions with 4 distinct perspectives", async () => {
+    // 1. Topic discussion
+    const topicTurn = await fetchAgentDiscussion("Stop-Loss Discipline", false, "");
+    expect(topicTurn.messages).toHaveLength(4);
+    expect(topicTurn.messages.map((m) => m.sender)).toEqual(["bull", "bear", "stag", "rabbit"]);
+    expect(topicTurn.messages[0].message).toContain("capital");
+
+    // 2. User question
+    const questionTurn = await fetchAgentDiscussion(
+      "How do I avoid panic selling in a market crash?",
+      true,
+      "",
+    );
+    expect(questionTurn.userQuestion).toBeDefined();
+    expect(questionTurn.messages).toHaveLength(5); // 1 user + 4 agents
+    expect(questionTurn.messages[0].sender).toBe("user");
+    expect(questionTurn.messages[1].sender).toBe("bull");
+    expect(questionTurn.messages[2].sender).toBe("bear");
+    expect(questionTurn.messages[3].sender).toBe("stag");
+    expect(questionTurn.messages[4].sender).toBe("rabbit");
+
+    // 3. 3D lounge positioning
+    gatherAgentsForDiscussion("Stop-Loss Discipline");
+    for (const agent of agents) {
+      expect(agent.actionStatus).toContain("Discussing");
     }
   });
 

@@ -245,6 +245,44 @@ export function stopAnalyzingAndRelax(): void {
   notifyListeners();
 }
 
+const DISCUSSION_POSITIONS: Record<string, { pos: Vec; angle: number }> = {
+  bull: { pos: { x: -1.2, z: 2.8 }, angle: 0.35 },
+  bear: { pos: { x: 1.2, z: 2.8 }, angle: -0.35 },
+  stag: { pos: { x: -0.7, z: 3.9 }, angle: Math.PI - 0.25 },
+  rabbit: { pos: { x: 0.7, z: 3.9 }, angle: -Math.PI + 0.25 },
+};
+
+/**
+ * Gathers the 4 AI agents in the central coffee table lounge for live discussions & tip sharing.
+ */
+export function gatherAgentsForDiscussion(topic = "Investment Strategies"): void {
+  currentTask = {
+    isActive: true,
+    symbol: "DISCUSSION",
+    horizon: "TIPS",
+    progress: 100,
+    isComplete: true,
+  };
+
+  for (const agent of agents) {
+    const config = DISCUSSION_POSITIONS[agent.id];
+    if (config) {
+      agent.target = { ...config.pos };
+      agent.state = "walk";
+      agent.actionStatus = `Discussing: ${topic}`;
+    }
+  }
+
+  notifyListeners();
+}
+
+/**
+ * Stops live agent discussion and releases them to roam.
+ */
+export function stopDiscussion(): void {
+  stopAnalyzingAndRelax();
+}
+
 function pickNextTarget(agent: Agent): Vec {
   // 25% chance to visit the coffee station for a drink
   if (Math.random() < 0.25) {

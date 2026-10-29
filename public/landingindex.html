@@ -1017,9 +1017,20 @@
       }
     </style>
 
-    <!-- Three.js UMD and OrbitControls via reliable CDN for seamless file:/// and web serving -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Three.js + OrbitControls Bundles: Local Offline-First with Dynamic Fallbacks -->
+    <script src="./vendor/three-bundle.min.js"></script>
+    <script src="./public/vendor/three-bundle.min.js"></script>
+    <script src="/vendor/three-bundle.min.js"></script>
+    <script>
+      if (!window.THREE) {
+        document.write(
+          '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>',
+        );
+        document.write(
+          '<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>',
+        );
+      }
+    </script>
   </head>
   <body>
     <!-- Top Navigation Bar -->
@@ -1660,6 +1671,7 @@
         if (e) e.preventDefault();
         try {
           localStorage.setItem("mindspace_entry_source", "landing");
+          localStorage.setItem("mindspace_entered_app", "1");
         } catch (err) {}
 
         // If embedded inside iframe in web app parent, signal parent to close overlay
@@ -1668,9 +1680,9 @@
           return;
         }
 
-        // If user opened directly from local disk (file:///), redirect to local dev server http://localhost:3000
+        // If user opened directly from local disk (file:///), redirect to local dev server (port 8080 or 3000)
         if (window.location.protocol === "file:") {
-          window.location.href = "http://localhost:3000/?view=app";
+          window.location.href = "http://localhost:8080/?view=app";
         } else {
           // If served via web server / domain, redirect to application root with ?view=app
           window.location.href = window.location.origin + "/?view=app";
@@ -2001,7 +2013,11 @@
         ctx.strokeStyle = colorHex;
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.roundRect(4, 4, 372, 88, 20);
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(4, 4, 372, 88, 20);
+        } else {
+          ctx.rect(4, 4, 372, 88);
+        }
         ctx.fill();
         ctx.stroke();
 
@@ -2667,13 +2683,24 @@
       let modalClock = new THREE.Clock();
       let modalActionState = "idle";
 
+      function getModalDimensions() {
+        const canvas = document.getElementById("modal-canvas");
+        if (!canvas) return { w: 480, h: 500 };
+        const stage = canvas.parentElement;
+        const stageW = stage ? stage.clientWidth : 0;
+        const stageH = stage ? stage.clientHeight : 0;
+        const canvasW = canvas.clientWidth;
+        const canvasH = canvas.clientHeight;
+        const w = Math.max(stageW, canvasW, 440);
+        const h = Math.max(stageH, canvasH, 480);
+        return { w, h };
+      }
+
       function initModal3D() {
         const canvas = document.getElementById("modal-canvas");
         if (!canvas || !window.THREE) return;
 
-        const stage = canvas.parentElement;
-        const w = stage.clientWidth || canvas.clientWidth || 480;
-        const h = stage.clientHeight || canvas.clientHeight || 500;
+        const { w, h } = getModalDimensions();
 
         modalRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
         modalRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -2694,13 +2721,16 @@
         }
 
         // Strong, vivid studio lighting
-        modalScene.add(new THREE.HemisphereLight(0xffffff, 0x182c20, 2.2));
-        const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
+        modalScene.add(new THREE.HemisphereLight(0xffffff, 0x182c20, 2.4));
+        const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
         keyLight.position.set(3, 6, 4);
         modalScene.add(keyLight);
-        const fillLight = new THREE.DirectionalLight(0x00e59a, 1.5);
+        const fillLight = new THREE.DirectionalLight(0x00e59a, 1.8);
         fillLight.position.set(-3, 2, 2);
         modalScene.add(fillLight);
+        const backLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        backLight.position.set(0, 4, -4);
+        modalScene.add(backLight);
 
         const podium = new THREE.Mesh(
           new THREE.CylinderGeometry(1.2, 1.25, 0.1, 32),
@@ -2709,10 +2739,13 @@
         podium.position.y = -0.05;
         modalScene.add(podium);
 
-        const ro = new ResizeObserver(() => {
-          resizeModalCanvas();
-        });
-        ro.observe(stage);
+        const stage = canvas.parentElement;
+        if (stage && typeof ResizeObserver !== "undefined") {
+          const ro = new ResizeObserver(() => {
+            resizeModalCanvas();
+          });
+          ro.observe(stage);
+        }
 
         animateModal();
       }
@@ -2720,9 +2753,7 @@
       function resizeModalCanvas() {
         const canvas = document.getElementById("modal-canvas");
         if (!canvas || !modalRenderer || !modalCamera) return;
-        const stage = canvas.parentElement;
-        const w = stage.clientWidth || canvas.clientWidth || 480;
-        const h = stage.clientHeight || canvas.clientHeight || 500;
+        const { w, h } = getModalDimensions();
         if (w > 0 && h > 0) {
           modalRenderer.setSize(w, h, false);
           modalCamera.aspect = w / h;
@@ -2757,16 +2788,12 @@
         requestAnimationFrame(animateModal);
         if (!modalRenderer || !modalScene || !modalCamera) return;
 
-        // Auto-fit check: if clientWidth changed, keep buffer in sync!
+        // Auto-fit check: ensure aspect ratio is ALWAYS valid and buffer matches display size
         const canvas = modalRenderer.domElement;
-        const w = canvas.clientWidth;
-        const h = canvas.clientHeight;
-        if (
-          w > 0 &&
-          h > 0 &&
-          (canvas.width !== Math.floor(w * Math.min(window.devicePixelRatio, 2)) ||
-            canvas.height !== Math.floor(h * Math.min(window.devicePixelRatio, 2)))
-        ) {
+        const { w, h } = getModalDimensions();
+        const curTargetW = Math.floor(w * Math.min(window.devicePixelRatio, 2));
+        const curTargetH = Math.floor(h * Math.min(window.devicePixelRatio, 2));
+        if (canvas.width !== curTargetW || canvas.height !== curTargetH) {
           modalRenderer.setSize(w, h, false);
           modalCamera.aspect = w / h;
           modalCamera.updateProjectionMatrix();
@@ -2876,15 +2903,14 @@
         document.body.style.overflow = "hidden";
 
         // Initialize and render 3D character in modal
-        requestAnimationFrame(() => {
-          loadModalAgent(agentId);
+        loadModalAgent(agentId);
+
+        // Successive frame resizes to match modal animation scaling
+        [20, 60, 150, 300, 500].forEach((ms) => {
+          setTimeout(() => {
+            resizeModalCanvas();
+          }, ms);
         });
-        setTimeout(() => {
-          resizeModalCanvas();
-        }, 50);
-        setTimeout(() => {
-          resizeModalCanvas();
-        }, 200);
       }
 
       function closeAgentModal(e) {
@@ -2918,12 +2944,23 @@
         reveals.forEach((el) => observer.observe(el));
       }
 
-      // Initialize scenes once DOM is ready
-      window.addEventListener("DOMContentLoaded", () => {
-        initHeroScene();
-        initCardCanvases();
+      // Resilient Initialization Engine
+      function boot3DScenes() {
+        if (typeof window.THREE === "undefined") {
+          if (!window._threeRetryCount) window._threeRetryCount = 0;
+          if (window._threeRetryCount++ < 200) {
+            setTimeout(boot3DScenes, 50);
+          }
+          return;
+        }
+        if (!heroRenderer) initHeroScene();
+        if (Object.keys(cardScenes).length === 0) initCardCanvases();
         setupScrollAnimations();
-      });
+      }
+
+      window.addEventListener("DOMContentLoaded", boot3DScenes);
+      window.addEventListener("load", boot3DScenes);
+      boot3DScenes();
     </script>
   </body>
 </html>

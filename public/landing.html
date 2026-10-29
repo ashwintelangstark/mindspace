@@ -23,15 +23,15 @@
         --text: #f0f7f3;
         --muted: #8b9d92;
         --bull: #00e59a;
-        --bull-glow: rgba(0, 229, 154, 0.35);
+        --bull-glow: rgba(0, 229, 154, 0.4);
         --bear: #ff3b57;
-        --bear-glow: rgba(255, 59, 87, 0.35);
+        --bear-glow: rgba(255, 59, 87, 0.4);
         --stag: #38bdf8;
-        --stag-glow: rgba(56, 189, 248, 0.35);
+        --stag-glow: rgba(56, 189, 248, 0.4);
         --rabbit: #ffd166;
-        --rabbit-glow: rgba(255, 209, 102, 0.35);
+        --rabbit-glow: rgba(255, 209, 102, 0.4);
         --primary: #00e59a;
-        --radius: 18px;
+        --radius: 20px;
       }
       * {
         box-sizing: border-box;
@@ -51,9 +51,9 @@
         line-height: 1.6;
         overflow-x: hidden;
         background-image:
-          radial-gradient(circle at 18% 10%, rgba(0, 229, 154, 0.08) 0%, transparent 45%),
-          radial-gradient(circle at 82% 25%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
-          radial-gradient(circle at 50% 85%, rgba(255, 59, 87, 0.05) 0%, transparent 60%);
+          radial-gradient(circle at 18% 12%, rgba(0, 229, 154, 0.08) 0%, transparent 45%),
+          radial-gradient(circle at 82% 28%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
+          radial-gradient(circle at 50% 88%, rgba(255, 59, 87, 0.05) 0%, transparent 60%);
       }
       a {
         color: inherit;
@@ -64,14 +64,14 @@
         margin: auto;
       }
 
-      /* Nav */
+      /* Clean Sticky Navbar */
       nav {
-        height: 76px;
+        height: 74px;
         position: sticky;
         top: 0;
         z-index: 100;
-        background: rgba(5, 8, 6, 0.82);
-        backdrop-filter: blur(18px);
+        background: rgba(5, 8, 6, 0.88);
+        backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--line);
       }
       .nav-inner {
@@ -101,6 +101,9 @@
         font-size: 13.5px;
         font-weight: 500;
       }
+      .links a {
+        transition: color 0.2s;
+      }
       .links a:hover {
         color: var(--bull);
       }
@@ -112,7 +115,7 @@
       .badge-live {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 7px;
         padding: 5px 12px;
         border-radius: 99px;
         border: 1px solid #1a422d;
@@ -155,7 +158,7 @@
         border-radius: 12px;
         font-size: 13px;
         cursor: pointer;
-        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
       }
       .btn:hover {
         transform: translateY(-2px);
@@ -172,15 +175,10 @@
         color: var(--bull);
         background: rgba(0, 229, 154, 0.06);
       }
-      .btn.sm {
-        padding: 8px 14px;
-        font-size: 12px;
-        border-radius: 9px;
-      }
 
       /* Hero */
       .hero {
-        padding: 50px 0 35px;
+        padding: 52px 0 35px;
         display: grid;
         grid-template-columns: 1fr 1.08fr;
         gap: 40px;
@@ -235,17 +233,20 @@
         margin-right: 6px;
       }
 
-      /* 3D Scene Card */
+      /* 3D Scene Card (Single Agent at a time) */
       .scene-container {
-        height: 480px;
+        height: 490px;
         position: relative;
-        border-radius: 24px;
-        border: 1px solid var(--line-bright);
-        background: radial-gradient(ellipse at 50% 90%, #0d1e15 0%, #060907 70%);
+        border-radius: 26px;
+        border: 1px solid var(--hero-accent, var(--line-bright));
+        background: radial-gradient(ellipse at 50% 90%, #0d1e15 0%, #060907 72%);
         box-shadow:
-          0 24px 60px rgba(0, 0, 0, 0.75),
-          inset 0 0 40px rgba(0, 229, 154, 0.05);
+          0 24px 60px rgba(0, 0, 0, 0.8),
+          inset 0 0 45px var(--hero-glow, rgba(0, 229, 154, 0.08));
         overflow: hidden;
+        transition:
+          border-color 0.4s ease,
+          box-shadow 0.4s ease;
       }
       #hero-canvas {
         width: 100%;
@@ -273,8 +274,8 @@
         font-size: 10.5px;
         letter-spacing: 0.12em;
         color: #8ea597;
-        background: rgba(8, 14, 10, 0.8);
-        padding: 5px 10px;
+        background: rgba(8, 14, 10, 0.85);
+        padding: 5px 11px;
         border-radius: 8px;
         border: 1px solid #1c2b21;
       }
@@ -291,65 +292,65 @@
         pointer-events: none;
       }
       .scene-caption {
-        background: rgba(6, 11, 8, 0.88);
-        backdrop-filter: blur(10px);
+        background: rgba(6, 11, 8, 0.9);
+        backdrop-filter: blur(12px);
         border: 1px solid #1e3325;
-        padding: 9px 13px;
-        border-radius: 12px;
-        font-size: 11px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 11.5px;
         color: #b0c4b7;
         max-width: 320px;
       }
       .scene-caption b {
         color: #f0f7f3;
         display: block;
-        font-size: 12px;
+        font-size: 12.5px;
         margin-bottom: 2px;
       }
       .agent-chips {
         display: flex;
         gap: 6px;
         pointer-events: auto;
-        background: rgba(6, 11, 8, 0.9);
+        background: rgba(6, 11, 8, 0.92);
         padding: 6px;
-        border-radius: 12px;
+        border-radius: 14px;
         border: 1px solid #1e3325;
       }
       .chip-btn {
         background: #0d1510;
         color: #a3b8ab;
         border: 1px solid #25382b;
-        border-radius: 8px;
-        padding: 6px 10px;
-        font-size: 10.5px;
+        border-radius: 9px;
+        padding: 7px 11px;
+        font-size: 11px;
         font-weight: 800;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        transition: all 0.2s;
+        transition: all 0.22s;
       }
       .chip-btn:hover,
       .chip-btn.active {
         background: #14281c;
         color: var(--bull);
         border-color: var(--bull);
-        box-shadow: 0 0 14px rgba(0, 229, 154, 0.3);
+        box-shadow: 0 0 16px rgba(0, 229, 154, 0.35);
       }
       .chip-btn.bear-chip.active {
         color: var(--bear);
         border-color: var(--bear);
-        box-shadow: 0 0 14px var(--bear-glow);
+        box-shadow: 0 0 16px var(--bear-glow);
       }
       .chip-btn.stag-chip.active {
         color: var(--stag);
         border-color: var(--stag);
-        box-shadow: 0 0 14px var(--stag-glow);
+        box-shadow: 0 0 16px var(--stag-glow);
       }
       .chip-btn.rabbit-chip.active {
         color: var(--rabbit);
         border-color: var(--rabbit);
-        box-shadow: 0 0 14px var(--rabbit-glow);
+        box-shadow: 0 0 16px var(--rabbit-glow);
       }
 
       /* Stats strip */
@@ -365,11 +366,11 @@
         border-radius: var(--radius);
         padding: 20px 22px;
         transition:
-          transform 0.2s,
-          border-color 0.2s;
+          transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+          border-color 0.28s;
       }
       .stat-card:hover {
-        transform: translateY(-3px);
+        transform: translateY(-4px);
         border-color: var(--line-bright);
       }
       .stat-card strong {
@@ -396,7 +397,7 @@
       }
       .section-head {
         max-width: 720px;
-        margin-bottom: 36px;
+        margin-bottom: 38px;
       }
       .section-head h2 {
         font-size: clamp(30px, 3.8vw, 44px);
@@ -412,81 +413,113 @@
         margin: 0;
       }
 
-      /* 4 Agents Grid */
+      /* 4 Agents Grid with Individual 3D Interactive Characters */
       .agents-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
+        gap: 18px;
       }
       .agent-card {
         background: var(--panel);
         border: 1px solid var(--line);
-        border-radius: 20px;
-        padding: 24px;
+        border-radius: 22px;
+        padding: 20px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         position: relative;
         cursor: pointer;
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow: hidden;
       }
       .agent-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-8px) scale(1.015);
         border-color: var(--card-color);
         box-shadow:
-          0 16px 36px rgba(0, 0, 0, 0.6),
-          0 0 20px var(--card-glow);
+          0 20px 45px rgba(0, 0, 0, 0.75),
+          0 0 25px var(--card-glow);
       }
       .agent-card.active-card {
         border-color: var(--card-color);
-        box-shadow: 0 0 24px var(--card-glow);
+        box-shadow: 0 0 26px var(--card-glow);
         background: linear-gradient(180deg, #101c15 0%, var(--panel) 100%);
       }
-      .card-top {
-        margin-bottom: 18px;
-      }
-      .agent-avatar-tag {
-        width: 52px;
-        height: 52px;
-        border-radius: 14px;
-        display: grid;
-        place-items: center;
-        font-size: 24px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--card-color);
-        color: var(--card-color);
+
+      /* Mini 3D Canvas Box in Card */
+      .card-3d-box {
+        width: 100%;
+        height: 185px;
+        border-radius: 16px;
+        background: radial-gradient(circle at 50% 65%, #112418 0%, #060c08 80%);
+        border: 1px solid #1c3224;
+        position: relative;
+        overflow: hidden;
         margin-bottom: 16px;
-        box-shadow: 0 0 15px var(--card-glow);
       }
+      .card-agent-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        cursor: grab;
+      }
+      .card-agent-canvas:active {
+        cursor: grabbing;
+      }
+      .card-3d-hint {
+        position: absolute;
+        top: 8px;
+        left: 10px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        color: var(--card-color);
+        background: rgba(4, 9, 6, 0.85);
+        padding: 3px 7px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        pointer-events: none;
+      }
+      .card-3d-rotate-tip {
+        position: absolute;
+        bottom: 8px;
+        right: 10px;
+        font-size: 9.5px;
+        color: #7d9685;
+        background: rgba(4, 9, 6, 0.85);
+        padding: 2px 6px;
+        border-radius: 5px;
+        pointer-events: none;
+      }
+
       .agent-role-pill {
         font-size: 10px;
         font-weight: 800;
         letter-spacing: 0.12em;
         color: var(--card-color);
         text-transform: uppercase;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
       }
       .agent-card h3 {
         font-size: 22px;
-        margin: 0 0 8px;
+        margin: 0 0 6px;
         font-weight: 800;
       }
       .agent-card p {
         font-size: 13px;
         color: var(--muted);
-        line-height: 1.7;
+        line-height: 1.65;
         margin: 0;
       }
       .agent-metrics {
-        margin: 16px 0;
-        padding-top: 14px;
+        margin: 14px 0;
+        padding-top: 12px;
         border-top: 1px solid var(--line);
         font-family: "JetBrains Mono", monospace;
         font-size: 11px;
         color: #a4b8ab;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 5px;
       }
       .agent-metrics div {
         display: flex;
@@ -497,14 +530,14 @@
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        background: #0f1812;
-        border: 1px solid #233428;
+        background: #0d1711;
+        border: 1px solid #213527;
         color: #e0ece3;
         padding: 10px 14px;
-        border-radius: 10px;
+        border-radius: 11px;
         font-size: 12px;
         font-weight: 700;
-        transition: all 0.2s;
+        transition: all 0.22s;
       }
       .agent-card:hover .explore-btn {
         background: var(--card-color);
@@ -513,39 +546,39 @@
         font-weight: 800;
       }
 
-      /* Modal / Deep-Dive Stage */
+      /* Modal / Deep-Dive Popup Inspection Chamber */
       .agent-modal-overlay {
         position: fixed;
         inset: 0;
         z-index: 1000;
-        background: rgba(3, 6, 4, 0.88);
-        backdrop-filter: blur(16px);
+        background: rgba(3, 6, 4, 0.9);
+        backdrop-filter: blur(18px);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 20px;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.25s ease;
+        transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
       }
       .agent-modal-overlay.open {
         opacity: 1;
         pointer-events: auto;
       }
       .agent-modal-box {
-        width: min(1050px, 96vw);
+        width: min(1080px, 96vw);
         max-height: 92vh;
         background: #0b120e;
         border: 1px solid var(--modal-accent, #2a4032);
-        border-radius: 26px;
+        border-radius: 28px;
         box-shadow:
-          0 35px 80px rgba(0, 0, 0, 0.85),
-          0 0 50px var(--modal-glow, rgba(0, 229, 154, 0.2));
+          0 35px 85px rgba(0, 0, 0, 0.9),
+          0 0 50px var(--modal-glow, rgba(0, 229, 154, 0.25));
         display: grid;
         grid-template-columns: 1.05fr 1.35fr;
         overflow: hidden;
-        transform: scale(0.96) translateY(12px);
-        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        transform: scale(0.88) translateY(24px);
+        transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
       .agent-modal-overlay.open .agent-modal-box {
         transform: scale(1) translateY(0);
@@ -560,7 +593,7 @@
       #modal-canvas {
         width: 100%;
         height: 100%;
-        min-height: 440px;
+        min-height: 460px;
         display: block;
         cursor: grab;
       }
@@ -579,10 +612,10 @@
         z-index: 5;
       }
       .anim-btn {
-        background: rgba(6, 11, 8, 0.85);
+        background: rgba(6, 11, 8, 0.88);
         border: 1px solid #23382b;
         color: #c7ded0;
-        padding: 7px 12px;
+        padding: 7px 13px;
         border-radius: 9px;
         font-size: 11px;
         font-weight: 700;
@@ -602,9 +635,9 @@
         letter-spacing: 0.1em;
         color: #799182;
         font-family: "JetBrains Mono", monospace;
-        background: rgba(5, 9, 7, 0.75);
-        padding: 4px 8px;
-        border-radius: 6px;
+        background: rgba(5, 9, 7, 0.8);
+        padding: 5px 9px;
+        border-radius: 7px;
         border: 1px solid #192b1f;
       }
 
@@ -670,7 +703,7 @@
       .dossier-block {
         background: #0d1611;
         border: 1px solid #1f3025;
-        border-radius: 15px;
+        border-radius: 16px;
         padding: 18px 20px;
       }
       .dossier-block h4 {
@@ -785,11 +818,11 @@
         border-radius: var(--radius);
         padding: 24px;
         transition:
-          transform 0.2s,
-          border-color 0.2s;
+          transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+          border-color 0.28s;
       }
       .feature-box:hover {
-        transform: translateY(-4px);
+        transform: translateY(-5px);
         border-color: var(--line-bright);
       }
       .feature-icon {
@@ -821,6 +854,10 @@
         border-top: 2px solid var(--bull);
         border-radius: 0 0 16px 16px;
         padding: 24px 20px;
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .step-box:hover {
+        transform: translateY(-4px);
       }
       .step-num {
         font-family: "JetBrains Mono", monospace;
@@ -853,7 +890,7 @@
         justify-content: space-between;
         gap: 30px;
         margin: 60px 0;
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
       }
       .cta-banner h2 {
         font-size: clamp(28px, 3.4vw, 42px);
@@ -866,6 +903,35 @@
         color: #a6bdae;
         margin: 0;
         max-width: 580px;
+      }
+
+      /* Smooth Scroll-Triggered Reveal Animations */
+      .reveal {
+        opacity: 0;
+        transform: translateY(32px) scale(0.98);
+        filter: blur(4px);
+        transition:
+          opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+          transform 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+          filter 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: opacity, transform, filter;
+      }
+      .reveal.revealed {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+      .stagger-1 {
+        transition-delay: 0.08s;
+      }
+      .stagger-2 {
+        transition-delay: 0.16s;
+      }
+      .stagger-3 {
+        transition-delay: 0.24s;
+      }
+      .stagger-4 {
+        transition-delay: 0.32s;
       }
 
       /* Footer */
@@ -898,7 +964,7 @@
           grid-template-columns: 1fr;
         }
         .scene-container {
-          height: 400px;
+          height: 420px;
         }
         .agents-grid {
           grid-template-columns: repeat(2, 1fr);
@@ -914,7 +980,7 @@
           max-height: 94vh;
         }
         #modal-canvas {
-          min-height: 280px;
+          min-height: 300px;
         }
         .discussion-section {
           grid-template-columns: 1fr;
@@ -939,7 +1005,7 @@
           padding: 30px;
         }
         .scene-container {
-          height: 340px;
+          height: 360px;
         }
         .scene-bottom {
           flex-direction: column;
@@ -981,7 +1047,7 @@
     <main id="top">
       <div class="wrap">
         <div class="hero">
-          <div>
+          <div class="reveal">
             <div class="eyebrow">
               <span class="pulse-dot"></span>
               AI-POWERED 3D MARKET INTELLIGENCE
@@ -1010,11 +1076,11 @@
             </div>
           </div>
 
-          <!-- 3D Interactive Exchange Floor Hero -->
-          <div class="scene-container" id="hero-3d">
+          <!-- 3D Hero Viewer (1 Character at a Time) -->
+          <div class="scene-container reveal stagger-2" id="hero-3d">
             <div class="scene-top">
-              <span class="scene-title">MINDSPACE // 3D AGENT TRADING FLOOR</span>
-              <span class="badge-live">● INTERACTIVE 3D</span>
+              <span class="scene-title">MINDSPACE // 3D AGENT SPOTLIGHT</span>
+              <span class="badge-live">● 1 AGENT AT A TIME</span>
             </div>
 
             <canvas id="hero-canvas"></canvas>
@@ -1022,7 +1088,7 @@
             <div class="scene-bottom">
               <div class="scene-caption" id="hero-caption">
                 <b>🐂 BULL · Upside Breakout Scout</b>
-                Drag to orbit 360° · Scroll to zoom · Click any agent to inspect
+                Drag to orbit 360° · Scroll to zoom · Switch character below
               </div>
               <div class="agent-chips">
                 <button class="chip-btn active" data-agent="bull">🐂 BULL</button>
@@ -1039,54 +1105,55 @@
 
         <!-- Quick Metrics Ribbon -->
         <div class="stats">
-          <div class="stat-card">
+          <div class="stat-card reveal stagger-1">
             <strong>4 <small>agents</small></strong>
             <span>Bull, Bear, Stag & Rabbit with distinct domain perspectives</span>
           </div>
-          <div class="stat-card">
+          <div class="stat-card reveal stagger-2">
             <strong>91%+ <small>accuracy</small></strong>
             <span>Multi-agent quantitative consensus & ML validation</span>
           </div>
-          <div class="stat-card">
+          <div class="stat-card reveal stagger-3">
             <strong>Market-Aware</strong>
             <span>Locks to official closing prices after 3:30 PM IST / 4:00 PM EST</span>
           </div>
-          <div class="stat-card">
+          <div class="stat-card reveal stagger-4">
             <strong>Zero-Token Q&A</strong>
             <span>Roundtable coffee table lounge with instant offline quantitative tips</span>
           </div>
         </div>
 
-        <!-- Section: The 4 AI Agents -->
+        <!-- Section: The 4 AI Agents with Live 3D Roblox Characters Inside Each Card -->
         <section id="agents">
-          <div class="section-head">
+          <div class="section-head reveal">
             <div class="eyebrow">THE AUTONOMOUS TEAM</div>
             <h2>Four agents. Four ways to read the market.</h2>
             <p>
-              Unlike generic AI bots, each Mindspace agent is modeled after a battle-tested
-              financial archetype. Click <b>"Explore Agent"</b> on any card below to launch the
-              dedicated 3D interactive character inspector with full mathematical indicators,
-              execution jobs, and roundtable personas.
+              Each Mindspace agent features their own live 3D interactive Roblox character model
+              right on the card. Rotate and inspect each agent, or click <b>"Explore in 3D"</b> to
+              launch the deep-dive quantitative inspection chamber.
             </p>
           </div>
 
           <div class="agents-grid">
-            <!-- Bull Card -->
+            <!-- Bull Card with 3D Canvas -->
             <article
-              class="agent-card active-card"
+              class="agent-card active-card reveal stagger-1"
               data-card="bull"
               style="--card-color: var(--bull); --card-glow: var(--bull-glow)"
               onclick="openAgentModal('bull')"
             >
-              <div class="card-top">
-                <div class="agent-avatar-tag">🐂</div>
-                <div class="agent-role-pill">Growth & Momentum Scout</div>
-                <h3>BULL</h3>
-                <p>
-                  Hunts for aggressive upside breakouts, volume-confirmed rallies, and golden
-                  moving-average crosses.
-                </p>
+              <div class="card-3d-box">
+                <span class="card-3d-hint">● 3D ROBLOX BULL</span>
+                <canvas class="card-agent-canvas" id="card-canvas-bull"></canvas>
+                <span class="card-3d-rotate-tip">↻ Drag to rotate</span>
               </div>
+              <div class="agent-role-pill">Growth & Momentum Scout</div>
+              <h3>BULL</h3>
+              <p>
+                Hunts for aggressive upside breakouts, volume-confirmed rallies, and golden
+                moving-average crosses.
+              </p>
               <div class="agent-metrics">
                 <div><span>Core Indicators:</span><b>EMA 9/21, SuperTrend</b></div>
                 <div><span>Trigger Filter:</span><b>RSI > 55 + Vol > 1.5x</b></div>
@@ -1104,22 +1171,24 @@
               </button>
             </article>
 
-            <!-- Bear Card -->
+            <!-- Bear Card with 3D Canvas -->
             <article
-              class="agent-card"
+              class="agent-card reveal stagger-2"
               data-card="bear"
               style="--card-color: var(--bear); --card-glow: var(--bear-glow)"
               onclick="openAgentModal('bear')"
             >
-              <div class="card-top">
-                <div class="agent-avatar-tag">🐻</div>
-                <div class="agent-role-pill">Risk Officer & Hedging Guardian</div>
-                <h3>BEAR</h3>
-                <p>
-                  Stress-tests bullish assumptions, flags overbought exhaustion traps, and enforces
-                  strict stop-losses.
-                </p>
+              <div class="card-3d-box">
+                <span class="card-3d-hint">● 3D ROBLOX BEAR</span>
+                <canvas class="card-agent-canvas" id="card-canvas-bear"></canvas>
+                <span class="card-3d-rotate-tip">↻ Drag to rotate</span>
               </div>
+              <div class="agent-role-pill">Risk Officer & Hedging Guardian</div>
+              <h3>BEAR</h3>
+              <p>
+                Stress-tests bullish assumptions, flags overbought exhaustion traps, and enforces
+                strict stop-losses.
+              </p>
               <div class="agent-metrics">
                 <div><span>Core Indicators:</span><b>Bollinger High, MACD-</b></div>
                 <div><span>Risk Ceiling:</span><b>Max 1-2% Capital Drawdown</b></div>
@@ -1137,22 +1206,24 @@
               </button>
             </article>
 
-            <!-- Stag Card -->
+            <!-- Stag Card with 3D Canvas -->
             <article
-              class="agent-card"
+              class="agent-card reveal stagger-3"
               data-card="stag"
               style="--card-color: var(--stag); --card-glow: var(--stag-glow)"
               onclick="openAgentModal('stag')"
             >
-              <div class="card-top">
-                <div class="agent-avatar-tag">🦌</div>
-                <div class="agent-role-pill">Macro Valuation & Asset Allocator</div>
-                <h3>STAG</h3>
-                <p>
-                  Steps back from short-term volatility to compute fundamental fair value, P/E
-                  multiples, and rebalancing bands.
-                </p>
+              <div class="card-3d-box">
+                <span class="card-3d-hint">● 3D ROBLOX STAG</span>
+                <canvas class="card-agent-canvas" id="card-canvas-stag"></canvas>
+                <span class="card-3d-rotate-tip">↻ Drag to rotate</span>
               </div>
+              <div class="agent-role-pill">Macro Valuation & Asset Allocator</div>
+              <h3>STAG</h3>
+              <p>
+                Steps back from short-term volatility to compute fundamental fair value, P/E
+                multiples, and rebalancing bands.
+              </p>
               <div class="agent-metrics">
                 <div><span>Core Indicators:</span><b>P/E Median, 200-Day SMA</b></div>
                 <div><span>Strategy:</span><b>Disciplined SIP & Compounding</b></div>
@@ -1170,22 +1241,24 @@
               </button>
             </article>
 
-            <!-- Rabbit Card -->
+            <!-- Rabbit Card with 3D Canvas -->
             <article
-              class="agent-card"
+              class="agent-card reveal stagger-4"
               data-card="rabbit"
               style="--card-color: var(--rabbit); --card-glow: var(--rabbit-glow)"
               onclick="openAgentModal('rabbit')"
             >
-              <div class="card-top">
-                <div class="agent-avatar-tag">🐇</div>
-                <div class="agent-role-pill">HFT Order Flow & Execution Specialist</div>
-                <h3>RABBIT</h3>
-                <p>
-                  Scans Level-2 order book depth, top-5 bid/ask queues, and VWAP micro-deviations to
-                  pinpoint zero-slippage entries.
-                </p>
+              <div class="card-3d-box">
+                <span class="card-3d-hint">● 3D ROBLOX RABBIT</span>
+                <canvas class="card-agent-canvas" id="card-canvas-rabbit"></canvas>
+                <span class="card-3d-rotate-tip">↻ Drag to rotate</span>
               </div>
+              <div class="agent-role-pill">HFT Order Flow & Execution Specialist</div>
+              <h3>RABBIT</h3>
+              <p>
+                Scans Level-2 order book depth, top-5 bid/ask queues, and VWAP micro-deviations to
+                pinpoint zero-slippage entries.
+              </p>
               <div class="agent-metrics">
                 <div><span>Core Indicators:</span><b>Level-2 Depth, VWAP Band</b></div>
                 <div><span>Execution Edge:</span><b>Sub-Second Queue Timing</b></div>
@@ -1207,9 +1280,9 @@
 
         <!-- Section: 3D Discussion Lounge & Q&A Feature -->
         <section id="discussions">
-          <div class="discussion-section">
+          <div class="discussion-section reveal">
             <div>
-              <div class="eyebrow">NEW: 3D AGENT ROUNDTABLE</div>
+              <div class="eyebrow">3D AGENT ROUNDTABLE & USER Q&A</div>
               <h2
                 style="
                   font-size: clamp(28px, 3.4vw, 40px);
@@ -1257,7 +1330,7 @@
             </div>
 
             <!-- Discussion Mock Preview -->
-            <div class="discussion-chat-preview">
+            <div class="discussion-chat-preview reveal stagger-2">
               <div
                 style="
                   display: flex;
@@ -1332,7 +1405,7 @@
 
         <!-- Section: Platform Capabilities -->
         <section id="capabilities">
-          <div class="section-head">
+          <div class="section-head reveal">
             <div class="eyebrow">INSTITUTIONAL GRADE TOOLKIT</div>
             <h2>Everything you need to analyze, simulate & learn.</h2>
             <p>
@@ -1342,7 +1415,7 @@
           </div>
 
           <div class="features-grid">
-            <div class="feature-box">
+            <div class="feature-box reveal stagger-1">
               <div class="feature-icon">⏰</div>
               <h3>Session-Aware Freezing</h3>
               <p>
@@ -1351,7 +1424,7 @@
                 artificial off-market volatility.
               </p>
             </div>
-            <div class="feature-box">
+            <div class="feature-box reveal stagger-2">
               <div class="feature-icon">📊</div>
               <h3>Groww-Style Paper Trading</h3>
               <p>
@@ -1360,7 +1433,7 @@
                 SQLite.
               </p>
             </div>
-            <div class="feature-box">
+            <div class="feature-box reveal stagger-3">
               <div class="feature-icon">📄</div>
               <h3>Export to Word (.docx)</h3>
               <p>
@@ -1369,7 +1442,7 @@
                 formula appendices.
               </p>
             </div>
-            <div class="feature-box">
+            <div class="feature-box reveal stagger-1">
               <div class="feature-icon">📈</div>
               <h3>Candlestick & Indicator Depth</h3>
               <p>
@@ -1377,7 +1450,7 @@
                 Bollinger Bands, and real-time volume oscillators for both Indian and US equities.
               </p>
             </div>
-            <div class="feature-box">
+            <div class="feature-box reveal stagger-2">
               <div class="feature-icon">🗄️</div>
               <h3>Embedded SQLite Database</h3>
               <p>
@@ -1386,7 +1459,7 @@
                 <code>data/mindspace.sqlite</code>.
               </p>
             </div>
-            <div class="feature-box">
+            <div class="feature-box reveal stagger-3">
               <div class="feature-icon">🌤️</div>
               <h3>System-Synced 3D Weather</h3>
               <p>
@@ -1400,7 +1473,7 @@
 
         <!-- Section: How It Works Workflow -->
         <section id="workflow">
-          <div class="section-head">
+          <div class="section-head reveal">
             <div class="eyebrow">THE 4-STEP RESEARCH FLOW</div>
             <h2>From raw quote to disciplined execution.</h2>
             <p>
@@ -1410,7 +1483,7 @@
           </div>
 
           <div class="workflow-grid">
-            <div class="step-box">
+            <div class="step-box reveal stagger-1">
               <div class="step-num">01 / DISCOVER</div>
               <h3>Search & Select</h3>
               <p>
@@ -1418,7 +1491,7 @@
                 candles, and market session indicators.
               </p>
             </div>
-            <div class="step-box">
+            <div class="step-box reveal stagger-2">
               <div class="step-num">02 / ANALYZE</div>
               <h3>Summon 4 Agents</h3>
               <p>
@@ -1426,7 +1499,7 @@
                 institutional consensus.
               </p>
             </div>
-            <div class="step-box">
+            <div class="step-box reveal stagger-3">
               <div class="step-num">03 / ROUNDTABLE</div>
               <h3>Debate & Ask Q&A</h3>
               <p>
@@ -1434,7 +1507,7 @@
                 questions in the discussion drawer.
               </p>
             </div>
-            <div class="step-box">
+            <div class="step-box reveal stagger-4">
               <div class="step-num">04 / SIMULATE</div>
               <h3>Paper Trade</h3>
               <p>
@@ -1447,7 +1520,7 @@
 
         <!-- Bottom Launch CTA -->
         <section>
-          <div class="cta-banner">
+          <div class="cta-banner reveal">
             <div>
               <div class="eyebrow">STEP ONTO THE EXCHANGE FLOOR</div>
               <h2>Ready to see market intelligence in 3D?</h2>
@@ -1570,17 +1643,17 @@
           localStorage.setItem("mindspace_entry_source", "landing");
         } catch (err) {}
 
-        // If embedded inside iframe in web app parent:
+        // If embedded inside iframe in web app parent, signal parent to close overlay
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: "CLOSE_LANDING_AND_ENTER_APP" }, "*");
           return;
         }
 
-        // If user opened this file directly from local disk (file:///), redirect to local dev server http://localhost:3000
+        // If user opened directly from local disk (file:///), redirect to local dev server http://localhost:3000
         if (window.location.protocol === "file:") {
           window.location.href = "http://localhost:3000/?view=app";
         } else {
-          // If served via web server / domain, redirect to application root
+          // If served via web server / domain, redirect to application root with ?view=app
           window.location.href = window.location.origin + "/?view=app";
         }
       }
@@ -1800,7 +1873,7 @@
         ctx.fillStyle = skinHex;
         ctx.fillRect(0, 0, 256, 256);
 
-        // Cute cheek blush
+        // Cheek blush
         ctx.fillStyle = "rgba(255, 110, 110, 0.22)";
         ctx.beginPath();
         ctx.arc(62, 158, 22, 0, Math.PI * 2);
@@ -1837,7 +1910,6 @@
 
         // Eyes (Large glossy cartoon anime/Roblox eyes)
         const drawEye = (x, y, accentHex) => {
-          // Sclera
           ctx.fillStyle = "#ffffff";
           ctx.beginPath();
           ctx.ellipse(x, y, 22, 28, 0, 0, Math.PI * 2);
@@ -1846,19 +1918,16 @@
           ctx.lineWidth = 3.5;
           ctx.stroke();
 
-          // Iris
           ctx.fillStyle = accentHex;
           ctx.beginPath();
           ctx.arc(x, y + 2, 14, 0, Math.PI * 2);
           ctx.fill();
 
-          // Pupil
           ctx.fillStyle = "#0a0e0c";
           ctx.beginPath();
           ctx.arc(x, y + 2, 8.5, 0, Math.PI * 2);
           ctx.fill();
 
-          // Highlights
           ctx.fillStyle = "#ffffff";
           ctx.beginPath();
           ctx.arc(x - 5, y - 5, 5, 0, Math.PI * 2);
@@ -1909,8 +1978,7 @@
         c.height = 96;
         const ctx = c.getContext("2d");
 
-        // Rounded pill container
-        ctx.fillStyle = "rgba(5, 12, 8, 0.92)";
+        ctx.fillStyle = "rgba(5, 12, 8, 0.94)";
         ctx.strokeStyle = colorHex;
         ctx.lineWidth = 4;
         ctx.beginPath();
@@ -1918,19 +1986,16 @@
         ctx.fill();
         ctx.stroke();
 
-        // Pulsing beacon dot
         ctx.fillStyle = colorHex;
         ctx.beginPath();
         ctx.arc(36, 48, 10, 0, Math.PI * 2);
         ctx.fill();
 
-        // Name
         ctx.font = "900 34px Inter, system-ui, sans-serif";
         ctx.fillStyle = "#f0f8f3";
         ctx.textAlign = "left";
         ctx.fillText(name, 62, 45);
 
-        // Role subtitle
         ctx.font = "700 19px Inter, system-ui, sans-serif";
         ctx.fillStyle = colorHex;
         ctx.fillText(role, 62, 75);
@@ -1947,7 +2012,7 @@
       }
 
       // 5. Construct a Full Roblox 3D Agent Character Model (Matching Characters.tsx)
-      function buildRobloxAgent(agentId, isDetailedChamber = false) {
+      function buildRobloxAgent(agentId) {
         const group = new THREE.Group();
         group.name = agentId;
 
@@ -1998,7 +2063,7 @@
           color: cfg.accent,
           roughness: 0.4,
           emissive: cfg.accent,
-          emissiveIntensity: 0.15,
+          emissiveIntensity: 0.2,
         });
         const matShirt = new THREE.MeshStandardMaterial({ color: "#e8e6e2", roughness: 0.7 });
         const matShoes = new THREE.MeshStandardMaterial({ color: "#0d0f11", roughness: 0.4 });
@@ -2023,7 +2088,7 @@
         lapel.position.set(0, 1.18, 0.186);
         group.add(lapel);
 
-        // Head Group (pivots for looking around)
+        // Head Group
         const headGroup = new THREE.Group();
         headGroup.position.set(0, 1.58, 0);
         group.add(headGroup);
@@ -2046,7 +2111,7 @@
         hair.position.set(0, 0.15, -0.02);
         headGroup.add(hair);
 
-        // Animal Species Features (Horns, Ears, Antlers)
+        // Species Headgear
         if (cfg.feature === "horns") {
           [-1, 1].forEach((s) => {
             const hornPivot = new THREE.Group();
@@ -2113,7 +2178,7 @@
           });
         }
 
-        // Arms (with shoulder pivots)
+        // Arms
         const armL = new THREE.Group();
         armL.position.set(-0.43, 1.25, 0);
         const sleeveL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.44, 0.22), matSuit);
@@ -2133,7 +2198,7 @@
         handR.position.set(0, -0.56, 0);
         armR.add(handR);
 
-        // Executive Porcelain Coffee Mug in Right Hand
+        // Coffee Mug in Right Hand
         const mug = new THREE.Group();
         mug.position.set(0, -0.62, 0.14);
         mug.rotation.x = 0.2;
@@ -2152,7 +2217,7 @@
         armR.add(mug);
         group.add(armR);
 
-        // Legs (with hip pivots)
+        // Legs
         const legL = new THREE.Group();
         legL.position.set(-0.17, 0.64, 0);
         const pantL = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.5, 0.28), matSuit);
@@ -2180,14 +2245,14 @@
 
         // Illuminated Team Floor Ring
         const ringMesh = new THREE.Mesh(
-          new THREE.RingGeometry(0.68, 0.74, 32),
+          new THREE.RingGeometry(0.72, 0.82, 32),
           new THREE.MeshBasicMaterial({ color: cfg.accent, side: THREE.DoubleSide }),
         );
         ringMesh.rotation.x = -Math.PI / 2;
         ringMesh.position.set(0, 0.015, 0);
         group.add(ringMesh);
 
-        // Attach Rig References for Animation
+        // Rig references for animation
         group.userData = {
           agentId: agentId,
           armL: armL,
@@ -2198,11 +2263,10 @@
           mug: mug,
           nameTag: nameTag,
           ringMesh: ringMesh,
+          accent: cfg.accent,
           phase: Math.random() * Math.PI * 2,
-          baseY: 0,
         };
 
-        // Enable raycast hits on meshes
         group.traverse((o) => {
           if (o.isMesh) o.userData.agent = agentId;
         });
@@ -2210,9 +2274,10 @@
         return group;
       }
 
-      // 6. Interactive 3D Hero Exchange Floor Scene
+      // 6. Hero 3D Spotlight Scene: Exactly 1 Character at a Time!
       let heroScene, heroCamera, heroRenderer, heroControls;
-      let heroAgents = {};
+      let heroCurrentMesh = null;
+      let heroSpotLight = null;
       let heroSelected = "bull";
       let heroClock = new THREE.Clock();
 
@@ -2227,55 +2292,63 @@
         heroRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         heroScene = new THREE.Scene();
-        heroScene.fog = new THREE.Fog(0x060907, 12, 32);
+        heroScene.fog = new THREE.Fog(0x060907, 8, 24);
 
         heroCamera = new THREE.PerspectiveCamera(
-          38,
+          36,
           canvas.clientWidth / canvas.clientHeight,
           0.1,
-          100,
+          50,
         );
-        heroCamera.position.set(4.5, 4.2, 7.8);
+        heroCamera.position.set(0, 2.1, 4.9);
 
         if (window.THREE.OrbitControls) {
           heroControls = new THREE.OrbitControls(heroCamera, canvas);
           heroControls.enableDamping = true;
-          heroControls.dampingFactor = 0.06;
-          heroControls.target.set(0, 1.25, 0);
-          heroControls.minDistance = 3.5;
-          heroControls.maxDistance = 14;
+          heroControls.dampingFactor = 0.07;
+          heroControls.target.set(0, 1.15, 0);
+          heroControls.minDistance = 2.8;
+          heroControls.maxDistance = 8.5;
           heroControls.maxPolarAngle = Math.PI / 2.05;
         }
 
         // Lights
-        heroScene.add(new THREE.HemisphereLight(0xddffe8, 0x111c15, 1.6));
+        heroScene.add(new THREE.HemisphereLight(0xe4fff0, 0x0c1510, 1.8));
 
-        const sun = new THREE.DirectionalLight(0xffffff, 2.8);
-        sun.position.set(5, 9, 6);
+        const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+        sun.position.set(4, 8, 5);
         sun.castShadow = true;
         heroScene.add(sun);
 
-        const terminalLight = new THREE.PointLight(0x00e59a, 15, 18);
-        terminalLight.position.set(0, 3.8, -3);
-        heroScene.add(terminalLight);
+        // Hero Floor Spotlight colored to active agent
+        heroSpotLight = new THREE.PointLight(0x00e59a, 18, 14);
+        heroSpotLight.position.set(0, 3.2, 0.5);
+        heroScene.add(heroSpotLight);
+
+        // Central Spotlight Platform Podium
+        const podiumMat = new THREE.MeshStandardMaterial({
+          color: 0x0b1711,
+          roughness: 0.35,
+          metalness: 0.2,
+        });
+        const podium = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.5, 0.08, 36), podiumMat);
+        podium.position.y = -0.04;
+        podium.receiveShadow = true;
+        heroScene.add(podium);
 
         // Floor (Reflective Dark Parquet Tiles)
-        const floorMat = new THREE.MeshStandardMaterial({
-          color: 0x0a140f,
-          roughness: 0.35,
-          metalness: 0.15,
-        });
-        const floor = new THREE.Mesh(new THREE.PlaneGeometry(24, 18), floorMat);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x070e0a, roughness: 0.45 });
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 16), floorMat);
         floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.045;
         floor.receiveShadow = true;
         heroScene.add(floor);
 
-        // Floor Grid Lines
-        const grid = new THREE.GridHelper(24, 24, 0x1f3c2b, 0x112318);
-        grid.position.y = 0.005;
+        const grid = new THREE.GridHelper(20, 20, 0x1f3c2b, 0x112318);
+        grid.position.y = -0.04;
         heroScene.add(grid);
 
-        // Giant Background Trading Display Wall (Candlestick charts)
+        // Giant Background Trading Display Wall (Live Candlestick charts)
         const wallCanvas = document.createElement("canvas");
         wallCanvas.width = 1024;
         wallCanvas.height = 360;
@@ -2284,25 +2357,24 @@
         wctx.fillRect(0, 0, 1024, 360);
         wctx.strokeStyle = "#183324";
         wctx.lineWidth = 2;
-        for (let x = 0; x < 1024; x += 40) {
+        for (let x = 0; x < 1024; x += 36) {
           wctx.beginPath();
           wctx.moveTo(x, 0);
           wctx.lineTo(x, 360);
           wctx.stroke();
         }
-        for (let y = 0; y < 360; y += 40) {
+        for (let y = 0; y < 360; y += 36) {
           wctx.beginPath();
           wctx.moveTo(0, y);
           wctx.lineTo(1024, y);
           wctx.stroke();
         }
 
-        // Draw Candlesticks on giant wall
         let prevClose = 180;
-        for (let i = 20; i < 1000; i += 24) {
+        for (let i = 20; i < 1000; i += 22) {
           const isUp = Math.random() > 0.42;
           const open = prevClose;
-          const close = isUp ? open + Math.random() * 24 : open - Math.random() * 24;
+          const close = isUp ? open + Math.random() * 26 : open - Math.random() * 26;
           const high = Math.max(open, close) + Math.random() * 12;
           const low = Math.min(open, close) - Math.random() * 12;
           prevClose = close;
@@ -2317,7 +2389,6 @@
           wctx.fillRect(i + 2, Math.min(open, close), 12, Math.max(Math.abs(open - close), 3));
         }
 
-        // Glowing ticker text on wall
         wctx.font = "bold 22px Inter, monospace";
         wctx.fillStyle = "#00e59a";
         wctx.fillText(
@@ -2328,53 +2399,14 @@
 
         const wallTex = new THREE.CanvasTexture(wallCanvas);
         const wallMesh = new THREE.Mesh(
-          new THREE.PlaneGeometry(16, 5.5),
+          new THREE.PlaneGeometry(12, 4.5),
           new THREE.MeshBasicMaterial({ map: wallTex }),
         );
-        wallMesh.position.set(0, 2.75, -4.5);
+        wallMesh.position.set(0, 2.25, -3.2);
         heroScene.add(wallMesh);
 
-        // Glass Wall Frame
-        const frameMat = new THREE.MeshStandardMaterial({ color: 0x1f3427, roughness: 0.4 });
-        const frame = new THREE.Mesh(new THREE.BoxGeometry(16.4, 0.15, 0.2), frameMat);
-        frame.position.set(0, 5.5, -4.5);
-        heroScene.add(frame);
-
-        // Spawn the 4 Roblox Agents in Dynamic Formation
-        const positions = {
-          bull: { x: -2.8, z: 0.4 },
-          bear: { x: -0.9, z: -0.6 },
-          stag: { x: 1.0, z: -0.6 },
-          rabbit: { x: 2.8, z: 0.4 },
-        };
-
-        Object.entries(positions).forEach(([id, pos]) => {
-          const agent = buildRobloxAgent(id);
-          agent.position.set(pos.x, 0, pos.z);
-          // Turn slightly towards camera center
-          agent.rotation.y = Math.atan2(-pos.x, 6 - pos.z) * 0.55;
-          heroScene.add(agent);
-          heroAgents[id] = agent;
-        });
-
-        // Raycasting for direct character clicking in 3D scene
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        canvas.addEventListener("click", (e) => {
-          const rect = canvas.getBoundingClientRect();
-          mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-          mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-          raycaster.setFromCamera(mouse, heroCamera);
-          const hits = raycaster.intersectObjects(heroScene.children, true);
-          for (const hit of hits) {
-            let curr = hit.object;
-            while (curr && !curr.userData?.agent) curr = curr.parent;
-            if (curr?.userData?.agent) {
-              selectHeroAgent(curr.userData.agent);
-              break;
-            }
-          }
-        });
+        // Load 1st Agent (Bull) in center stage
+        loadHeroSingleAgent("bull");
 
         // Resize observer
         const ro = new ResizeObserver(() => {
@@ -2386,12 +2418,15 @@
         ro.observe(canvas);
 
         animateHero();
-        selectHeroAgent("bull");
       }
 
-      // 7. Select Hero Agent with Camera Focus & Highlights
-      function selectHeroAgent(agentId) {
+      // 7. Load Single Agent into Hero Stage with Color Transition
+      function loadHeroSingleAgent(agentId) {
         heroSelected = agentId;
+        const d = AGENT_DOSSIERS[agentId];
+        if (!d) return;
+
+        // Update Card Highlight & Chips
         document.querySelectorAll(".chip-btn[data-agent]").forEach((b) => {
           b.classList.toggle("active", b.dataset.agent === agentId);
         });
@@ -2399,80 +2434,96 @@
           c.classList.toggle("active-card", c.dataset.card === agentId);
         });
 
+        // Update Container glow border
+        const container = document.getElementById("hero-3d");
+        if (container) {
+          container.style.setProperty("--hero-accent", d.color);
+          container.style.setProperty("--hero-glow", d.glow);
+        }
+
+        // Update Spotlight light color
+        if (heroSpotLight) {
+          heroSpotLight.color.set(d.color);
+        }
+
+        // Update Caption
         const capt = document.getElementById("hero-caption");
-        if (capt && AGENT_DOSSIERS[agentId]) {
-          const d = AGENT_DOSSIERS[agentId];
+        if (capt) {
           capt.innerHTML = `<b>${d.name} · ${d.role}</b>${d.tagline}`;
         }
 
-        if (heroControls && heroAgents[agentId]) {
-          const targetPos = heroAgents[agentId].position;
-          // Smoothly pan camera target to agent
-          heroControls.target.set(targetPos.x, 1.3, targetPos.z);
+        // Remove existing mesh and add single selected agent mesh
+        if (heroCurrentMesh && heroScene) {
+          heroScene.remove(heroCurrentMesh);
+        }
+
+        heroCurrentMesh = buildRobloxAgent(agentId);
+        heroCurrentMesh.position.set(0, 0, 0);
+        heroCurrentMesh.scale.set(1.08, 1.08, 1.08);
+        heroScene.add(heroCurrentMesh);
+
+        // Reset camera to perfect framing
+        if (heroControls && heroCamera) {
+          heroCamera.position.set(0, 2.1, 4.9);
+          heroControls.target.set(0, 1.15, 0);
+          heroControls.update();
         }
       }
 
       // Button event listeners
       document.querySelectorAll(".chip-btn[data-agent]").forEach((b) => {
-        b.addEventListener("click", () => selectHeroAgent(b.dataset.agent));
+        b.addEventListener("click", () => loadHeroSingleAgent(b.dataset.agent));
       });
       const btnReset = document.getElementById("btn-reset-cam");
       if (btnReset) {
         btnReset.addEventListener("click", () => {
           if (heroControls && heroCamera) {
-            heroCamera.position.set(4.5, 4.2, 7.8);
-            heroControls.target.set(0, 1.25, 0);
+            heroCamera.position.set(0, 2.1, 4.9);
+            heroControls.target.set(0, 1.15, 0);
             heroControls.update();
           }
         });
       }
 
-      // 8. 3D Animation Loop for Hero Scene
+      // 8. 3D Animation Loop for Hero Single-Agent Scene
       function animateHero() {
         requestAnimationFrame(animateHero);
         const t = heroClock.getElapsedTime();
 
-        // Animate Roblox Agents (Breathing, Sway, Coffee Mug Bob)
-        Object.entries(heroAgents).forEach(([id, ag]) => {
-          const u = ag.userData;
-          const isSel = id === heroSelected;
+        if (heroCurrentMesh) {
+          const u = heroCurrentMesh.userData;
 
           // Idle vertical breathing
-          ag.position.y = Math.sin(t * 2.2 + u.phase) * 0.035;
+          heroCurrentMesh.position.y = Math.sin(t * 2.4) * 0.035;
 
           // Subtle torso sway
-          ag.rotation.y += Math.sin(t * 1.2 + u.phase) * 0.001;
+          heroCurrentMesh.rotation.y = Math.sin(t * 0.9) * 0.08;
 
           // Arm motion
           if (u.armL) {
-            u.armL.rotation.x = Math.sin(t * 1.8 + u.phase) * 0.08;
+            u.armL.rotation.x = Math.sin(t * 1.8) * 0.09;
           }
           if (u.armR) {
-            // If selected, hold coffee mug higher or gesture
-            if (isSel) {
-              u.armR.rotation.x = -0.4 + Math.sin(t * 2.5) * 0.12;
-              u.armR.rotation.z = 0.2;
-            } else {
-              u.armR.rotation.x = Math.sin(t * 1.8 + u.phase + 1) * 0.08;
-              u.armR.rotation.z = 0;
-            }
+            // Subtle gesture with coffee mug
+            u.armR.rotation.x = -0.3 + Math.sin(t * 2.2) * 0.08;
+            u.armR.rotation.z = 0.15;
           }
 
           // Head looking around
           if (u.headGroup) {
-            u.headGroup.rotation.y = Math.sin(t * 0.8 + u.phase) * 0.14;
+            u.headGroup.rotation.y = Math.sin(t * 1.1) * 0.15;
           }
 
           // Floating nametag bob
           if (u.nameTag) {
-            u.nameTag.position.y = 2.25 + Math.sin(t * 2.5 + u.phase) * 0.04;
+            u.nameTag.position.y = 2.25 + Math.sin(t * 2.5) * 0.04;
           }
 
-          // Ring glow
+          // Ring pulse
           if (u.ringMesh) {
-            u.ringMesh.scale.setScalar(isSel ? 1 + Math.sin(t * 4) * 0.06 : 1);
+            u.ringMesh.scale.setScalar(1 + Math.sin(t * 3.5) * 0.05);
           }
-        });
+        }
 
         if (heroControls) heroControls.update();
         if (heroRenderer && heroScene && heroCamera) {
@@ -2480,7 +2531,92 @@
         }
       }
 
-      // 9. Secondary 3D Inspector Chamber (Modal Dedicated Stage)
+      // 9. Card Mini 3D Canvases (1 for each of the 4 Agents)
+      const cardScenes = {};
+
+      function initCardCanvases() {
+        const agentIds = ["bull", "bear", "stag", "rabbit"];
+
+        agentIds.forEach((id) => {
+          const canvas = document.getElementById(`card-canvas-${id}`);
+          if (!canvas || !window.THREE) return;
+
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+          renderer.shadowMap.enabled = true;
+
+          const scene = new THREE.Scene();
+          const camera = new THREE.PerspectiveCamera(
+            40,
+            canvas.clientWidth / canvas.clientHeight,
+            0.1,
+            50,
+          );
+          camera.position.set(0, 1.45, 3.2);
+
+          let controls = null;
+          if (window.THREE.OrbitControls) {
+            controls = new THREE.OrbitControls(camera, canvas);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.08;
+            controls.target.set(0, 1.1, 0);
+            controls.minDistance = 2.0;
+            controls.maxDistance = 5.0;
+            controls.maxPolarAngle = Math.PI / 2.05;
+          }
+
+          scene.add(new THREE.HemisphereLight(0xffffff, 0x112218, 1.8));
+          const dirLight = new THREE.DirectionalLight(0xffffff, 2.2);
+          dirLight.position.set(3, 5, 4);
+          scene.add(dirLight);
+
+          // Character model
+          const agentMesh = buildRobloxAgent(id);
+          agentMesh.position.set(0, 0, 0);
+          scene.add(agentMesh);
+
+          cardScenes[id] = { renderer, scene, camera, controls, mesh: agentMesh, canvas };
+
+          // Resize observer
+          const ro = new ResizeObserver(() => {
+            if (!canvas.clientWidth || !canvas.clientHeight) return;
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+          });
+          ro.observe(canvas);
+        });
+
+        animateCardScenes();
+      }
+
+      function animateCardScenes() {
+        requestAnimationFrame(animateCardScenes);
+        const t = heroClock.getElapsedTime();
+
+        Object.entries(cardScenes).forEach(([id, item]) => {
+          const u = item.mesh.userData;
+
+          // Idle breathing on card
+          item.mesh.position.y = Math.sin(t * 2.2 + u.phase) * 0.03;
+
+          // Gentle rotation
+          item.mesh.rotation.y = Math.sin(t * 0.8 + u.phase) * 0.18;
+
+          if (u.headGroup) {
+            u.headGroup.rotation.y = Math.sin(t * 1.2 + u.phase) * 0.12;
+          }
+          if (u.armR) {
+            u.armR.rotation.x = -0.3 + Math.sin(t * 2.0 + u.phase) * 0.06;
+          }
+
+          if (item.controls) item.controls.update();
+          item.renderer.render(item.scene, item.camera);
+        });
+      }
+
+      // 10. Secondary 3D Inspector Chamber (Modal Dedicated Stage)
       let modalScene, modalCamera, modalRenderer, modalControls;
       let modalCurrentAgentMesh = null;
       let modalClock = new THREE.Clock();
@@ -2540,7 +2676,7 @@
         if (!modalScene) initModal3D();
         if (modalCurrentAgentMesh) modalScene.remove(modalCurrentAgentMesh);
 
-        modalCurrentAgentMesh = buildRobloxAgent(agentId, true);
+        modalCurrentAgentMesh = buildRobloxAgent(agentId);
         modalCurrentAgentMesh.position.set(0, 0, 0);
         modalScene.add(modalCurrentAgentMesh);
         modalActionState = "idle";
@@ -2560,7 +2696,6 @@
           const u = modalCurrentAgentMesh.userData;
 
           if (modalActionState === "victory") {
-            // Victory Stance: raise arms high
             if (u.armL) {
               u.armL.rotation.x = -2.6;
               u.armL.rotation.z = -0.4;
@@ -2573,7 +2708,6 @@
               u.headGroup.rotation.x = -0.3;
             }
           } else if (modalActionState === "coffee") {
-            // Coffee Sip: lift right arm mug to face
             if (u.armR) {
               u.armR.rotation.x = -1.6;
               u.armR.rotation.y = -0.3;
@@ -2583,7 +2717,6 @@
               u.headGroup.rotation.x = 0.2;
             }
           } else if (modalActionState === "scan") {
-            // Rapid head scan
             if (u.headGroup) {
               u.headGroup.rotation.y = Math.sin(t * 8) * 0.4;
             }
@@ -2594,7 +2727,6 @@
               u.armR.rotation.x = -0.6;
             }
           } else {
-            // Default idle
             modalCurrentAgentMesh.position.y = Math.sin(t * 2.5) * 0.03;
             if (u.armL) u.armL.rotation.set(Math.sin(t * 1.8) * 0.1, 0, 0);
             if (u.armR) u.armR.rotation.set(-0.35 + Math.sin(t * 2) * 0.08, 0, 0.15);
@@ -2617,7 +2749,7 @@
         }
       }
 
-      // 10. Open & Populate Full Modal Dossier
+      // 11. Open & Populate Full Modal Dossier
       function openAgentModal(agentId) {
         const d = AGENT_DOSSIERS[agentId];
         if (!d) return;
@@ -2673,14 +2805,35 @@
         document.body.style.overflow = "";
       }
 
-      // Escape key listener for closing modal
       window.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeAgentModal();
       });
 
+      // 12. Smooth Scroll-Triggered Reveal Animations using IntersectionObserver
+      function setupScrollAnimations() {
+        const reveals = document.querySelectorAll(".reveal");
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("revealed");
+              }
+            });
+          },
+          {
+            threshold: 0.08,
+            rootMargin: "0px 0px -40px 0px",
+          },
+        );
+
+        reveals.forEach((el) => observer.observe(el));
+      }
+
       // Initialize scenes once DOM is ready
       window.addEventListener("DOMContentLoaded", () => {
         initHeroScene();
+        initCardCanvases();
+        setupScrollAnimations();
       });
     </script>
   </body>

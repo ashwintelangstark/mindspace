@@ -106,27 +106,11 @@ function MindspaceExchangeFloor() {
 
       {/* Full-Screen Landing Page View */}
       {isLandingOpen && (
-        <div className="fixed inset-0 z-50 bg-[#050806] flex flex-col">
-          {/* Quick bar at top with Enter 3D Floor button */}
-          <div className="h-11 bg-[#09110c] border-b border-[#182b20] px-4 flex items-center justify-between text-xs text-[#9db2a5] z-10 shadow-md">
-            <div className="flex items-center gap-2.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#00e59a] shadow-[0_0_8px_#00e59a] animate-pulse" />
-              <span className="font-bold text-[#f0f7f3] tracking-wider text-[11px] font-mono">
-                MINDSPACE // LANDING & 3D AGENT DOSSIERS
-              </span>
-            </div>
-            <button
-              onClick={handleEnterApp}
-              className="px-3.5 py-1.5 rounded-lg bg-[#00e59a] text-[#030d07] font-black text-xs hover:bg-[#0fffab] transition-all shadow-[0_0_12px_rgba(0,229,154,0.35)] flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>Enter 3D Trading Floor</span>
-              <span>↗</span>
-            </button>
-          </div>
+        <div className="fixed inset-0 z-50 bg-[#050806]">
           <iframe
             src="/landing.html"
             title="Mindspace Landing Page"
-            className="flex-1 w-full h-full border-0"
+            className="w-full h-full border-0 block"
           />
         </div>
       )}

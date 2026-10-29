@@ -98,7 +98,7 @@ function AnimalFeature({ feature, skin }: { feature: Feature; skin: string }) {
 }
 
 function Trader({ index }: { index: number }) {
-  const agent = agents[index];
+  const agent = agents[index]!;
   const look = LOOKS[agent.id]!;
 
   const tag = useMemo(() => makeNameTagTexture(agent.name), [agent.name]);

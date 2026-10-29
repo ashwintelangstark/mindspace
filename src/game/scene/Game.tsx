@@ -32,10 +32,11 @@ function Scene() {
       <fog attach="fog" args={["#0a0c0f", 22, 44]} />
 
       {/* warm sunset wash from the window wall */}
-      <directionalLight position={[0, 3.2, -12]} intensity={2.2} color="#ff9d4d" />
-      <ambientLight intensity={0.35} color="#3d4a5c" />
-      <pointLight position={[0, 3.6, 0]} intensity={18} color="#ffd9a0" distance={14} decay={2} />
-      <pointLight position={[0, 2.6, -4]} intensity={10} color="#8ad8ff" distance={10} decay={2} />
+      <directionalLight position={[0, 3.2, -12]} intensity={0.9} color="#ff9d4d" />
+      <ambientLight intensity={0.5} color="#42506a" />
+      <hemisphereLight intensity={0.4} color="#5a6d85" groundColor="#181a1e" />
+      <pointLight position={[0, 3.6, 0]} intensity={7} color="#ffd9a0" distance={14} decay={2} />
+      <pointLight position={[0, 2.6, -4]} intensity={5} color="#8ad8ff" distance={10} decay={2} />
 
       {/* image-based lighting from light panels, all local */}
       <Environment resolution={256}>
@@ -63,7 +64,7 @@ export default function Game() {
       style={{ backgroundColor: "#0a0c0f" }}
     >
       <Canvas
-        camera={{ position: [3.5, 2.4, 6.5], fov: 52 }}
+        camera={{ position: [0, 2.7, 5.6], fov: 52 }}
         dpr={[1, 2]}
         gl={{ antialias: true }}
         onCreated={() => {

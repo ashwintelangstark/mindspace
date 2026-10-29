@@ -126,7 +126,7 @@ export function Office() {
       {/* ---- floor ---- */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
         <planeGeometry args={[ROOM_W, ROOM_D]} />
-        <meshStandardMaterial color="#15171b" roughness={0.25} metalness={0.65} />
+        <meshStandardMaterial color="#101216" roughness={0.4} metalness={0.35} />
       </mesh>
       {/* rug under the lounge */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 3.1]}>
@@ -196,13 +196,13 @@ export function Office() {
       ))}
 
       {/* ---- big brand + index board above the window wall ---- */}
-      <group position={[0, 3.0, -5.85]}>
+      <group position={[0, 2.9, -5.85]}>
         <mesh>
-          <boxGeometry args={[10.5, 3.9, 0.12]} />
+          <boxGeometry args={[8.8, 3.4, 0.12]} />
           <meshStandardMaterial color="#080b0d" roughness={0.45} metalness={0.4} />
         </mesh>
         <mesh position={[0, 0, 0.065]}>
-          <planeGeometry args={[10.2, 3.65]} />
+          <planeGeometry args={[8.5, 3.15]} />
           <meshBasicMaterial map={board} toneMapped={false} />
         </mesh>
       </group>

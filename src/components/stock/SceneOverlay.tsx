@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { agents, subscribeTask, TaskState, Agent } from "@/game/sim/roam";
+import { agents, subscribeTask, TaskState, Agent, stopAnalyzingAndRelax } from "@/game/sim/roam";
 import { subscribeMarketEngine, getMarketSnapshot } from "@/lib/market-engine";
 import { getSystemSkyAndWeather, SystemEnvironmentProfile } from "@/game/scene/textures";
 import { AgentLiveAlert } from "@/types/stock";
@@ -134,7 +134,16 @@ export function SceneOverlay({ onOpenDrawer, isDrawerOpen }: SceneOverlayProps) 
                 <span>
                   ML Ensemble: {taskState.symbol} ({taskState.horizon})
                 </span>
-                <span className="font-mono">{Math.round(taskState.progress)}%</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono">{Math.round(taskState.progress)}%</span>
+                  <button
+                    onClick={() => stopAnalyzingAndRelax()}
+                    title="Stop analysis and release agents from desks"
+                    className="text-[10px] text-gray-200 hover:text-white px-2 py-0.5 rounded border border-[#1b4a36] bg-[#05110c] hover:border-[#00e59a] transition-all"
+                  >
+                    ☕ Relax
+                  </button>
+                </div>
               </div>
               <div className="h-1.5 w-full bg-[#0a1f16] rounded-full overflow-hidden mt-1">
                 <div
@@ -146,13 +155,13 @@ export function SceneOverlay({ onOpenDrawer, isDrawerOpen }: SceneOverlayProps) 
           )}
         </div>
 
-        {/* Top Right: Drawer toggle button for small screens */}
+        {/* Top Right: Drawer toggle button when drawer is closed */}
         {!isDrawerOpen && onOpenDrawer && (
           <button
             onClick={onOpenDrawer}
-            className="pointer-events-auto flex items-center gap-2 rounded-xl border border-[#00e59a] bg-[#07100d] px-4 py-2.5 text-xs font-bold text-[#00e59a] shadow-[0_0_20px_rgba(0,229,154,0.25)] hover:bg-[#00e59a] hover:text-[#00180e] transition-all"
+            className="pointer-events-auto flex items-center gap-2 rounded-xl border border-[#00e59a] bg-[#07100de0] backdrop-blur-md px-4 py-2.5 text-xs font-black text-[#00e59a] shadow-[0_0_25px_rgba(0,229,154,0.35)] hover:bg-[#00e59a] hover:text-[#00180e] transition-all"
           >
-            <span>Open Intelligence Drawer</span>
+            <span>📊 Open Stock Intelligence Drawer</span>
             <span>→</span>
           </button>
         )}

@@ -5,7 +5,7 @@ import {
   generateDeterministicPrediction,
   OPENROUTER_DEFAULT_KEY,
 } from "@/lib/openrouter";
-import { assignTaskToAgents, finishTaskForAgents } from "@/game/sim/roam";
+import { assignTaskToAgents, finishTaskForAgents, stopAnalyzingAndRelax } from "@/game/sim/roam";
 import {
   subscribeMarketEngine,
   getMarketSnapshot,
@@ -13,8 +13,10 @@ import {
   setActiveMarketSymbol,
   searchStocksLive,
   refreshSymbolFromLiveApi,
+  getExchangeMarketStatus,
   StockSearchResultItem,
 } from "@/lib/market-engine";
+import { exportPredictionToWordDoc } from "@/lib/export-word";
 import { CandlestickChart } from "./CandlestickChart";
 
 interface StockDrawerProps {
@@ -38,19 +40,22 @@ export function StockDrawer({
   const [searchResults, setSearchResults] = useState<StockSearchResultItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [horizon, setHorizon] = useState<TimeHorizon>("1D");
-  // No preset investment amount — user enters their own number
-  const [investAmountInput, setInvestAmountInput] = useState<string>("");
+  // User mentions number of shares to buy (not cash amount)
+  const [sharesQuantityInput, setSharesQuantityInput] = useState<string>("");
   const [apiKey] = useState<string>(OPENROUTER_DEFAULT_KEY);
   const [isLoading, setIsLoading] = useState(false);
   const [showMlDetails, setShowMlDetails] = useState(true);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  const numericInvestAmount = Math.max(0, Number(investAmountInput) || 0);
+  const numericShares = Math.max(0, parseInt(sharesQuantityInput, 10) || 0);
 
   // Live market snapshot subscription
   const [marketSnap, setMarketSnap] = useState(() => getMarketSnapshot());
   const liveStock = currentStock ? marketSnap.quotes[currentStock.symbol] || currentStock : null;
   const liveCandles = currentStock ? marketSnap.candlesBySymbol[currentStock.symbol] || [] : [];
+  const marketStatus = liveStock
+    ? getExchangeMarketStatus(liveStock.market, liveStock.symbol)
+    : null;
 
   // Active prediction state (null when no stock is chosen)
   const [prediction, setPrediction] = useState<StockPrediction | null>(null);
@@ -89,19 +94,33 @@ export function StockDrawer({
     };
   }, [searchQuery]);
 
-  // Recompute ML forecast when selected stock, horizon, or user's investAmount changes
+  // Recompute ML forecast when selected stock, horizon, or user's sharesQuantity changes
   useEffect(() => {
     if (!currentStock) {
       setPrediction(null);
       return;
     }
     const freshStock = getLiveStockQuote(currentStock.symbol);
-    setPrediction(generateDeterministicPrediction(freshStock, horizon, numericInvestAmount));
-  }, [currentStock, horizon, numericInvestAmount, liveStock?.price]);
+    setPrediction(generateDeterministicPrediction(freshStock, horizon, numericShares));
+  }, [currentStock, horizon, numericShares, liveStock?.price]);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3200);
+  };
+
+  const handleRelaxAgents = () => {
+    stopAnalyzingAndRelax();
+    showToast("☕ All 4 agents got up from their desks and are relaxing on the trading floor.");
+  };
+
+  const handleExportWord = () => {
+    if (!prediction) {
+      showToast("Select a stock first to export analysis report.");
+      return;
+    }
+    exportPredictionToWordDoc(prediction);
+    showToast(`📄 Exported ${prediction.stock.symbol} 4-Agent report to Word document.`);
   };
 
   const selectStockItem = async (symbolOrYahoo: string) => {
@@ -116,7 +135,7 @@ export function StockDrawer({
     if (liveUpdated) {
       onSelectStock(liveUpdated);
       showToast(
-        `Loaded live market data for ${liveUpdated.name} (${liveUpdated.symbol}: ${liveUpdated.currency}${liveUpdated.price.toFixed(2)})`,
+        `Loaded market data for ${liveUpdated.name} (${liveUpdated.symbol}: ${liveUpdated.currency}${liveUpdated.price.toFixed(2)})`,
       );
     } else {
       showToast(`Loaded market stream for ${initialQuote.name} (${initialQuote.symbol})`);
@@ -144,7 +163,7 @@ export function StockDrawer({
     );
 
     try {
-      const res = await fetchStockPrediction(liveStock, horizon, numericInvestAmount, apiKey);
+      const res = await fetchStockPrediction(liveStock, horizon, numericShares, apiKey);
       setPrediction(res);
       showToast(
         res.isAiGenerated
@@ -153,7 +172,7 @@ export function StockDrawer({
       );
     } catch (err) {
       console.error("AI analysis error:", err);
-      setPrediction(generateDeterministicPrediction(liveStock, horizon, numericInvestAmount));
+      setPrediction(generateDeterministicPrediction(liveStock, horizon, numericShares));
     } finally {
       setIsLoading(false);
       finishTaskForAgents();
@@ -183,17 +202,27 @@ export function StockDrawer({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#00e59a55] bg-[#00e59a14] px-2.5 py-0.5 text-[10px] font-mono text-[#00e59a]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#00e59a] animate-ping" />
-              LIVE API
-            </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleRelaxAgents}
+              title="Release all 4 agents to relax and take a coffee break"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#1d5c3f] bg-[#071711] text-[#b4cec1] hover:text-white hover:border-[#00e59a] text-[11px] font-semibold transition-all shadow-sm"
+            >
+              <span>☕</span>
+              <span className="hidden sm:inline">Relax Agents</span>
+            </button>
+
             {onToggleOpen && (
               <button
+                type="button"
                 onClick={onToggleOpen}
-                className="lg:hidden text-xs text-gray-400 hover:text-white p-1.5 rounded-lg border border-[#1b4a36] bg-[#07130f]"
+                title="Hide drawer to view full 3D exchange office"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#1b4a36] bg-[#07130f] text-gray-300 hover:text-white hover:border-[#00e59a] text-[11px] font-semibold transition-all shadow-sm"
               >
-                ✕
+                <span>👁</span>
+                <span className="hidden sm:inline">3D Space</span>
+                <span className="text-gray-400">✕</span>
               </button>
             )}
           </div>
@@ -291,6 +320,27 @@ export function StockDrawer({
                       {liveStock.symbol} · {liveStock.market}
                       {liveStock.sector ? ` · ${liveStock.sector}` : ""}
                     </p>
+                    {marketStatus && (
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-mono font-bold ${
+                            marketStatus.isOpen
+                              ? "border border-[#00e59a55] bg-[#00e59a18] text-[#00e59a]"
+                              : "border border-amber-500/50 bg-amber-500/15 text-amber-300"
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              marketStatus.isOpen ? "bg-[#00e59a] animate-ping" : "bg-amber-400"
+                            }`}
+                          />
+                          {marketStatus.badge}
+                        </span>
+                        <span className="text-[9.5px] text-gray-400 font-mono truncate max-w-[200px]">
+                          {marketStatus.sessionMessage}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -511,18 +561,30 @@ export function StockDrawer({
               </div>
 
               <div className="mt-3 space-y-2.5 text-xs">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-gray-300">Your Investment Capital:</span>
-                  <div className="flex items-center gap-1.5 font-mono">
-                    <span className="text-gray-400">{liveStock.currency}</span>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Enter amount..."
-                      value={investAmountInput}
-                      onChange={(e) => setInvestAmountInput(e.target.value)}
-                      className="w-36 rounded border border-[#1a573b] bg-[#020705] px-2.5 py-1 text-right font-bold text-white placeholder:text-gray-500 placeholder:font-normal focus:outline-none focus:border-[#00e59a]"
-                    />
+                {/* Number of Shares to Buy input */}
+                <div className="rounded-xl border border-[#18533b] bg-[#040e0a] p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-white block font-bold text-xs">
+                        Number of Shares to Buy:
+                      </span>
+                      <span className="text-[10.5px] text-[#00e59a] font-mono mt-0.5 block">
+                        {numericShares > 0
+                          ? `Total Capital: ${liveStock.currency}${(numericShares * liveStock.price).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                          : "Enter shares to calculate exact capital & returns"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 font-mono">
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="e.g. 25"
+                        value={sharesQuantityInput}
+                        onChange={(e) => setSharesQuantityInput(e.target.value)}
+                        className="w-24 rounded-lg border border-[#1b6b47] bg-[#020705] px-2.5 py-1.5 text-right font-black text-white text-sm placeholder:text-gray-500 placeholder:font-normal focus:outline-none focus:border-[#00e59a]"
+                      />
+                      <span className="text-xs text-gray-400 font-semibold">shares</span>
+                    </div>
                   </div>
                 </div>
 
@@ -543,15 +605,15 @@ export function StockDrawer({
                     <strong className="text-gray-200">{prediction.withdrawProfitDate}</strong>
                   </p>
                   <p className="text-[11px] text-[#00e59a] font-mono mt-0.5 font-semibold">
-                    {numericInvestAmount > 0 ? (
+                    {numericShares > 0 ? (
                       <>
-                        Exact Projected Gain: +{liveStock.currency}
+                        Exact Gain ({numericShares} shares): +{liveStock.currency}
                         {prediction.projectedProfitAmount.toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                         })}
                       </>
                     ) : (
-                      "Enter your investment capital above to calculate exact gain"
+                      "Enter number of shares above to calculate exact gain"
                     )}
                   </p>
                 </div>
@@ -573,37 +635,59 @@ export function StockDrawer({
                     <strong className="text-gray-200">{prediction.withdrawCutLossDate}</strong>
                   </p>
                   <p className="text-[11px] text-[#ff7180] font-mono mt-0.5 font-semibold">
-                    {numericInvestAmount > 0 ? (
+                    {numericShares > 0 ? (
                       <>
-                        Max Capped Loss: -{liveStock.currency}
+                        Max Capped Risk ({numericShares} shares): -{liveStock.currency}
                         {prediction.projectedLossAmount.toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                         })}
                       </>
                     ) : (
-                      "Enter your investment capital above to calculate max capped risk"
+                      "Enter number of shares above to calculate max risk"
                     )}
                   </p>
                 </div>
               </div>
 
-              {/* Action Button: Run AI Analysis */}
-              <button
-                onClick={handleRunAiAnalysis}
-                disabled={isLoading}
-                className="w-full mt-3.5 py-2.5 rounded-xl border border-[#00e59a] bg-[#00e59a] text-[#00180e] font-extrabold text-xs tracking-wider uppercase hover:bg-[#52ffbf] hover:shadow-[0_0_20px_rgba(0,229,154,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <>
-                    <span className="animate-spin">⏳</span>
-                    <span>Agents Computing at 3D Desks...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>⚡ Run 4-Agent ML Analysis & Save to SQLite</span>
-                  </>
-                )}
-              </button>
+              {/* Action Buttons: Run ML Analysis, Stop/Relax Agents, and Export to Word */}
+              <div className="mt-3.5 space-y-2">
+                <button
+                  onClick={handleRunAiAnalysis}
+                  disabled={isLoading}
+                  className="w-full py-2.5 rounded-xl border border-[#00e59a] bg-[#00e59a] text-[#00180e] font-extrabold text-xs tracking-wider uppercase hover:bg-[#52ffbf] hover:shadow-[0_0_20px_rgba(0,229,154,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>Agents Computing at 3D Desks...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>⚡ Run 4-Agent ML Analysis & Save to SQLite</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleRelaxAgents}
+                    className="py-2 px-3 rounded-xl border border-[#1e583c] bg-[#071912] hover:bg-[#0c2b1f] hover:border-[#00e59a] text-gray-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <span>☕</span>
+                    <span>Relax Agents</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleExportWord}
+                    className="py-2 px-3 rounded-xl border border-[#1b6b47] bg-[#082417] hover:bg-[#00e59a] hover:text-[#00180e] text-[#00e59a] text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <span>📄</span>
+                    <span>Export to Word</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* 4 Specialized Topic-Focused AI Agent Reports */}

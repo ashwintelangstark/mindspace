@@ -36,4 +36,5 @@ data/*.sqlite-wal
 *.sln
 *.sw?
 .meta-panel-trigger
+meta
 meta.bat

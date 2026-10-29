@@ -13,6 +13,167 @@ export interface LiveMarketSnapshot {
   isLiveFeedConnected: boolean;
 }
 
+export interface ExchangeMarketStatus {
+  isOpen: boolean;
+  marketCode: "NSE/BSE" | "US" | "CRYPTO";
+  badge: "🔴 Market Closed" | "🟢 Market Open";
+  sessionMessage: string;
+}
+
+/**
+ * Checks exchange trading hours for Indian (NSE/BSE: 9:15 AM - 3:30 PM IST),
+ * US (NASDAQ/NYSE: 9:30 AM - 4:00 PM EST), and Crypto (24/7).
+ */
+export function getExchangeMarketStatus(
+  market = "",
+  symbol = "",
+  now = new Date(),
+): ExchangeMarketStatus {
+  const upperM = (market || "").toUpperCase();
+  const upperS = (symbol || "").toUpperCase();
+
+  // 1. Crypto (24/7 continuous trading)
+  if (
+    upperM.includes("CRYPTO") ||
+    upperS.includes("BTC") ||
+    upperS.includes("ETH") ||
+    upperS === "BTC-USD" ||
+    upperS === "ETH-USD"
+  ) {
+    return {
+      isOpen: true,
+      marketCode: "CRYPTO",
+      badge: "🟢 Market Open",
+      sessionMessage: "24/7 Global Live Market",
+    };
+  }
+
+  // 2. Indian Equities & Indices (NSE / BSE / NIFTY 50 / SENSEX / Reliance / TCS / etc.)
+  const isIndian =
+    upperM.includes("NSE") ||
+    upperM.includes("BSE") ||
+    upperM.includes("INDIA") ||
+    upperM.includes("EQ") ||
+    upperS.endsWith(".NS") ||
+    upperS.endsWith(".BO") ||
+    upperS === "^NSEI" ||
+    upperS === "^BSESN" ||
+    upperS === "NIFTY 50" ||
+    upperS === "SENSEX" ||
+    upperS === "RELIANCE" ||
+    upperS === "TCS" ||
+    upperS === "INFY" ||
+    upperS === "HDFCBANK" ||
+    upperS === "ICICIBANK" ||
+    upperS === "TATAMOTORS" ||
+    upperS === "SBIN" ||
+    upperS === "BHARTIARTL";
+
+  if (isIndian) {
+    // Convert to Indian Standard Time (UTC + 5:30)
+    const istTime = new Date(now.getTime() + (now.getTimezoneOffset() + 330) * 60000);
+    const day = istTime.getDay(); // 0 is Sunday, 6 is Saturday
+    const hours = istTime.getHours();
+    const minutes = istTime.getMinutes();
+    const totalMinutes = hours * 60 + minutes;
+
+    // Trading hours: Mon–Fri 9:15 AM (555 mins) to 3:30 PM (930 mins) IST
+    const isWeekday = day >= 1 && day <= 5;
+    const isTradingHours = totalMinutes >= 555 && totalMinutes <= 930;
+    const isOpen = isWeekday && isTradingHours;
+
+    if (!isWeekday) {
+      return {
+        isOpen: false,
+        marketCode: "NSE/BSE",
+        badge: "🔴 Market Closed",
+        sessionMessage: "Weekend · Opens Mon 9:15 AM IST",
+      };
+    }
+    if (totalMinutes < 555) {
+      return {
+        isOpen: false,
+        marketCode: "NSE/BSE",
+        badge: "🔴 Market Closed",
+        sessionMessage: "Pre-Market · Opens 9:15 AM IST",
+      };
+    }
+    if (totalMinutes > 930) {
+      return {
+        isOpen: false,
+        marketCode: "NSE/BSE",
+        badge: "🔴 Market Closed",
+        sessionMessage: "Closed at 3:30 PM IST · Opens 9:15 AM IST",
+      };
+    }
+    return {
+      isOpen: true,
+      marketCode: "NSE/BSE",
+      badge: "🟢 Market Open",
+      sessionMessage: "Trading Live · Closes 3:30 PM IST",
+    };
+  }
+
+  // 3. US Equities & Indices (NASDAQ / NYSE / S&P 500 / NVDA / AAPL / TSLA / MSFT / etc.)
+  try {
+    const nyFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      hour12: false,
+      weekday: "short",
+      hour: "numeric",
+      minute: "numeric",
+    });
+    const parts = nyFormatter.formatToParts(now);
+    const weekdayStr = parts.find((p) => p.type === "weekday")?.value || "";
+    const hourVal = parseInt(parts.find((p) => p.type === "hour")?.value || "0", 10);
+    const minuteVal = parseInt(parts.find((p) => p.type === "minute")?.value || "0", 10);
+    const totalMin = hourVal * 60 + minuteVal;
+
+    const isWeekend = weekdayStr === "Sat" || weekdayStr === "Sun";
+    // Regular US session: Mon–Fri 9:30 AM (570 mins) to 4:00 PM (960 mins) ET
+    const isTradingHours = totalMin >= 570 && totalMin <= 960;
+    const isOpen = !isWeekend && isTradingHours;
+
+    if (isWeekend) {
+      return {
+        isOpen: false,
+        marketCode: "US",
+        badge: "🔴 Market Closed",
+        sessionMessage: "Weekend · Opens Mon 9:30 AM EST",
+      };
+    }
+    if (totalMin < 570) {
+      return {
+        isOpen: false,
+        marketCode: "US",
+        badge: "🔴 Market Closed",
+        sessionMessage: "Pre-Market · Opens 9:30 AM EST",
+      };
+    }
+    if (totalMin > 960) {
+      return {
+        isOpen: false,
+        marketCode: "US",
+        badge: "🔴 Market Closed",
+        sessionMessage: "Closed at 4:00 PM EST · Opens 9:30 AM EST",
+      };
+    }
+    return {
+      isOpen: true,
+      marketCode: "US",
+      badge: "🟢 Market Open",
+      sessionMessage: "Trading Live · Closes 4:00 PM EST",
+    };
+  } catch {
+    return {
+      isOpen: false,
+      marketCode: "US",
+      badge: "🔴 Market Closed",
+      sessionMessage: "Closed · Opens 9:30 AM EST",
+    };
+  }
+}
+
 export interface StockSearchResultItem {
   symbol: string;
   yahooSymbol: string;
@@ -304,6 +465,14 @@ function stepMarketTick(): void {
     const q = liveQuotes[sym];
     if (!q) continue;
 
+    // Check exchange trading session status
+    const marketStatus = getExchangeMarketStatus(q.market, q.symbol);
+    // If the exchange market is closed, FREEZE price, change, bid, ask, and candles!
+    // Never simulate price ticks outside official market hours.
+    if (!marketStatus.isOpen) {
+      continue;
+    }
+
     const microVol = q.market.includes("CRYPTO") ? 0.0014 : 0.00085;
     const bias = q.change >= 0 ? 0.00006 : -0.00004;
     const deltaPct = (Math.random() - 0.495) * microVol + bias;
@@ -347,6 +516,12 @@ function stepMarketTick(): void {
   }
 
   liveIndices = liveIndices.map((idx) => {
+    // If the index's exchange is closed, keep it completely frozen at official settlement price
+    const idxStatus = getExchangeMarketStatus(idx.market || idx.name, idx.name);
+    if (!idxStatus.isOpen) {
+      return idx;
+    }
+
     const delta = (Math.random() - 0.492) * 0.0007;
     const numericPrice = Number((idx.numericPrice * (1 + delta)).toFixed(2));
     const changePct = Number((idx.changePct + delta * 95).toFixed(2));

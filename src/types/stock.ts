@@ -117,10 +117,20 @@ export interface StockPrediction {
   accuracyRate: number; // e.g. 91.8%
   confidenceScore: number; // 0-100
 
-  // Investment & withdrawal advisory
+  // Investment & withdrawal advisory (Shares quantity entered by user)
+  sharesQuantity?: number;
+  totalInvestmentCapital?: number;
   recommendedInvestAmount: number;
   recommendedInvestPct: number; // e.g. 15% of portfolio
   entryPrice: number;
+
+  // Market session state
+  marketStatus?: {
+    isOpen: boolean;
+    marketCode: string;
+    badge: string;
+    sessionMessage: string;
+  };
 
   // When to withdraw (Profit)
   targetPrice: number;

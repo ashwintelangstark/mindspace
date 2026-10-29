@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { STOCKS_CATALOG } from "@/data/stocks";
 import { generateDeterministicPrediction, runOpenSourceMLPipeline } from "@/lib/openrouter";
-import { getLiveStockQuote, getMarketSnapshot } from "@/lib/market-engine";
+import { getLiveStockQuote, getMarketSnapshot, getExchangeMarketStatus } from "@/lib/market-engine";
 import { getSystemSkyAndWeather } from "@/game/scene/textures";
 import { handleSqliteAction } from "@/lib/sqlite-server";
+import { stopAnalyzingAndRelax, agents, assignTaskToAgents } from "@/game/sim/roam";
 
 describe("Mindspace Open-Source ML Ensemble, SQLite & No-Preset Verification", () => {
   it("starts with no default stock selected and zero preset wallet cash in SQLite", async () => {
@@ -33,14 +34,16 @@ describe("Mindspace Open-Source ML Ensemble, SQLite & No-Preset Verification", (
     expect(relPipeline.mlReport.subModels).toHaveLength(3);
   });
 
-  it("has zero preset investment numbers when user has not entered an amount, and computes exact numbers when user enters an amount", () => {
+  it("has zero preset investment numbers when user has not entered an amount, and computes exact numbers when user enters shares quantity", () => {
     const emptyPred = generateDeterministicPrediction(STOCKS_CATALOG.tcs, "1W", 0);
     expect(emptyPred.recommendedInvestAmount).toBe(0);
     expect(emptyPred.projectedProfitAmount).toBe(0);
     expect(emptyPred.projectedLossAmount).toBe(0);
 
-    const userPred = generateDeterministicPrediction(STOCKS_CATALOG.tcs, "1W", 25000);
-    expect(userPred.recommendedInvestAmount).toBeGreaterThan(0);
+    // User specifies 25 shares of TCS
+    const userPred = generateDeterministicPrediction(STOCKS_CATALOG.tcs, "1W", 25);
+    expect(userPred.sharesQuantity).toBe(25);
+    expect(userPred.recommendedInvestAmount).toBe(25 * STOCKS_CATALOG.tcs.price);
     expect(userPred.projectedProfitAmount).toBeGreaterThan(0);
     expect(userPred.projectedLossAmount).toBeGreaterThan(0);
 
@@ -48,6 +51,38 @@ describe("Mindspace Open-Source ML Ensemble, SQLite & No-Preset Verification", (
     expect(userPred.agentConsensus.bear.focusTopic).toContain("ATR-14 Volatility");
     expect(userPred.agentConsensus.stag.focusTopic).toContain("Institutional VWAP");
     expect(userPred.agentConsensus.rabbit.focusTopic).toContain("Bid/Ask Spread");
+  });
+
+  it("accurately detects Indian and US exchange market open and closed hours", () => {
+    // 11:30 AM IST on a Wednesday (2026-10-28 06:00 UTC) -> Market Open in India
+    const indianOpenTime = new Date("2026-10-28T06:00:00Z");
+    const indianOpenStatus = getExchangeMarketStatus("NSE · EQ", "RELIANCE.NS", indianOpenTime);
+    expect(indianOpenStatus.isOpen).toBe(true);
+    expect(indianOpenStatus.badge).toBe("🟢 Market Open");
+
+    // 11:00 PM IST on a Wednesday (2026-10-28 17:30 UTC) -> Market Closed in India
+    const indianClosedTime = new Date("2026-10-28T17:30:00Z");
+    const indianClosedStatus = getExchangeMarketStatus("NSE · EQ", "RELIANCE.NS", indianClosedTime);
+    expect(indianClosedStatus.isOpen).toBe(false);
+    expect(indianClosedStatus.badge).toBe("🔴 Market Closed");
+
+    // Sunday (Weekend) -> Closed for both Indian and US stocks
+    const sundayTime = new Date("2026-10-25T12:00:00Z");
+    expect(getExchangeMarketStatus("NSE", "TCS.NS", sundayTime).isOpen).toBe(false);
+    expect(getExchangeMarketStatus("NASDAQ", "AAPL", sundayTime).isOpen).toBe(false);
+
+    // Crypto -> 24/7 Open anytime
+    expect(getExchangeMarketStatus("CRYPTO", "BTC", sundayTime).isOpen).toBe(true);
+  });
+
+  it("releases all 4 agents from their desks to relax and roam when stopAnalyzingAndRelax is invoked", () => {
+    assignTaskToAgents("RELIANCE", "1M");
+    expect(agents[0].state).toBe("walk");
+
+    stopAnalyzingAndRelax();
+    for (const agent of agents) {
+      expect(agent.actionStatus).toBe("Relaxing · Off-desk");
+    }
   });
 
   it("streams live market quotes with bid/ask spreads and system time sky profile", () => {

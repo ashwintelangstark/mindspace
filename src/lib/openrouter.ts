@@ -6,7 +6,11 @@ import {
   MLModelReport,
   CandleData,
 } from "@/types/stock";
-import { getMarketSnapshot, generateInitialCandles } from "./market-engine";
+import {
+  getMarketSnapshot,
+  generateInitialCandles,
+  getExchangeMarketStatus,
+} from "./market-engine";
 import { savePredictionToSqlite } from "./sqlite-client";
 
 const envApiKey =
@@ -262,15 +266,21 @@ export function runOpenSourceMLPipeline(
 
 /**
  * Deterministic quantitative prediction engine powered by the Open-Source ML Time-Series Ensemble.
- * Computes 91%+ accuracy price targets, stop-losses, profit/loss amounts, and 4 specialized topic reports.
+ * Evaluates real-time price or official settlement/closing price (when exchange is closed).
+ * Computes 91%+ accuracy price targets, stop-losses, and exact returns for user-specified shares quantity.
  */
 export function generateDeterministicPrediction(
   stock: StockQuote,
   horizon: TimeHorizon,
-  investAmount: number,
+  sharesQuantityOrAmount: number = 0,
 ): StockPrediction {
   const hInfo = HORIZON_FACTORS[horizon];
   const price = stock.price;
+  const mktStatus = getExchangeMarketStatus(stock.market, stock.symbol);
+  const statusNote = mktStatus.isOpen
+    ? `real-time live trading price (${stock.currency}${price.toFixed(2)})`
+    : `official settlement/closing price (${stock.currency}${price.toFixed(2)} · ${mktStatus.badge} - ${mktStatus.sessionMessage})`;
+
   const { mlReport, ensembleTargetPrice, ensembleStopLossPrice, ensembleMidpoint, isBullish } =
     runOpenSourceMLPipeline(stock, horizon);
 
@@ -281,14 +291,27 @@ export function generateDeterministicPrediction(
   const targetPct = (targetPrice - price) / price;
   const stopLossPct = (price - stopLossPrice) / price;
 
-  const hasUserAmount = investAmount > 0;
-  const shares = hasUserAmount ? Math.max(1, Math.floor(investAmount / price)) : 0;
-  const effectiveInvestment = hasUserAmount ? Number((shares * price).toFixed(2)) : 0;
+  // If user entered a number < 500, it's typically shares count; otherwise if large it could be capital amount
+  // Support explicit share count directly
+  const inputVal = Math.max(0, sharesQuantityOrAmount);
+  let shares = 0;
+  if (inputVal > 0) {
+    if (inputVal < 10000 && Number.isInteger(inputVal)) {
+      shares = inputVal;
+    } else if (inputVal >= price) {
+      shares = Math.max(1, Math.floor(inputVal / price));
+    } else {
+      shares = Math.floor(inputVal);
+    }
+  }
 
-  const projectedProfit = hasUserAmount
+  const hasShares = shares > 0;
+  const effectiveInvestment = hasShares ? Number((shares * price).toFixed(2)) : 0;
+
+  const projectedProfit = hasShares
     ? Number((shares * Math.max(0.5, targetPrice - price)).toFixed(2))
     : 0;
-  const projectedLoss = hasUserAmount
+  const projectedLoss = hasShares
     ? Number((shares * Math.max(0.25, price - stopLossPrice)).toFixed(2))
     : 0;
 
@@ -320,10 +343,10 @@ export function generateDeterministicPrediction(
           value: `${stock.currency}${targetPrice} (+${(targetPct * 100).toFixed(2)}%)`,
         },
       ],
-      actionRecommendation: hasUserAmount
-        ? `Accumulate ${shares} shares (~${stock.currency}${effectiveInvestment.toLocaleString()}) targeting breakout to ${stock.currency}${targetPrice}.`
-        : `Target breakout at ${stock.currency}${targetPrice} (+${(targetPct * 100).toFixed(2)}%). Enter your investment capital above to calculate exact share allocation.`,
-      commentary: `LightGBM GBDT sub-model detects institutional accumulation above EMA-20 (${stock.currency}${ti.ema20}). Price expansion toward upper Bollinger band (${stock.currency}${ti.bollingerUpper}) projects a ${horizon} upside target of ${stock.currency}${targetPrice} with ${accuracy}% directional validation accuracy.`,
+      actionRecommendation: hasShares
+        ? `Buy & accumulate ${shares} shares (${stock.currency}${effectiveInvestment.toLocaleString()}) targeting breakout to ${stock.currency}${targetPrice}.`
+        : `Target breakout at ${stock.currency}${targetPrice} (+${(targetPct * 100).toFixed(2)}%). Enter number of shares to calculate exact share allocation.`,
+      commentary: `LightGBM GBDT sub-model detects institutional accumulation above EMA-20 (${stock.currency}${ti.ema20}). Price expansion toward upper Bollinger band (${stock.currency}${ti.bollingerUpper}) projects a ${horizon} upside target of ${stock.currency}${targetPrice} based on ${statusNote} with ${accuracy}% directional validation accuracy.`,
       confidencePct: Number((accuracy + 0.6).toFixed(1)),
       status: "ready",
     },
@@ -345,10 +368,10 @@ export function generateDeterministicPrediction(
           value: `${stock.currency}${stopLossPrice} (-${(stopLossPct * 100).toFixed(2)}%)`,
         },
       ],
-      actionRecommendation: hasUserAmount
-        ? `Place strict automated stop-loss at ${stock.currency}${stopLossPrice} to cap max drawdown at ${stock.currency}${projectedLoss.toLocaleString()}.`
-        : `Place strict automated stop-loss at ${stock.currency}${stopLossPrice} (-${(stopLossPct * 100).toFixed(2)}%). Enter your investment capital above to compute exact capped risk.`,
-      commentary: `Downside risk audit measures 14-period Average True Range at ${stock.currency}${ti.atr14} and lower volatility band at ${stock.currency}${ti.bollingerLower}. If ${stock.symbol} breaches ${stock.currency}${stopLossPrice}, exit immediately to protect capital.`,
+      actionRecommendation: hasShares
+        ? `Set strict automated stop-loss at ${stock.currency}${stopLossPrice} for ${shares} shares to cap max drawdown at ${stock.currency}${projectedLoss.toLocaleString()}.`
+        : `Set strict automated stop-loss at ${stock.currency}${stopLossPrice} (-${(stopLossPct * 100).toFixed(2)}%). Enter number of shares to compute exact capped risk.`,
+      commentary: `Downside risk audit measures 14-period Average True Range at ${stock.currency}${ti.atr14} and lower volatility band at ${stock.currency}${ti.bollingerLower}. If ${stock.symbol} breaches ${stock.currency}${stopLossPrice}, exit immediately to protect capital. Evaluated on ${statusNote}.`,
       confidencePct: Number((accuracy - 0.3).toFixed(1)),
       status: "ready",
     },
@@ -367,8 +390,10 @@ export function generateDeterministicPrediction(
         { label: "Kalman Fair Value", value: `${stock.currency}${forecastMid}` },
         { label: "Portfolio Weight", value: "15% – 20% Core Equity" },
       ],
-      actionRecommendation: `Allocate 15% of active capital; rebalance at fair-value midpoint ${stock.currency}${forecastMid}.`,
-      commentary: `ADF stationarity test confirms mean-reverting log-returns around institutional VWAP (${stock.currency}${ti.vwap}). Kalman State-Space model values ${stock.symbol} at ${stock.currency}${forecastMid} over the ${horizon} horizon.`,
+      actionRecommendation: hasShares
+        ? `Allocate ${shares} shares (${stock.currency}${effectiveInvestment.toLocaleString()}); rebalance at fair-value midpoint ${stock.currency}${forecastMid}.`
+        : `Allocate 15%–20% of active capital; rebalance at fair-value midpoint ${stock.currency}${forecastMid}.`,
+      commentary: `ADF stationarity test confirms mean-reverting log-returns around institutional VWAP (${stock.currency}${ti.vwap}). Kalman State-Space model values ${stock.symbol} at ${stock.currency}${forecastMid} over the ${horizon} horizon based on ${statusNote}.`,
       confidencePct: Number((accuracy + 0.2).toFixed(1)),
       status: "ready",
     },
@@ -385,13 +410,15 @@ export function generateDeterministicPrediction(
       keyMetrics: [
         { label: "RSI-14 / MACD", value: `${ti.rsi14} / ${ti.macd >= 0 ? "+" : ""}${ti.macd}` },
         {
-          label: "Live Bid × Ask",
+          label: "Bid × Ask",
           value: `${stock.currency}${stock.bid.toFixed(2)} × ${stock.currency}${stock.ask.toFixed(2)}`,
         },
         { label: "Risk / Reward", value: `1 : ${rrRatio}` },
       ],
-      actionRecommendation: `Execute limit/market buy near Ask ${stock.currency}${stock.ask.toFixed(2)}; take profit ${hInfo.profitWithdrawTime}.`,
-      commentary: `Orderbook spread is tight at ${stock.currency}${stock.spread.toFixed(2)} with RSI-14 at ${ti.rsi14}. Execute entry now and schedule profit withdrawal ${hInfo.profitWithdrawTime} for an asymmetric 1:${rrRatio} risk-to-reward profile.`,
+      actionRecommendation: hasShares
+        ? `Execute buy for ${shares} shares near Ask ${stock.currency}${stock.ask.toFixed(2)}; schedule profit withdrawal ${hInfo.profitWithdrawTime}.`
+        : `Execute limit/market buy near Ask ${stock.currency}${stock.ask.toFixed(2)}; take profit ${hInfo.profitWithdrawTime}.`,
+      commentary: `Orderbook spread is ${stock.currency}${stock.spread.toFixed(2)} with RSI-14 at ${ti.rsi14}. ${mktStatus.isOpen ? "Market is live; execute entry now." : `Market is ${mktStatus.badge.toLowerCase()} (${mktStatus.sessionMessage}); queue orders for market open.`} Schedule profit withdrawal ${hInfo.profitWithdrawTime} for an asymmetric 1:${rrRatio} risk-to-reward profile.`,
       confidencePct: accuracy,
       status: "ready",
     },
@@ -419,6 +446,8 @@ export function generateDeterministicPrediction(
     consensusVerdict: isBullish ? "STRONG BUY" : "ACCUMULATE",
     accuracyRate: accuracy,
     confidenceScore: confidence,
+    sharesQuantity: shares,
+    totalInvestmentCapital: effectiveInvestment,
     recommendedInvestAmount: effectiveInvestment,
     recommendedInvestPct: 15,
     entryPrice: price,
@@ -439,9 +468,15 @@ export function generateDeterministicPrediction(
     horizonForecasts,
     mlReport,
     agentConsensus,
-    rationale: hasUserAmount
-      ? `Mindspace Open-Source ML Ensemble (${mlReport.modelName}) validated at ${accuracy}% directional accuracy forecasts ${stock.name} (${stock.symbol}) reaching ${stock.currency}${targetPrice} (+${(targetPct * 100).toFixed(2)}%) on the ${horizon} horizon. Invest ${stock.currency}${effectiveInvestment.toLocaleString()} (${shares} shares @ ${stock.currency}${price.toFixed(2)}), withdraw profits at ${stock.currency}${targetPrice} for +${stock.currency}${projectedProfit.toLocaleString()}, and maintain an automated stop-loss at ${stock.currency}${stopLossPrice} (max risk -${stock.currency}${projectedLoss.toLocaleString()}).`
-      : `Mindspace Open-Source ML Ensemble (${mlReport.modelName}) validated at ${accuracy}% directional accuracy forecasts ${stock.name} (${stock.symbol}) reaching ${stock.currency}${targetPrice} (+${(targetPct * 100).toFixed(2)}%) on the ${horizon} horizon with a stop-loss guard at ${stock.currency}${stopLossPrice} (-${(stopLossPct * 100).toFixed(2)}%). Enter your investment capital to calculate exact profit & loss amounts.`,
+    marketStatus: {
+      isOpen: mktStatus.isOpen,
+      marketCode: mktStatus.marketCode,
+      badge: mktStatus.badge,
+      sessionMessage: mktStatus.sessionMessage,
+    },
+    rationale: hasShares
+      ? `Mindspace Open-Source ML Ensemble (${mlReport.modelName}) validated at ${accuracy}% directional accuracy forecasts ${stock.name} (${stock.symbol}) reaching ${stock.currency}${targetPrice} (+${(targetPct * 100).toFixed(2)}%) on the ${horizon} horizon based on ${statusNote}. Buy ${shares} shares (${stock.currency}${effectiveInvestment.toLocaleString()} @ ${stock.currency}${price.toFixed(2)}), withdraw profits at ${stock.currency}${targetPrice} for +${stock.currency}${projectedProfit.toLocaleString()}, and maintain an automated stop-loss at ${stock.currency}${stopLossPrice} (max risk -${stock.currency}${projectedLoss.toLocaleString()}).`
+      : `Mindspace Open-Source ML Ensemble (${mlReport.modelName}) validated at ${accuracy}% directional accuracy forecasts ${stock.name} (${stock.symbol}) reaching ${stock.currency}${targetPrice} (+${(targetPct * 100).toFixed(2)}%) on the ${horizon} horizon based on ${statusNote} with a stop-loss guard at ${stock.currency}${stopLossPrice} (-${(stopLossPct * 100).toFixed(2)}%). Enter number of shares to calculate exact investment capital, profit & loss amounts.`,
     isAiGenerated: false,
     modelUsed: "Mindspace Open-Source ML Ensemble v3.4",
   };
@@ -454,10 +489,10 @@ export function generateDeterministicPrediction(
 export async function fetchStockPrediction(
   stock: StockQuote,
   horizon: TimeHorizon,
-  investAmount: number,
+  sharesQuantityOrAmount: number = 0,
   apiKey: string = OPENROUTER_DEFAULT_KEY,
 ): Promise<StockPrediction> {
-  const baseline = generateDeterministicPrediction(stock, horizon, investAmount);
+  const baseline = generateDeterministicPrediction(stock, horizon, sharesQuantityOrAmount);
 
   if (!apiKey || apiKey.trim() === "") {
     savePredictionToSqlite(baseline);
@@ -465,12 +500,14 @@ export async function fetchStockPrediction(
   }
 
   const ti = baseline.mlReport.technicalIndicators;
+  const mkt = baseline.marketStatus || getExchangeMarketStatus(stock.market, stock.symbol);
   const prompt = `You are Mindspace AI, a multi-agent quantitative stock exchange intelligence system powered by an open-source ML ensemble (${baseline.mlReport.ensembleDirectionalAccuracy}% validation directional accuracy).
 Stock: ${stock.name} (${stock.symbol}) on ${stock.market}
-Live Price: ${stock.currency}${stock.price} (Bid: ${stock.currency}${stock.bid}, Ask: ${stock.currency}${stock.ask}, 24h Change: ${stock.change}%)
+Market Status: ${mkt.badge} (${mkt.sessionMessage}) - Evaluated on official ${mkt.isOpen ? "live trading" : "closing settlement"} price.
+Price: ${stock.currency}${stock.price} (Bid: ${stock.currency}${stock.bid}, Ask: ${stock.currency}${stock.ask}, 24h Change: ${stock.change}%)
 Technicals: RSI-14=${ti.rsi14}, MACD=${ti.macd}, EMA-20=${ti.ema20}, EMA-50=${ti.ema50}, VWAP=${ti.vwap}, ATR-14=${ti.atr14}
 Selected Forecast Horizon: ${horizon}
-User Investment Amount: ${investAmount > 0 ? `${stock.currency}${investAmount}` : "Not specified yet"}
+User Planned Shares Quantity: ${baseline.sharesQuantity && baseline.sharesQuantity > 0 ? `${baseline.sharesQuantity} shares (Required capital: ${stock.currency}${baseline.totalInvestmentCapital?.toLocaleString()})` : "Not specified yet"}
 ML Ensemble Target: ${stock.currency}${baseline.targetPrice} (+${baseline.targetGainPct}%)
 ML Stop-Loss Guard: ${stock.currency}${baseline.stopLossPrice} (-${baseline.stopLossLossPct}%)
 

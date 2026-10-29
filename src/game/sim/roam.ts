@@ -223,6 +223,28 @@ export function releaseAgentsToRoam(): void {
   notifyListeners();
 }
 
+/**
+ * Stops any active analysis task and releases all 4 agents from their desks
+ * so they stand up, relax, drink coffee, and roam freely.
+ */
+export function stopAnalyzingAndRelax(): void {
+  currentTask = {
+    isActive: false,
+    symbol: "",
+    horizon: "1D",
+    progress: 0,
+    isComplete: false,
+  };
+
+  for (const agent of agents) {
+    agent.target = pickNextTarget(agent);
+    agent.state = "walk";
+    agent.actionStatus = "Relaxing · Off-desk";
+  }
+
+  notifyListeners();
+}
+
 function pickNextTarget(agent: Agent): Vec {
   // 25% chance to visit the coffee station for a drink
   if (Math.random() < 0.25) {

@@ -66,7 +66,7 @@ export const agents: Agent[] = [
 
 function pickNextTarget(agent: Agent): Vec {
   // Prefer a waypoint away from the current one so they cover the floor.
-  let best: Vec = WAYPOINTS[0];
+  let best: Vec = WAYPOINTS[0] ?? { x: 0, z: 0 };
   let bestScore = -Infinity;
   for (const wp of WAYPOINTS) {
     const dist = Math.hypot(wp.x - agent.x, wp.z - agent.z);

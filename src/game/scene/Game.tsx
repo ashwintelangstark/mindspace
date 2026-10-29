@@ -71,7 +71,7 @@ export default function Game() {
           // signal readiness after the first real frame has drawn
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              if (wrapper.current) wrapper.current.dataset.sceneReady = "1";
+              if (wrapper.current) wrapper.current.dataset["sceneReady"] = "1";
             });
           });
         }}

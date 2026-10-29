@@ -264,5 +264,3 @@ export function Office() {
   );
 }
 
-export const ROOM_BOUNDS = { minX: -7.4, maxX: 7.4, minZ: -5.4, maxZ: 5.4, WALL_H };
-export const CITY_TEXTURE_HINT = THREE.LinearFilter;

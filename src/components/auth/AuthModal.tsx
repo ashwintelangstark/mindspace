@@ -9,7 +9,7 @@ import {
 interface AuthModalProps {
   isOpen: boolean;
   onSuccess: (user: MindspaceUser) => void;
-  onBackToLanding: () => void;
+  onBackToLanding?: () => void;
 }
 
 export function AuthModal({ isOpen, onSuccess, onBackToLanding }: AuthModalProps) {
@@ -81,7 +81,7 @@ export function AuthModal({ isOpen, onSuccess, onBackToLanding }: AuthModalProps
   };
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#020604]/95 backdrop-blur-xl p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#020604]/95 backdrop-blur-xl p-4 overflow-y-auto">
       {/* Ambient Background Glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[620px] h-[360px] rounded-full bg-[#00e59a]/10 blur-[120px]" />
@@ -93,7 +93,7 @@ export function AuthModal({ isOpen, onSuccess, onBackToLanding }: AuthModalProps
         <div className="flex items-center justify-between mb-5">
           <button
             type="button"
-            onClick={onBackToLanding}
+            onClick={() => onBackToLanding?.()}
             className="inline-flex items-center gap-1.5 rounded-xl border border-[#1a4d36] bg-[#06130d] px-3 py-1.5 text-xs font-bold text-[#9ab8a8] hover:border-[#00e59a] hover:text-white transition-all"
           >
             <span>←</span>

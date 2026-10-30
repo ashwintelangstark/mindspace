@@ -1078,6 +1078,247 @@
           align-items: flex-start;
         }
       }
+
+      /* Mindspace Auth Modal Overlay (Login & Registration) */
+      .auth-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        background: rgba(2, 6, 4, 0.96);
+        backdrop-filter: blur(24px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .auth-modal-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .auth-modal-box {
+        width: min(460px, 94vw);
+        background: linear-gradient(180deg, #071610 0%, #040d09 50%, #020705 100%);
+        border: 1px solid #1d6445;
+        border-radius: 26px;
+        box-shadow:
+          0 28px 80px rgba(0, 0, 0, 0.9),
+          0 0 40px rgba(0, 229, 154, 0.18);
+        padding: 28px;
+        color: #f0f7f3;
+        position: relative;
+        transform: scale(0.92) translateY(20px);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .auth-modal-overlay.open .auth-modal-box {
+        transform: scale(1) translateY(0);
+      }
+      .auth-modal-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .auth-back-btn {
+        background: #06130d;
+        border: 1px solid #1a4d36;
+        border-radius: 12px;
+        padding: 6px 12px;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #9ab8a8;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .auth-back-btn:hover {
+        border-color: #00e59a;
+        color: #fff;
+      }
+      .auth-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid rgba(0, 229, 154, 0.4);
+        background: rgba(0, 229, 154, 0.1);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 700;
+        color: #00e59a;
+      }
+      .auth-brand-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .auth-logo-box {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        border: 1px solid #1f6e4c;
+        background: #061810;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 20px rgba(0, 229, 154, 0.2);
+        flex-shrink: 0;
+      }
+      .auth-logo-box img {
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+      }
+      .auth-title {
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        color: #fff;
+        margin: 0;
+      }
+      .auth-sub {
+        font-size: 11px;
+        color: #92a79c;
+        margin: 3px 0 0 0;
+      }
+      .auth-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        background: #020705;
+        border: 1px solid #154531;
+        border-radius: 14px;
+        padding: 4px;
+        margin-bottom: 18px;
+      }
+      .auth-tab {
+        background: transparent;
+        border: none;
+        border-radius: 10px;
+        padding: 9px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        color: #7a9485;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .auth-tab.active {
+        background: #00e59a;
+        color: #00180e;
+        box-shadow: 0 0 14px rgba(0, 229, 154, 0.35);
+      }
+      .auth-field {
+        margin-bottom: 14px;
+      }
+      .auth-field label {
+        display: block;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #9db8aa;
+        margin-bottom: 6px;
+      }
+      .auth-field input {
+        width: 100%;
+        background: #030906;
+        border: 1px solid #1b573d;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-size: 13.5px;
+        color: #fff;
+        outline: none;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+      }
+      .auth-field input:focus {
+        border-color: #00e59a;
+        box-shadow: 0 0 12px rgba(0, 229, 154, 0.25);
+      }
+      .auth-check-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 12px 0 18px 0;
+      }
+      .auth-check-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #d1ded6;
+        cursor: pointer;
+      }
+      .auth-check-label input {
+        accent-color: #00e59a;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+      .auth-check-note {
+        font-size: 10.5px;
+        font-family: "JetBrains Mono", monospace;
+        color: #00e59a;
+      }
+      .auth-submit-btn {
+        width: 100%;
+        background: #00e59a;
+        color: #00180e;
+        border: 1px solid #00e59a;
+        border-radius: 14px;
+        padding: 13px;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .auth-submit-btn:hover {
+        background: #48ffbe;
+        box-shadow: 0 0 25px rgba(0, 229, 154, 0.4);
+      }
+      .auth-alert {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 14px;
+      }
+      .auth-alert.error {
+        background: rgba(255, 53, 73, 0.15);
+        border: 1px solid rgba(255, 53, 73, 0.5);
+        color: #ff808d;
+      }
+      .auth-alert.success {
+        background: rgba(0, 229, 154, 0.15);
+        border: 1px solid rgba(0, 229, 154, 0.5);
+        color: #00e59a;
+      }
+      .auth-footer-row {
+        margin-top: 20px;
+        padding-top: 12px;
+        border-top: 1px solid #143c2b;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #8da89a;
+      }
+      .auth-agents-icons {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .auth-isolated-note {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        color: #00e59a;
+      }
     </style>
 
     <!-- Three.js + OrbitControls Bundles: Local Offline-First with Dynamic Fallbacks -->
@@ -1762,29 +2003,349 @@
       </div>
     </div>
 
+    <!-- Mindspace Authentication Modal (Login & Registration) -->
+    <div class="auth-modal-overlay" id="auth-modal" onclick="closeAuthModal(event)">
+      <div class="auth-modal-box" id="auth-modal-box" onclick="event.stopPropagation()">
+        <!-- Top Controls: Close button & Tag -->
+        <div class="auth-modal-top">
+          <button type="button" class="auth-back-btn" onclick="closeAuthModal()">
+            ← Back to Landing Page
+          </button>
+          <span class="auth-badge">
+            <span class="pulse-dot"></span>
+            PRIVATE WORKSPACE
+          </span>
+        </div>
+
+        <!-- Brand Title -->
+        <div class="auth-brand-row">
+          <div class="auth-logo-box">
+            <img src="logo.png" alt="Mindspace" onerror="this.src = '/logo.png'" />
+          </div>
+          <div>
+            <h2 class="auth-title">MINDSPACE ACCESS</h2>
+            <p class="auth-sub">Personal 3D AI Trading Floor & Isolated Portfolio</p>
+          </div>
+        </div>
+
+        <!-- Mode Tabs: Login vs Register -->
+        <div class="auth-tabs">
+          <button
+            type="button"
+            class="auth-tab active"
+            id="auth-tab-login"
+            onclick="setAuthMode('login')"
+          >
+            🔐 Login
+          </button>
+          <button
+            type="button"
+            class="auth-tab"
+            id="auth-tab-register"
+            onclick="setAuthMode('register')"
+          >
+            ✨ Register Account
+          </button>
+        </div>
+
+        <!-- Alerts -->
+        <div id="auth-error-msg" class="auth-alert error" style="display: none"></div>
+        <div id="auth-success-msg" class="auth-alert success" style="display: none"></div>
+
+        <!-- Auth Form (Username, Password for Login; Username, Email, Password for Register; Remember Me; NO forgot password) -->
+        <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+          <div class="auth-field">
+            <label for="auth-username">USERNAME</label>
+            <input
+              type="text"
+              id="auth-username"
+              required
+              placeholder="Enter your username (e.g. ashwin)"
+              autocomplete="username"
+            />
+          </div>
+
+          <div class="auth-field" id="auth-email-field" style="display: none">
+            <label for="auth-email">EMAIL ADDRESS</label>
+            <input
+              type="email"
+              id="auth-email"
+              placeholder="Enter your email (e.g. you@example.com)"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="auth-field">
+            <label for="auth-password">PASSWORD</label>
+            <input
+              type="password"
+              id="auth-password"
+              required
+              placeholder="Enter your password"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <!-- Remember me checkbox (strictly no forgot password) -->
+          <div class="auth-check-row">
+            <label class="auth-check-label">
+              <input type="checkbox" id="auth-remember" checked />
+              <span>Remember me on this device</span>
+            </label>
+            <span class="auth-check-note">Username + Password Auth</span>
+          </div>
+
+          <button type="submit" class="auth-submit-btn" id="auth-submit-btn">
+            Enter Mindspace Workspace →
+          </button>
+        </form>
+
+        <div class="auth-footer-row">
+          <div class="auth-agents-icons">
+            <span>🐂</span><span>🐻</span><span>🦌</span><span>🐇</span>
+            <span style="margin-left: 4px">4 Autonomous AI Agents</span>
+          </div>
+          <span class="auth-isolated-note">100% Isolated User Data</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Interactive JavaScript Engine (Three.js 3D Roblox Models, OrbitControls & Dynamic Dossiers) -->
     <script>
-      // 1. Navigation / App Launcher Redirection
-      function launchMindspaceApp(e) {
-        if (e) e.preventDefault();
-        try {
-          localStorage.setItem("mindspace_entry_source", "landing");
-          localStorage.setItem("mindspace_entered_app", "1");
-        } catch (err) {}
-
-        // If embedded inside iframe in web app parent, signal parent to close overlay
+      // 1. Navigation & Auth Launcher Redirection
+      function openAuthModal(mode) {
+        // If embedded in iframe in parent web app, signal parent to open the login page
         if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "ENTER_MINDSPACE_APP" }, "*");
           window.parent.postMessage({ type: "CLOSE_LANDING_AND_ENTER_APP" }, "*");
+          window.parent.postMessage({ type: "OPEN_AUTH_MODAL" }, "*");
+        }
+
+        // Also open the embedded modal so it's always visible both inside iframe and in standalone file:///
+        const modal = document.getElementById("auth-modal");
+        if (modal) {
+          setAuthMode(mode || "login");
+          modal.classList.add("open");
+          document.body.style.overflow = "hidden";
+
+          try {
+            const remembered = JSON.parse(
+              localStorage.getItem("mindspace_remembered_credentials_v1") || "null",
+            );
+            if (remembered && remembered.username) {
+              document.getElementById("auth-username").value = remembered.username;
+              document.getElementById("auth-password").value = remembered.password || "";
+              if (remembered.email && document.getElementById("auth-email")) {
+                document.getElementById("auth-email").value = remembered.email;
+              }
+              document.getElementById("auth-remember").checked = true;
+            } else {
+              const rawUsers = localStorage.getItem("mindspace_registered_users_v1");
+              if (!rawUsers || rawUsers === "[]") {
+                setAuthMode("register");
+              }
+            }
+          } catch (e) {}
+        }
+      }
+
+      function closeAuthModal(e) {
+        if (
+          e &&
+          e.target &&
+          e.target !== e.currentTarget &&
+          !e.target.classList.contains("auth-back-btn")
+        )
+          return;
+        const modal = document.getElementById("auth-modal");
+        if (modal) {
+          modal.classList.remove("open");
+        }
+        document.body.style.overflow = "";
+      }
+
+      function setAuthMode(mode) {
+        window.currentAuthMode = mode;
+        const tabLogin = document.getElementById("auth-tab-login");
+        const tabReg = document.getElementById("auth-tab-register");
+        const emailField = document.getElementById("auth-email-field");
+        const emailInput = document.getElementById("auth-email");
+        const submitBtn = document.getElementById("auth-submit-btn");
+        const pwdInput = document.getElementById("auth-password");
+        const errBox = document.getElementById("auth-error-msg");
+        const succBox = document.getElementById("auth-success-msg");
+
+        if (errBox) errBox.style.display = "none";
+        if (succBox) succBox.style.display = "none";
+
+        if (mode === "register") {
+          if (tabReg) tabReg.classList.add("active");
+          if (tabLogin) tabLogin.classList.remove("active");
+          if (emailField) emailField.style.display = "block";
+          if (emailInput) emailInput.required = true;
+          if (submitBtn) submitBtn.textContent = "Register & Open Mindspace →";
+          if (pwdInput) pwdInput.setAttribute("autocomplete", "new-password");
+        } else {
+          if (tabLogin) tabLogin.classList.add("active");
+          if (tabReg) tabReg.classList.remove("active");
+          if (emailField) emailField.style.display = "none";
+          if (emailInput) emailInput.required = false;
+          if (submitBtn) submitBtn.textContent = "Enter Mindspace Workspace →";
+          if (pwdInput) pwdInput.setAttribute("autocomplete", "current-password");
+        }
+      }
+
+      function handleAuthSubmit(e) {
+        if (e) e.preventDefault();
+        const errBox = document.getElementById("auth-error-msg");
+        const succBox = document.getElementById("auth-success-msg");
+        if (errBox) errBox.style.display = "none";
+        if (succBox) succBox.style.display = "none";
+
+        const username = (document.getElementById("auth-username").value || "").trim();
+        const password = document.getElementById("auth-password").value || "";
+        const email = (
+          document.getElementById("auth-email") ? document.getElementById("auth-email").value : ""
+        ).trim();
+        const remember = document.getElementById("auth-remember").checked;
+        const mode = window.currentAuthMode || "login";
+
+        if (!username) {
+          showAuthError("Please enter your username.");
+          return;
+        }
+        if (!password) {
+          showAuthError("Please enter your password.");
           return;
         }
 
-        // If user opened directly from local disk (file:///), redirect to local dev server (port 8080 or 3000)
+        let users = [];
+        try {
+          users = JSON.parse(localStorage.getItem("mindspace_registered_users_v1") || "[]");
+          if (!Array.isArray(users)) users = [];
+        } catch (err) {
+          users = [];
+        }
+
+        const usernameLower = username.toLowerCase();
+
+        if (mode === "register") {
+          if (!email || !email.includes("@")) {
+            showAuthError("Please enter a valid email address.");
+            return;
+          }
+          if (password.length < 4) {
+            showAuthError("Password must be at least 4 characters.");
+            return;
+          }
+          const existing = users.find(function (u) {
+            return u.usernameLower === usernameLower;
+          });
+          if (existing) {
+            showAuthError(
+              'Username "' + username + '" is already registered. Please sign in on the Login tab.',
+            );
+            return;
+          }
+
+          const newUser = {
+            username: username,
+            usernameLower: usernameLower,
+            email: email,
+            password: password,
+            createdAt: new Date().toISOString(),
+          };
+          users.push(newUser);
+          try {
+            localStorage.setItem("mindspace_registered_users_v1", JSON.stringify(users));
+          } catch (e) {}
+
+          const sessionUser = {
+            username: username,
+            email: email,
+            createdAt: newUser.createdAt,
+            rememberMe: remember,
+          };
+
+          saveSessionAndProceed(sessionUser, password, remember);
+        } else {
+          // LOGIN
+          const account = users.find(function (u) {
+            return u.usernameLower === usernameLower;
+          });
+          if (!account) {
+            showAuthError(
+              'No account found for "' + username + '". Switch to Register to create your account.',
+            );
+            return;
+          }
+          if (account.password !== password) {
+            showAuthError("Invalid username or password. Please check your credentials.");
+            return;
+          }
+
+          const sessionUser = {
+            username: account.username,
+            email: account.email,
+            createdAt: account.createdAt,
+            rememberMe: remember,
+          };
+
+          saveSessionAndProceed(sessionUser, password, remember);
+        }
+      }
+
+      function showAuthError(msg) {
+        const errBox = document.getElementById("auth-error-msg");
+        if (errBox) {
+          errBox.textContent = "⚠️ " + msg;
+          errBox.style.display = "block";
+        }
+      }
+
+      function saveSessionAndProceed(sessionUser, password, remember) {
+        try {
+          sessionStorage.setItem("mindspace_active_session_user_v1", JSON.stringify(sessionUser));
+          if (remember) {
+            localStorage.setItem("mindspace_active_session_user_v1", JSON.stringify(sessionUser));
+            localStorage.setItem(
+              "mindspace_remembered_credentials_v1",
+              JSON.stringify({
+                username: sessionUser.username,
+                password: password,
+                email: sessionUser.email,
+                rememberMe: true,
+              }),
+            );
+          } else {
+            localStorage.removeItem("mindspace_active_session_user_v1");
+            localStorage.removeItem("mindspace_remembered_credentials_v1");
+          }
+          localStorage.setItem("mindspace_entered_app", "1");
+        } catch (e) {}
+
+        // Signal parent if in iframe
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "AUTH_LOGIN_SUCCESS", user: sessionUser }, "*");
+          window.parent.postMessage({ type: "ENTER_MINDSPACE_APP", user: sessionUser }, "*");
+          window.parent.postMessage(
+            { type: "CLOSE_LANDING_AND_ENTER_APP", user: sessionUser },
+            "*",
+          );
+          return;
+        }
+
+        // If standalone (file:/// or localhost)
         if (window.location.protocol === "file:") {
           window.location.href = "http://localhost:8080/?view=app";
         } else {
-          // If served via web server / domain, redirect to application root with ?view=app
           window.location.href = window.location.origin + "/?view=app";
         }
+      }
+
+      function launchMindspaceApp(e) {
+        if (e) e.preventDefault();
+        openAuthModal("login");
       }
 
       // 2. Comprehensive Agent Dossier Database
@@ -2418,21 +2979,20 @@
         const canvas = document.getElementById("hero-canvas");
         if (!canvas || !window.THREE) return;
 
+        const box = canvas.parentElement;
+        const w = Math.max(canvas.clientWidth || (box ? box.clientWidth : 0) || 540, 280);
+        const h = Math.max(canvas.clientHeight || (box ? box.clientHeight : 0) || 360, 240);
+
         heroRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
         heroRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        heroRenderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+        heroRenderer.setSize(w, h, false);
         heroRenderer.shadowMap.enabled = true;
         heroRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         heroScene = new THREE.Scene();
         heroScene.fog = new THREE.Fog(0x060907, 8, 24);
 
-        heroCamera = new THREE.PerspectiveCamera(
-          36,
-          canvas.clientWidth / canvas.clientHeight,
-          0.1,
-          50,
-        );
+        heroCamera = new THREE.PerspectiveCamera(36, w / h, 0.1, 50);
         heroCamera.position.set(0, 2.1, 4.9);
 
         if (window.THREE.OrbitControls) {
@@ -2543,12 +3103,15 @@
 
         // Resize observer
         const ro = new ResizeObserver(() => {
-          if (!canvas.clientWidth || !canvas.clientHeight) return;
-          heroRenderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-          heroCamera.aspect = canvas.clientWidth / canvas.clientHeight;
-          heroCamera.updateProjectionMatrix();
+          const nw = canvas.clientWidth || (box ? box.clientWidth : 0);
+          const nh = canvas.clientHeight || (box ? box.clientHeight : 0);
+          if (nw > 0 && nh > 0) {
+            heroRenderer.setSize(nw, nh, false);
+            heroCamera.aspect = nw / nh;
+            heroCamera.updateProjectionMatrix();
+          }
         });
-        ro.observe(canvas);
+        ro.observe(canvas.parentElement || canvas);
 
         animateHero();
       }
@@ -2960,6 +3523,10 @@
         requestAnimationFrame(animateModal);
         if (!modalRenderer || !modalScene || !modalCamera) return;
 
+        const modal = document.getElementById("agent-modal");
+        const isOpen = modal && modal.classList.contains("open");
+        if (!isOpen) return;
+
         // Keep WebGL drawing buffer strictly synced to bounded stage dimensions
         const canvas = modalRenderer.domElement;
         const { w, h } = getModalDimensions();
@@ -3154,6 +3721,7 @@
 
       window.addEventListener("DOMContentLoaded", boot3DScenes);
       window.addEventListener("load", boot3DScenes);
+      setTimeout(boot3DScenes, 80);
       boot3DScenes();
     </script>
   </body>

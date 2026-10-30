@@ -12,6 +12,13 @@ import {
 } from "@/game/sim/roam";
 import { fetchAgentDiscussion } from "@/lib/agent-discussions";
 
+import {
+  registerMindspaceUser,
+  loginMindspaceUser,
+  getCurrentUser,
+  logoutMindspaceUser,
+} from "@/lib/auth";
+
 describe("Mindspace Open-Source ML Ensemble, Multi-Horizon Probabilities & No-Preset Verification", () => {
   it("starts with no default stock selected and zero preset wallet cash", async () => {
     const snap = getMarketSnapshot();
@@ -149,5 +156,53 @@ describe("Mindspace Open-Source ML Ensemble, Multi-Horizon Probabilities & No-Pr
     expect(morningSky.isNight).toBe(false);
     expect(nightSky.phase).toBe("NIGHT");
     expect(nightSky.isNight).toBe(true);
+  });
+
+  it("handles user registration, login with username+password, and remember-me persistence", () => {
+    logoutMindspaceUser();
+    expect(getCurrentUser()).toBeNull();
+
+    // 1. Register new user
+    const regRes = registerMindspaceUser({
+      username: "testtrader",
+      email: "trader@example.com",
+      password: "secretpassword",
+      rememberMe: true,
+    });
+    expect(regRes.ok).toBe(true);
+    expect(regRes.user?.username).toBe("testtrader");
+    expect(getCurrentUser()?.username).toBe("testtrader");
+
+    // 2. Reject duplicate registration
+    const dupRes = registerMindspaceUser({
+      username: "testtrader",
+      email: "other@example.com",
+      password: "secretpassword",
+      rememberMe: true,
+    });
+    expect(dupRes.ok).toBe(false);
+    expect(dupRes.error).toContain("already registered");
+
+    // 3. Logout
+    logoutMindspaceUser();
+    expect(getCurrentUser()).toBeNull();
+
+    // 4. Failed login with wrong password
+    const failLogin = loginMindspaceUser({
+      username: "testtrader",
+      password: "wrongpassword",
+      rememberMe: true,
+    });
+    expect(failLogin.ok).toBe(false);
+    expect(failLogin.error).toContain("Invalid username or password");
+
+    // 5. Successful login
+    const successLogin = loginMindspaceUser({
+      username: "testtrader",
+      password: "secretpassword",
+      rememberMe: true,
+    });
+    expect(successLogin.ok).toBe(true);
+    expect(getCurrentUser()?.username).toBe("testtrader");
   });
 });

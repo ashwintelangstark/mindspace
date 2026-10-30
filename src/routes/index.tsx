@@ -48,9 +48,19 @@ function LoadingScreen() {
 }
 
 function Index() {
-  // Always open the Landing Page first whenever the project is run
-  const [isLandingOpen, setIsLandingOpen] = useState<boolean>(true);
-  const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
+  // Always open the Landing Page first whenever the project is run unless ?view=app is present
+  const [isLandingOpen, setIsLandingOpen] = useState<boolean>(() => {
+    if (typeof window !== "undefined" && window.location.search.includes("view=app")) {
+      return false;
+    }
+    return true;
+  });
+  const [isAuthOpen, setIsAuthOpen] = useState<boolean>(() => {
+    if (typeof window !== "undefined" && window.location.search.includes("view=app")) {
+      return !getCurrentUser();
+    }
+    return false;
+  });
   const [currentUser, setCurrentUser] = useState<MindspaceUser | null>(() => getCurrentUser());
 
   const [selectedStock, setSelectedStock] = useState<StockQuote | null>(null);
@@ -98,9 +108,25 @@ function Index() {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === "ENTER_MINDSPACE_APP") {
+      if (!event.data) return;
+      const type = event.data.type;
+      if (
+        type === "ENTER_MINDSPACE_APP" ||
+        type === "CLOSE_LANDING_AND_ENTER_APP" ||
+        type === "TRY_OUT_MINDSPACE" ||
+        type === "OPEN_AUTH_MODAL"
+      ) {
         setIsLandingOpen(false);
-        setIsAuthOpen(true);
+        if (event.data.user) {
+          setCurrentUser(event.data.user);
+          setIsAuthOpen(false);
+        } else {
+          setIsAuthOpen(true);
+        }
+      } else if (type === "AUTH_LOGIN_SUCCESS" && event.data.user) {
+        setCurrentUser(event.data.user);
+        setIsLandingOpen(false);
+        setIsAuthOpen(false);
       }
     };
     window.addEventListener("message", handleMessage);
@@ -130,10 +156,11 @@ function Index() {
 
       {/* Login & Registration Gate shown when user clicks "Try out Mindspace" */}
       <AuthModal
-        isOpen={!isLandingOpen && (isAuthOpen || !currentUser)}
+        isOpen={isAuthOpen || (!isLandingOpen && !currentUser)}
         onSuccess={(user) => {
           setCurrentUser(user);
           setIsAuthOpen(false);
+          setIsLandingOpen(false);
         }}
         onBackToLanding={() => {
           setIsAuthOpen(false);

@@ -124,6 +124,10 @@ export interface HorizonForecastDetail {
   verdict:
     "STRONG BUY" | "BUY" | "ACCUMULATE" | "HOLD" | "TAKE PROFIT" | "SELL / AVOID" | "BOOK LOSS";
   withdrawTiming: string;
+  buyingDate?: string;
+  targetDate?: string;
+  targetDateLabel?: string;
+  fixedRate?: number;
   agents: Record<AgentRole, HorizonAgentSummary>;
 }
 
@@ -184,6 +188,10 @@ export interface StockPrediction {
 
   // When to withdraw (Profit or Target)
   targetPrice: number;
+  fixedTargetRate?: number;
+  buyingDate?: string;
+  targetDate?: string;
+  targetDateLabel?: string;
   targetGainPct: number;
   withdrawProfitDate: string; // estimated timeframe to exit for profit
   projectedProfitAmount: number;

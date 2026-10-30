@@ -324,7 +324,7 @@ export function CandlestickChart({
             />
           )}
 
-          {/* ML 91%+ Forecast Cone on Right Side */}
+          {/* Pretrained ML Forecast Cone on Right Side */}
           {showForecastCone && visibleCandles.length > 0 && (
             <g>
               <polygon

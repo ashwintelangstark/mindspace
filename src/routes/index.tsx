@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A 3D stock exchange office with Bull, Bear, Stag and Rabbit AI agents predicting market trends with 91% accuracy, target withdrawal timing, and live trading simulation.",
+          "A 3D stock exchange office with Bull, Bear, Stag and Rabbit AI agents predicting market trends across 6 horizons, target withdrawal timing, and live trading simulation.",
       },
     ],
   }),

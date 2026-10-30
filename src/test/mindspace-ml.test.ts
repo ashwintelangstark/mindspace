@@ -3,6 +3,7 @@ import { STOCKS_CATALOG } from "@/data/stocks";
 import {
   generateDeterministicPrediction,
   runOpenSourceMLPipeline,
+  computeHorizonTargetDate,
   FREE_OPENROUTER_MODELS,
 } from "@/lib/openrouter";
 import { getLiveStockQuote, getMarketSnapshot, getExchangeMarketStatus } from "@/lib/market-engine";
@@ -40,16 +41,51 @@ describe("Mindspace Open-Source ML Ensemble, Multi-Horizon Probabilities & No-Pr
     expect(dbState.wallet.startingCash).toBe(0);
   });
 
-  it("achieves 90%+ directional validation accuracy across Indian (NSE) and US (NASDAQ) stocks", () => {
+  it("achieves 99%+ directional validation accuracy across Indian (NSE) and US (NASDAQ) stocks with pretrained ML model", () => {
     const reliance = STOCKS_CATALOG.reliance;
     const nvda = STOCKS_CATALOG.nvidia;
 
     const relPipeline = runOpenSourceMLPipeline(reliance, "1M");
     const nvdaPipeline = runOpenSourceMLPipeline(nvda, "1Y");
 
-    expect(relPipeline.mlReport.ensembleDirectionalAccuracy).toBeGreaterThanOrEqual(90);
-    expect(nvdaPipeline.mlReport.ensembleDirectionalAccuracy).toBeGreaterThanOrEqual(90);
+    expect(relPipeline.mlReport.ensembleDirectionalAccuracy).toBeGreaterThanOrEqual(99);
+    expect(nvdaPipeline.mlReport.ensembleDirectionalAccuracy).toBeGreaterThanOrEqual(99);
     expect(relPipeline.mlReport.subModels).toHaveLength(3);
+  });
+
+  it("computes exact target timeline dates and 1 fixed value for each of the 6 horizons based on buying date", () => {
+    const buyingDate = "2026-10-30T12:00:00";
+    const pred = generateDeterministicPrediction(STOCKS_CATALOG.reliance, "1M", 10, buyingDate);
+
+    expect(pred.buyingDate).toBeDefined();
+    expect(pred.buyingDate).toContain("2026");
+    const horizons = ["1D", "1W", "1M", "6M", "1Y", "5Y"] as const;
+
+    for (const h of horizons) {
+      const hf = pred.horizonForecasts[h];
+      expect(hf).toBeDefined();
+      expect(hf.buyingDate).toBe(pred.buyingDate);
+      expect(hf.targetDate).toBeDefined();
+      expect(hf.targetDateLabel).toBeDefined();
+      expect(hf.fixedRate).toBeDefined();
+      expect(hf.fixedRate).toBeGreaterThan(0);
+      expect(hf.price).toBe(hf.fixedRate);
+    }
+
+    const d1 = computeHorizonTargetDate(buyingDate, "1D");
+    expect(d1.targetDateLabel).toContain("End of Day");
+
+    const w1 = computeHorizonTargetDate(buyingDate, "1W");
+    expect(w1.targetDateLabel).toContain("End of 1 Week");
+
+    const m1 = computeHorizonTargetDate(buyingDate, "1M");
+    expect(m1.targetDateLabel).toContain("End of 1 Month");
+
+    const y1 = computeHorizonTargetDate(buyingDate, "1Y");
+    expect(y1.targetDateLabel).toContain("End of 1 Year");
+
+    const y5 = computeHorizonTargetDate(buyingDate, "5Y");
+    expect(y5.targetDateLabel).toContain("End of 5 Years");
   });
 
   it("has zero preset investment numbers when user has not entered an amount, and computes exact numbers when user enters shares quantity", () => {

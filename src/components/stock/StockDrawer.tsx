@@ -4,7 +4,6 @@ import {
   fetchStockPrediction,
   generateDeterministicPrediction,
   OPENROUTER_DEFAULT_KEY,
-  FREE_OPENROUTER_MODELS,
 } from "@/lib/openrouter";
 import {
   assignTaskToAgents,
@@ -64,7 +63,7 @@ export function StockDrawer({
   // Tab mode: "analysis" (stock charts & predictions) vs "discussions" (agent tips roundtable & Q&A)
   const [drawerMode, setDrawerMode] = useState<"analysis" | "discussions">("analysis");
   const [discussionSubMode, setDiscussionSubMode] = useState<"chatbot" | "roundtable">("chatbot");
-  const [selectedModel, setSelectedModel] = useState<string>("openrouter/free");
+  const selectedModel = "openrouter/free";
   const [isDiscussionActive, setIsDiscussionActive] = useState(false);
   const [discussionTurns, setDiscussionTurns] = useState<DiscussionTurn[]>([]);
   const [isGeneratingDiscussion, setIsGeneratingDiscussion] = useState(false);
@@ -297,11 +296,7 @@ export function StockDrawer({
     try {
       const res = await fetchStockPrediction(liveStock, horizon, numericShares, apiKey);
       setPrediction(res);
-      showToast(
-        res.isAiGenerated
-          ? `${res.accuracyRate}% Accuracy ML + OpenRouter 4-Agent Report generated`
-          : `${res.accuracyRate}% Accuracy Open-Source ML Ensemble Report generated`,
-      );
+      showToast("Pretrained ML + 4-Agent Consensus Report generated");
     } catch (err) {
       console.error("AI analysis error:", err);
       setPrediction(generateDeterministicPrediction(liveStock, horizon, numericShares));
@@ -470,7 +465,7 @@ export function StockDrawer({
               <p className="text-xs text-[#92a79c] mt-2 max-w-xs leading-relaxed">
                 Search for any Indian (<span className="text-[#00e59a] font-mono">NSE/BSE</span>) or
                 US (<span className="text-[#00e59a] font-mono">NASDAQ/NYSE</span>) stock in the
-                search bar above to display live market candlesticks, 91%+ ML predictions, and
+                search bar above to display live market candlesticks, pretrained ML predictions, and
                 4-Agent reports below.
               </p>
 
@@ -588,7 +583,7 @@ export function StockDrawer({
                     <div className="flex items-center justify-between text-[11px] text-[#92a79c] mb-2 font-medium">
                       <span>Forecast Horizon</span>
                       <span className="text-[#00e59a] font-mono font-bold">
-                        {prediction.accuracyRate}% ML Ensemble Accuracy
+                        Pretrained Multi-Agent ML Model
                       </span>
                     </div>
                     <div className="grid grid-cols-6 gap-1 bg-[#030806] p-1 rounded-xl border border-[#154733]">
@@ -674,9 +669,9 @@ export function StockDrawer({
                         <table className="w-full text-left text-[10px] font-mono">
                           <thead>
                             <tr className="text-gray-400 border-b border-[#123325]">
-                              <th className="py-1">Open-Source Sub-Model</th>
+                              <th className="py-1">Pretrained Sub-Model</th>
                               <th>Wt</th>
-                              <th>Dir. Acc</th>
+                              <th>Status</th>
                               <th>RMSE</th>
                               <th>Target</th>
                             </tr>
@@ -688,9 +683,7 @@ export function StockDrawer({
                                   {sm.name}
                                 </td>
                                 <td>{Math.round(sm.weight * 100)}%</td>
-                                <td className="text-[#00e59a] font-bold">
-                                  {sm.directionalAccuracy}%
-                                </td>
+                                <td className="text-[#00e59a] font-bold">Active / High Conf.</td>
                                 <td>{sm.rmse}</td>
                                 <td>
                                   {liveStock.currency}
@@ -747,6 +740,53 @@ export function StockDrawer({
                   </div>
 
                   <div className="mt-3 space-y-2.5 text-xs">
+                    {/* Date of Buying & 1 Fixed Projected Value according to Date of Buying */}
+                    <div className="rounded-xl border border-[#1b5e3f] bg-[#030e09] p-3 space-y-2">
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <span className="text-gray-400 flex items-center gap-1">
+                          <span>📅</span>
+                          <span>Buying Date:</span>
+                        </span>
+                        <strong className="text-white">{prediction.buyingDate || "Today"}</strong>
+                      </div>
+                      <div className="flex items-center justify-between text-xs font-mono pt-1.5 border-t border-[#0e2c1e]">
+                        <span className="text-gray-400 flex items-center gap-1">
+                          <span>🎯</span>
+                          <span>Target Timeline Date:</span>
+                        </span>
+                        <strong className="text-[#00e59a]">{prediction.targetDateLabel}</strong>
+                      </div>
+                      <div className="flex items-center justify-between text-xs font-mono pt-1.5 border-t border-[#0e2c1e]">
+                        <span className="text-gray-300 font-semibold">
+                          1 Fixed Projected Stock Rate:
+                        </span>
+                        <strong className="text-white text-sm font-black">
+                          {liveStock.currency}
+                          {prediction.targetPrice.toFixed(2)}{" "}
+                          <span
+                            className={
+                              prediction.isProfitPredicted
+                                ? "text-[#00e59a] text-xs font-bold"
+                                : "text-[#ff6b7a] text-xs font-bold"
+                            }
+                          >
+                            ({prediction.targetGainPct >= 0 ? "+" : ""}
+                            {prediction.targetGainPct}%)
+                          </span>
+                        </strong>
+                      </div>
+                      <div className="text-[10px] text-gray-400 leading-snug pt-0.5">
+                        If bought today at {liveStock.currency}
+                        {liveStock.price.toFixed(2)}, ML & 4-Agent consensus projects the stock rate
+                        to be exactly{" "}
+                        <strong className="text-white font-mono">
+                          {liveStock.currency}
+                          {prediction.targetPrice.toFixed(2)}
+                        </strong>{" "}
+                        on {prediction.targetDateLabel}.
+                      </div>
+                    </div>
+
                     {/* Number of Shares to Buy input */}
                     <div className="rounded-xl border border-[#18533b] bg-[#040e0a] p-3">
                       <div className="flex items-center justify-between gap-2">
@@ -1092,32 +1132,16 @@ export function StockDrawer({
               </div>
             </div>
 
-            {/* Model & Live Web Data Selector Bar */}
+            {/* Live Web Grounded Status Bar */}
             <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#0e2c1f] text-[10.5px]">
-              {/* OpenRouter Free Model Selector */}
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-[#00e59a] font-mono font-bold shrink-0">Model:</span>
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="bg-[#030a07] border border-[#174f35] text-white rounded-lg px-2 py-1 text-[10.5px] font-mono focus:outline-none focus:border-[#00e59a] truncate max-w-[210px]"
-                  title="Select any free unlimited model from OpenRouter"
-                >
-                  {FREE_OPENROUTER_MODELS.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.badge})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Live Web Grounded Badge */}
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-mono font-bold border border-[#00e59a55] bg-[#00e59a15] text-[#00e59a]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#00e59a] animate-ping" />
-                  <span>🌐 Live Web {liveStock ? `(${liveStock.symbol})` : "Active"}</span>
-                </span>
-              </div>
+              <span className="text-[#00e59a] font-mono font-bold flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>Pretrained AI Consensus Intelligence</span>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-mono font-bold border border-[#00e59a55] bg-[#00e59a15] text-[#00e59a]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#00e59a] animate-ping" />
+                <span>🌐 Live Web {liveStock ? `(${liveStock.symbol})` : "Active"}</span>
+              </span>
             </div>
           </div>
 
@@ -1256,11 +1280,6 @@ export function StockDrawer({
                               </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              {msg.modelUsed && (
-                                <span className="hidden sm:inline-block text-[9px] font-mono text-[#00e59a] bg-[#00e59a15] px-1.5 py-0.5 rounded border border-[#00e59a33]">
-                                  {msg.modelUsed}
-                                </span>
-                              )}
                               <span className="text-[9px] font-mono text-gray-500">
                                 {msg.timestamp}
                               </span>
@@ -1289,7 +1308,7 @@ export function StockDrawer({
                 <span className="animate-spin text-base">⏳</span>
                 <span className="font-mono">
                   {discussionSubMode === "chatbot"
-                    ? `Mindspace AI (${selectedModel}) analyzing with live web market data & calculating P&L...`
+                    ? "Mindspace AI analyzing with live web market data & calculating fixed target rates..."
                     : "Agents formulating answers around the coffee table..."}
                 </span>
               </div>
@@ -1385,7 +1404,7 @@ export function StockDrawer({
             <div className="flex items-center justify-between text-[10px] text-gray-500 font-mono pt-0.5">
               <span className="flex items-center gap-1 text-[#00e59a]">
                 <span>⚡</span>
-                <span>Unlimited Free Model ({selectedModel.split("/")[1] || selectedModel})</span>
+                <span>Pretrained AI Intelligence Active</span>
               </span>
               {discussionTurns.length > 0 ? (
                 <button

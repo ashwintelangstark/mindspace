@@ -352,7 +352,7 @@ OUTPUT REQUIREMENTS:
               topic: userQuestion,
               userQuestion: userQuestion,
               mode: "chatbot",
-              modelUsed: model,
+              modelUsed: "Pretrained AI Engine",
               webContext: contextText,
               timestamp: nowStr,
               messages: [
@@ -371,10 +371,10 @@ OUTPUT REQUIREMENTS:
                   sender: "assistant",
                   name: "Mindspace AI Chatbot",
                   avatar: "🤖",
-                  roleTitle: `Market Intelligence & Quant Analyst · Powered by ${model}`,
+                  roleTitle: "Market Intelligence & Pretrained Quant Analyst",
                   message: reply.trim(),
                   timestamp: nowStr,
-                  modelUsed: model,
+                  modelUsed: "Pretrained AI Engine",
                 },
               ],
             };

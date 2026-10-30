@@ -61,7 +61,7 @@ export function LiveTickerBar() {
       <div className="hidden xl:flex items-center gap-2 text-[11px] text-gray-400 pl-4 border-l border-[#174c36] whitespace-nowrap font-mono">
         <span className="text-[#00e59a]">4 AI AGENTS</span>
         <span>·</span>
-        <span>91%+ ML ENSEMBLE</span>
+        <span>PRETRAINED ML ENSEMBLE</span>
       </div>
     </div>
   );

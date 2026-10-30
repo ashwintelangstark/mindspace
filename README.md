@@ -127,9 +127,11 @@ Experience the realism of live markets without financial risk:
 - **Click & Switch Bought Stocks**: Click any bought stock in your portfolio or the Quick Switcher ribbon to immediately switch to it, inspect its chart, or sell shares.
 - **1-Click & Partial Selling**: Use **Sell All** for instant execution at the live Bid price, or click **Sell** to load the position into the Order Pad.
 - **6-Horizon 4-Agent Analysis (`1D`, `1W`, `1M`, `6M`, `1Y`, `5Y`)**:
-  - Honest **PROFIT** or **LOSS** predictions based on momentum, technical alignment, and entry price.
-  - Explicit **Probability of Profit (%)** and **Probability of Loss (%)** for every time horizon.
-  - Side-by-side 4-Agent (`Bull`, `Bear`, `Stag`, `Rabbit`) breakdown for each of the 6 horizons.
+  - **1 Fixed Projected Rate by Buying Date**: Pretrained quantitative ML model co-works with the 4 AI agents to establish one fixed consensus valuation for the end of each horizon based on the date of buying: _"If you buy today at ₹2,846.50, the projected stock rate will be ₹2,894.20 on [Target Date]"_.
+  - **Exact Target Timeline Dates**: Transparent display of the exact calendar date (End of Day, End of 1 Week, End of 1 Month, End of 6 Months, End of 1 Year, End of 5 Years).
+  - **Honest Profit / Loss Directionality**: Unbiased **PROFIT** or **LOSS** predictions based on momentum, technical alignment, and entry price.
+  - **Explicit Probabilities**: Mathematical **Probability of Profit (%)** and **Probability of Loss (%)** for every time horizon.
+  - **Side-by-Side 4-Agent Breakdown**: Detailed consensus analysis from `Bull`, `Bear`, `Stag`, and `Rabbit`.
 
 ---
 
@@ -137,10 +139,10 @@ Experience the realism of live markets without financial risk:
 
 Mindspace features a dual-mode discussion intelligence system accessible right from the side drawer:
 
-### 1. 🤖 AI Market Chatbot (Free Unlimited Model & Live Web Grounding)
+### 1. 🤖 AI Market Chatbot (Live Web Grounding & Multi-Agent Intelligence)
 
-- **Unlimited Free OpenRouter Models**: Powered by `openrouter/free` (high-speed auto-router across free pools with zero rate limits), with selectable options including **Google Gemma 4 31B**, **NVIDIA Nemotron 3.5**, **Cohere North Mini**, and **Recursive Flint v1.0**.
-- **Live Web & Real-Time Market Grounding**: Dynamically queries live stock quotes, 24-hour price changes, intraday highs/lows, VWAP, 20-EMA, and RSI from the web feed, enabling the chatbot to give up-to-the-minute answers.
+- **Autonomous Market Intelligence**: High-speed, real-time market chatbot synthesizing continuous market sentiment and technical data.
+- **Live Web & Real-Time Market Grounding**: Dynamically queries live stock quotes, 24-hour price changes, intraday highs/lows, VWAP, 20-EMA, and RSI from live feeds, enabling the chatbot to give up-to-the-minute answers.
 - **Exact Profit & Loss (P&L) Calculator**: Ask about any position sizing (e.g. _"Calculate P&L for 50 shares of Reliance"_) and the chatbot automatically computes:
   - Capital deployed ($Shares \times Price$)
   - Upside target price and potential gross profit in amount & %
@@ -176,7 +178,7 @@ Generate institutional-quality Word documents with a single click:
 
 - **Frontend & 3D**: [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Three.js](https://threejs.org/), [@react-three/fiber](https://r3f.docs.pmnd.rs/), [Tailwind CSS](https://tailwindcss.com/)
 - **Framework & SSR**: [TanStack Start](https://tanstack.com/start), [Nitro](https://nitro.unjs.io/)
-- **AI & ML Engine**: OpenRouter API (free-tier optimized) + Open-Source Quantitative ML Ensemble (LightGBM GBDT + Kalman State-Space AR + Holt-Winters)
+- **AI & ML Engine**: Pretrained Quantitative Multi-Agent ML Ensemble (LightGBM GBDT + Kalman State-Space AR + Holt-Winters) + Autonomous AI Market Intelligence
 - **Testing**: [Vitest](https://vitest.dev/)
 
 ---

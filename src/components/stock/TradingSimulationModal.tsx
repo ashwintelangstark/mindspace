@@ -1076,6 +1076,43 @@ export function TradingSimulationModal({
               </div>
             </div>
 
+            {/* 1 Fixed Projected Value according to Date of Buying Headline */}
+            <div className="rounded-xl border border-[#1a5a3d] bg-gradient-to-r from-[#071911] via-[#05130d] to-[#040e09] p-3 my-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">📅</span>
+                  <span className="text-gray-300">
+                    If bought <strong>{activePrediction.buyingDate || "today"}</strong> at{" "}
+                    <strong className="text-white font-mono">
+                      {liveStock.currency}
+                      {liveStock.price.toFixed(2)}
+                    </strong>
+                    :
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 font-mono">
+                  <span className="text-gray-400">
+                    Fixed Rate for {activeHorizonReport.targetDateLabel}:
+                  </span>
+                  <strong className="text-white text-sm font-black">
+                    {liveStock.currency}
+                    {activeHorizonReport.price.toFixed(2)}
+                  </strong>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                      activeHorizonReport.isProfitPredicted
+                        ? "bg-[#00e59a22] text-[#00e59a]"
+                        : "bg-[#ff354925] text-[#ff6b7a]"
+                    }`}
+                  >
+                    {activeHorizonReport.changePct >= 0 ? "+" : ""}
+                    {activeHorizonReport.changePct.toFixed(2)}% (
+                    {activeHorizonReport.isProfitPredicted ? "PROFIT" : "LOSS"})
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* 6-Horizon Interactive Selector Grid (1D, 1W, 1M, 6M, 1Y, 5Y) */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 my-4">
               {ALL_TIME_HORIZONS.map((h) => {
@@ -1110,7 +1147,14 @@ export function TradingSimulationModal({
                       </span>
                     </div>
 
-                    <div className="mt-2 font-mono">
+                    <div className="text-[10px] text-gray-400 font-mono mt-1">
+                      Target:{" "}
+                      <strong className="text-gray-200">
+                        {hf.targetDate || HORIZON_FACTORS[h].label}
+                      </strong>
+                    </div>
+
+                    <div className="mt-1.5 font-mono">
                       <div className="text-sm font-black text-white">
                         {liveStock.currency}
                         {hf.price.toFixed(2)}

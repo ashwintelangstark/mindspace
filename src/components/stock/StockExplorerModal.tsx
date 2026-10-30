@@ -66,7 +66,8 @@ export function StockExplorerModal({ isOpen, onClose, onSelectStock }: StockExpl
                 MINDSPACE · Live Market Explorer
               </h2>
               <p className="text-xs text-[#92a79c] mt-0.5">
-                Real-Time Indian (NSE/BSE) & US (NASDAQ/NYSE) Equities · 91%+ ML Ensemble Forecast
+                Real-Time Indian (NSE/BSE) & US (NASDAQ/NYSE) Equities · Pretrained ML Ensemble
+                Forecast
               </p>
             </div>
           </div>

@@ -180,8 +180,8 @@ export function exportPredictionToWordDoc(prediction: StockPrediction): void {
       </td>
       <td class="doc-meta">
         <strong>Report Date:</strong> ${dateStr} at ${timeStr}<br/>
-        <strong>Ensemble Model:</strong> ${ml.modelName}<br/>
-        <strong>Validation Accuracy:</strong> ${prediction.accuracyRate}% Directional
+        <strong>Ensemble Engine:</strong> Pretrained Multi-Agent Quant Model<br/>
+        <strong>Execution Consensus:</strong> Timeline-Locked Fixed Valuation
       </td>
     </tr>
   </table>
@@ -241,13 +241,17 @@ export function exportPredictionToWordDoc(prediction: StockPrediction): void {
   </table>
 
   <!-- Section 2: 6-Horizon Profit / Loss & Probability Matrix (1D, 1W, 1M, 6M, 1Y, 5Y) -->
-  <h2>2. 6-Horizon Forecast & Profit/Loss Probability Matrix (1D · 1W · 1M · 6M · 1Y · 5Y)</h2>
+  <h2>2. 6-Horizon Forecast & Timeline Valuation Matrix (1D · 1W · 1M · 6M · 1Y · 5Y)</h2>
+  <p style="font-size: 9pt; color: #5e6c84; margin-top: 0;">
+    Buying Date: <strong>${prediction.buyingDate || dateStr}</strong> · Fixed projected rate consensus across exact target timeline dates:
+  </p>
   <table class="data-table">
     <thead>
       <tr>
         <th>Horizon</th>
+        <th>Target Timeline Date</th>
         <th>Predicted Outcome</th>
-        <th>Projected Price</th>
+        <th>1 Fixed Projected Value</th>
         <th>Expected Return</th>
         <th>Profit Probability</th>
         <th>Loss Probability</th>
@@ -258,15 +262,20 @@ export function exportPredictionToWordDoc(prediction: StockPrediction): void {
       ${ALL_HORIZONS.map((h) => {
         const hf = prediction.horizonForecasts[h];
         if (!hf) return "";
+        const fixedVal = hf.fixedRate ?? hf.price;
         return `
         <tr>
           <td><strong>${h}</strong></td>
+          <td>
+            <strong>${hf.targetDateLabel || h}</strong><br/>
+            <span style="font-size: 8pt; color: #5e6c84;">${hf.targetDate || ""}</span>
+          </td>
           <td>
             <span class="${hf.isProfitPredicted ? "badge-bull" : "badge-bear"}">
               ${hf.isProfitPredicted ? "PROFIT" : "LOSS"}
             </span>
           </td>
-          <td><strong>${stock.currency}${hf.price.toFixed(2)}</strong></td>
+          <td><strong style="color: #006644; font-size: 10pt;">${stock.currency}${fixedVal.toFixed(2)}</strong></td>
           <td style="color: ${hf.changePct >= 0 ? "#00875a" : "#bf2600"}; font-weight: bold;">
             ${hf.changePct >= 0 ? "+" : ""}${hf.changePct.toFixed(2)}%
           </td>
@@ -350,7 +359,7 @@ export function exportPredictionToWordDoc(prediction: StockPrediction): void {
       <span class="verdict-badge">VERDICT: ${prediction.consensusVerdict}</span>
       &nbsp;&nbsp;
       <span style="font-size: 10pt; color: #006644; font-weight: bold;">
-        Profit Probability: ${prediction.profitProbability}% | Loss Probability: ${prediction.lossProbability}% | ML Accuracy: ${prediction.accuracyRate}%
+        Profit Probability: ${prediction.profitProbability}% | Loss Probability: ${prediction.lossProbability}% | Model: Pretrained Multi-Agent Consensus
       </span>
     </div>
 

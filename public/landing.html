@@ -1084,7 +1084,7 @@
         position: fixed;
         inset: 0;
         z-index: 2000;
-        background: rgba(2, 6, 4, 0.96);
+        background: rgba(2, 6, 4, 0.92);
         backdrop-filter: blur(24px);
         display: flex;
         align-items: center;
@@ -1093,14 +1093,47 @@
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow: hidden;
       }
       .auth-modal-overlay.open {
         opacity: 1;
         pointer-events: auto;
       }
+      .auth-video-backdrop {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .auth-bg-video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: translate(-50%, -50%);
+        opacity: 0.38;
+      }
+      .auth-video-overlay {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at center,
+          rgba(3, 10, 7, 0.62) 0%,
+          rgba(2, 6, 4, 0.92) 80%
+        );
+        backdrop-filter: blur(2px);
+      }
       .auth-modal-box {
         width: min(460px, 94vw);
-        background: linear-gradient(180deg, #071610 0%, #040d09 50%, #020705 100%);
+        background: linear-gradient(
+          180deg,
+          rgba(7, 22, 16, 0.96) 0%,
+          rgba(4, 13, 9, 0.96) 50%,
+          rgba(2, 7, 5, 0.96) 100%
+        );
         border: 1px solid #1d6445;
         border-radius: 26px;
         box-shadow:
@@ -1109,8 +1142,10 @@
         padding: 28px;
         color: #f0f7f3;
         position: relative;
+        z-index: 10;
         transform: scale(0.92) translateY(20px);
         transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(12px);
       }
       .auth-modal-overlay.open .auth-modal-box {
         transform: scale(1) translateY(0);
@@ -1396,11 +1431,6 @@
 
           <!-- 3D Hero Viewer (STRICTLY 1 Character at a Time) -->
           <div class="scene-container reveal stagger-2" id="hero-3d">
-            <div class="scene-top">
-              <span class="scene-title">MINDSPACE // 3D AGENT SPOTLIGHT</span>
-              <span class="badge-live">● 1 CHARACTER AT A TIME</span>
-            </div>
-
             <canvas id="hero-canvas"></canvas>
 
             <div class="scene-bottom">
@@ -1413,9 +1443,6 @@
                 <button class="chip-btn bear-chip" data-agent="bear">🐻 BEAR</button>
                 <button class="chip-btn stag-chip" data-agent="stag">🦌 STAG</button>
                 <button class="chip-btn rabbit-chip" data-agent="rabbit">🐇 RABBIT</button>
-                <button class="chip-btn" id="btn-reset-cam" title="Reset Camera View">
-                  🔄 RESET
-                </button>
               </div>
             </div>
           </div>
@@ -2005,6 +2032,15 @@
 
     <!-- Mindspace Authentication Modal (Login & Registration) -->
     <div class="auth-modal-overlay" id="auth-modal" onclick="closeAuthModal(event)">
+      <!-- Background Video -->
+      <div class="auth-video-backdrop">
+        <video autoplay loop muted playsinline class="auth-bg-video">
+          <source src="login_bg.mp4" type="video/mp4" />
+          <source src="/login_bg.mp4" type="video/mp4" />
+        </video>
+        <div class="auth-video-overlay"></div>
+      </div>
+
       <div class="auth-modal-box" id="auth-modal-box" onclick="event.stopPropagation()">
         <!-- Top Controls: Close button & Tag -->
         <div class="auth-modal-top">
@@ -2060,7 +2096,7 @@
               type="text"
               id="auth-username"
               required
-              placeholder="Enter your username (e.g. ashwin)"
+              placeholder="Enter your username"
               autocomplete="username"
             />
           </div>
@@ -2070,7 +2106,7 @@
             <input
               type="email"
               id="auth-email"
-              placeholder="Enter your email (e.g. you@example.com)"
+              placeholder="Enter your email"
               autocomplete="email"
             />
           </div>

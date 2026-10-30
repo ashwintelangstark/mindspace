@@ -81,14 +81,28 @@ export function AuthModal({ isOpen, onSuccess, onBackToLanding }: AuthModalProps
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#020604]/95 backdrop-blur-xl p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#020604]/90 backdrop-blur-xl p-4 overflow-y-auto">
+      {/* Background Video */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-40"
+        >
+          <source src="/login_bg.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020604]/80 via-[#020604]/65 to-[#020604]/90 backdrop-blur-[2px]" />
+      </div>
+
       {/* Ambient Background Glow */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[620px] h-[360px] rounded-full bg-[#00e59a]/10 blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 w-[420px] h-[280px] rounded-full bg-[#38bdf8]/8 blur-[110px]" />
       </div>
 
-      <div className="relative w-full max-w-md rounded-3xl border border-[#1d6445] bg-gradient-to-b from-[#071610] via-[#040d09] to-[#020705] p-6 sm:p-8 shadow-[0_28px_80px_rgba(0,0,0,0.9),0_0_40px_rgba(0,229,154,0.14)] text-[#f0f7f3]">
+      <div className="relative z-10 w-full max-w-md rounded-3xl border border-[#1d6445] bg-gradient-to-b from-[#071610]/95 via-[#040d09]/95 to-[#020705]/95 p-6 sm:p-8 shadow-[0_28px_80px_rgba(0,0,0,0.9),0_0_40px_rgba(0,229,154,0.14)] text-[#f0f7f3] backdrop-blur-md">
         {/* Top bar: Back to Landing */}
         <div className="flex items-center justify-between mb-5">
           <button
@@ -173,7 +187,7 @@ export function AuthModal({ isOpen, onSuccess, onBackToLanding }: AuthModalProps
               type="text"
               required
               autoComplete="username"
-              placeholder="Enter your username (e.g. ashwin)"
+              placeholder="Enter your username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full rounded-xl border border-[#1b573d] bg-[#030906] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00e59a] shadow-inner"
@@ -189,7 +203,7 @@ export function AuthModal({ isOpen, onSuccess, onBackToLanding }: AuthModalProps
                 type="email"
                 required
                 autoComplete="email"
-                placeholder="Enter your email (e.g. you@example.com)"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-[#1b573d] bg-[#030906] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00e59a] shadow-inner"

@@ -82,14 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Real-time 3D AI Stock Exchange Office with Bull, Bear, Stag, and Rabbit agents, Open-Source ML Forecasting, and Groww-style Paper Trading.",
+          "Real-time 3D AI Stock Exchange Office with Bull, Bear, Stag, and Rabbit agents, Open-Source ML Forecasting, and Live Paper Trading.",
       },
       { name: "author", content: "Mindspace AI" },
       { property: "og:title", content: "MINDSPACE — AI-Powered Stock Market Intelligence" },
       {
         property: "og:description",
         content:
-          "Real-time 3D AI Stock Exchange Office with Bull, Bear, Stag, and Rabbit agents, Open-Source ML Forecasting, and Groww-style Paper Trading.",
+          "Real-time 3D AI Stock Exchange Office with Bull, Bear, Stag, and Rabbit agents, Open-Source ML Forecasting, and Live Paper Trading.",
       },
       { property: "og:image", content: "/logo.png" },
       { property: "og:type", content: "website" },

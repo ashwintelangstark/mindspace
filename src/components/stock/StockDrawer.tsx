@@ -22,8 +22,9 @@ import {
   getExchangeMarketStatus,
   StockSearchResultItem,
 } from "@/lib/market-engine";
-import { exportPredictionToWordDoc } from "@/lib/export-word";
-import { fetchAgentDiscussion, DiscussionTurn, CURATED_TOPICS } from "@/lib/agent-discussions";
+import { exportPredictionToWordDoc, exportDiscussionsToWordDoc } from "@/lib/export-word";
+import { fetchAgentDiscussion, DiscussionTurn } from "@/lib/agent-discussions";
+import { getCurrentUser } from "@/lib/auth";
 import { CandlestickChart } from "./CandlestickChart";
 
 interface StockDrawerProps {
@@ -60,6 +61,36 @@ export function StockDrawer({
   const [discussionTurns, setDiscussionTurns] = useState<DiscussionTurn[]>([]);
   const [isGeneratingDiscussion, setIsGeneratingDiscussion] = useState(false);
   const [userQuestionInput, setUserQuestionInput] = useState("");
+
+  const activeUser = getCurrentUser();
+  const activeUsername = activeUser?.username || "guest";
+  const discussionStorageKey = `mindspace_discussions_${activeUsername.toLowerCase()}`;
+
+  // Load per-user saved discussions when user changes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(discussionStorageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setDiscussionTurns(Array.isArray(parsed) ? parsed : []);
+      } else {
+        setDiscussionTurns([]);
+      }
+    } catch {
+      setDiscussionTurns([]);
+    }
+  }, [discussionStorageKey]);
+
+  // Persist per-user discussions whenever they update
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(discussionStorageKey, JSON.stringify(discussionTurns));
+    } catch {
+      // ignore
+    }
+  }, [discussionTurns, discussionStorageKey]);
 
   const numericShares = Math.max(0, parseInt(sharesQuantityInput, 10) || 0);
 
@@ -194,6 +225,15 @@ export function StockDrawer({
     showToast(`📄 Exported ${prediction.stock.symbol} 4-Agent report to Word document.`);
   };
 
+  const handleExportDiscussionsWord = () => {
+    if (discussionTurns.length === 0) {
+      showToast("Start a discussion or ask a question first before exporting.");
+      return;
+    }
+    exportDiscussionsToWordDoc(discussionTurns, activeUser?.username);
+    showToast("📄 Exported 4-Agent Roundtable & Q&A Discussions to Word document (.doc).");
+  };
+
   const selectStockItem = async (symbolOrYahoo: string) => {
     setIsSearching(true);
     const initialQuote = getLiveStockQuote(symbolOrYahoo);
@@ -238,8 +278,8 @@ export function StockDrawer({
       setPrediction(res);
       showToast(
         res.isAiGenerated
-          ? `${res.accuracyRate}% Accuracy ML + OpenRouter 4-Agent Report saved to SQLite`
-          : `${res.accuracyRate}% Accuracy Open-Source ML Ensemble Report saved to SQLite`,
+          ? `${res.accuracyRate}% Accuracy ML + OpenRouter 4-Agent Report generated`
+          : `${res.accuracyRate}% Accuracy Open-Source ML Ensemble Report generated`,
       );
     } catch (err) {
       console.error("AI analysis error:", err);
@@ -551,30 +591,31 @@ export function StockDrawer({
 
               {/* Main Content Stack */}
               <div className="px-5 space-y-4">
-                {/* Top 3 KPI Summary Pills */}
+                {/* Top 3 KPI Summary Pills + Profit/Loss Probabilities */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-xl border border-[#163d2b] bg-[#06100b] p-2.5">
-                    <span className="text-[10px] text-gray-400 block font-medium">ML Accuracy</span>
+                    <span className="text-[10px] text-gray-400 block font-medium">
+                      Profit Prob.
+                    </span>
                     <strong className="text-sm font-mono text-[#00e59a] mt-0.5 block">
-                      {prediction.accuracyRate}%
+                      {prediction.profitProbability}%
                     </strong>
                   </div>
                   <div className="rounded-xl border border-[#163d2b] bg-[#06100b] p-2.5">
-                    <span className="text-[10px] text-gray-400 block font-medium">
-                      Fair Midpoint
-                    </span>
-                    <strong className="text-sm font-mono text-white mt-0.5 block">
-                      {liveStock.currency}
-                      {prediction.forecastMidpoint.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                      })}
+                    <span className="text-[10px] text-gray-400 block font-medium">Loss Prob.</span>
+                    <strong className="text-sm font-mono text-[#ff6b7a] mt-0.5 block">
+                      {prediction.lossProbability}%
                     </strong>
                   </div>
                   <div className="rounded-xl border border-[#163d2b] bg-[#06100b] p-2.5">
                     <span className="text-[10px] text-gray-400 block font-medium">
                       Consensus Verdict
                     </span>
-                    <strong className="text-sm font-mono text-[#00e59a] mt-0.5 block">
+                    <strong
+                      className={`text-sm font-mono mt-0.5 block ${
+                        prediction.isProfitPredicted ? "text-[#00e59a]" : "text-[#ff6b7a]"
+                      }`}
+                    >
                       {prediction.consensusVerdict}
                     </strong>
                   </div>
@@ -787,7 +828,7 @@ export function StockDrawer({
                         </>
                       ) : (
                         <>
-                          <span>⚡ Run 4-Agent ML Analysis & Save to SQLite</span>
+                          <span>⚡ Run 4-Agent ML Analysis</span>
                         </>
                       )}
                     </button>
@@ -930,13 +971,13 @@ export function StockDrawer({
                   </div>
                 )}
 
-                {/* Big Trading Simulation Trigger (Groww Style) */}
+                {/* Big Trading Simulation Trigger */}
                 <div className="pt-1 pb-6">
                   <button
                     onClick={onOpenSimulation}
                     className="w-full py-3.5 rounded-xl border border-[#00e59a] bg-gradient-to-r from-[#0a261a] to-[#0f3826] text-[#00e59a] font-black text-sm tracking-wide hover:bg-[#00e59a] hover:text-[#00180e] hover:shadow-[0_0_25px_rgba(0,229,154,0.35)] transition-all flex items-center justify-center gap-2"
                   >
-                    <span>📈 Open Live Trading Simulation (Groww Interface)</span>
+                    <span>📈 Open Live Trading Simulation Platform</span>
                     <span>→</span>
                   </button>
                 </div>
@@ -976,7 +1017,7 @@ export function StockDrawer({
               </div>
 
               {/* Discussion Controls */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   type="button"
                   onClick={handleToggleDiscussion}
@@ -997,6 +1038,17 @@ export function StockDrawer({
                   className="px-2.5 py-1.5 rounded-xl border border-[#1b5e41] bg-[#081e14] hover:bg-[#0c2f20] text-gray-200 text-xs font-bold transition-all disabled:opacity-40"
                 >
                   {isGeneratingDiscussion ? "..." : "🎲 New Topic"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExportDiscussionsWord}
+                  disabled={discussionTurns.length === 0}
+                  title="Export all agent discussions to a neatly organized Word (.doc) document"
+                  className="px-2.5 py-1.5 rounded-xl border border-[#00e59a] bg-[#082417] hover:bg-[#00e59a] hover:text-[#00180e] text-[#00e59a] text-xs font-bold transition-all disabled:opacity-40 flex items-center gap-1"
+                >
+                  <span>📄</span>
+                  <span>Export Word</span>
                 </button>
 
                 {discussionTurns.length > 0 && (
@@ -1149,7 +1201,17 @@ export function StockDrawer({
             </div>
             <div className="flex items-center justify-between text-[10px] text-gray-500 mt-1.5 font-mono">
               <span>⚡ Token-efficient: 4 perspectives in 1 turn</span>
-              <span>Bull · Bear · Stag · Rabbit</span>
+              {discussionTurns.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={handleExportDiscussionsWord}
+                  className="text-[#00e59a] font-bold hover:underline flex items-center gap-1"
+                >
+                  <span>📄 Export Discussions to Word (.doc)</span>
+                </button>
+              ) : (
+                <span>Bull · Bear · Stag · Rabbit</span>
+              )}
             </div>
           </form>
         </div>

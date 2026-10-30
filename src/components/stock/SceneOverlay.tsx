@@ -3,14 +3,23 @@ import { agents, subscribeTask, TaskState, Agent, stopAnalyzingAndRelax } from "
 import { subscribeMarketEngine, getMarketSnapshot } from "@/lib/market-engine";
 import { getSystemSkyAndWeather, SystemEnvironmentProfile } from "@/game/scene/textures";
 import { AgentLiveAlert } from "@/types/stock";
+import { MindspaceUser } from "@/lib/auth";
 
 interface SceneOverlayProps {
   onOpenDrawer?: () => void;
   isDrawerOpen?: boolean;
   onOpenLanding?: () => void;
+  currentUser?: MindspaceUser | null;
+  onLogout?: () => void;
 }
 
-export function SceneOverlay({ onOpenDrawer, isDrawerOpen, onOpenLanding }: SceneOverlayProps) {
+export function SceneOverlay({
+  onOpenDrawer,
+  isDrawerOpen,
+  onOpenLanding,
+  currentUser,
+  onLogout,
+}: SceneOverlayProps) {
   const [taskState, setTaskState] = useState<TaskState>({
     isActive: false,
     symbol: "",
@@ -129,9 +138,29 @@ export function SceneOverlay({ onOpenDrawer, isDrawerOpen, onOpenLanding }: Scen
             ))}
           </div>
 
-          {/* Quick link to Landing Page & Agent Dossiers */}
-          {onOpenLanding && (
-            <div className="mt-2.5 pt-2 border-t border-[#155238]">
+          {/* Quick link to Landing Page & Active User Account Controls */}
+          <div className="mt-2.5 pt-2 border-t border-[#155238] space-y-1.5">
+            {currentUser && (
+              <div className="flex items-center justify-between gap-2 rounded-lg bg-[#05120c] border border-[#174631] px-2.5 py-1.5 text-[11px]">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[#00e59a]">👤</span>
+                  <span className="font-mono font-bold text-white truncate">
+                    @{currentUser.username}
+                  </span>
+                </div>
+                {onLogout && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="rounded border border-[#ff354966] bg-[#ff354918] px-2 py-0.5 text-[10px] font-bold text-[#ff7b88] hover:bg-[#ff3549] hover:text-white transition-colors shrink-0"
+                  >
+                    Logout
+                  </button>
+                )}
+              </div>
+            )}
+
+            {onOpenLanding && (
               <button
                 onClick={onOpenLanding}
                 className="w-full py-1.5 px-2.5 rounded-lg bg-[#071710] hover:bg-[#0c2419] border border-[#1d4c36] hover:border-[#00e59a] text-[11px] text-[#00e59a] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm group"
@@ -142,8 +171,8 @@ export function SceneOverlay({ onOpenDrawer, isDrawerOpen, onOpenLanding }: Scen
                 </span>
                 <span className="text-[10px] text-gray-400">↗</span>
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           {taskState.isActive && (
             <div className="mt-2.5 pt-2 border-t border-[#155238]">

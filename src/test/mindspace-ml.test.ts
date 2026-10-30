@@ -12,8 +12,8 @@ import {
 } from "@/game/sim/roam";
 import { fetchAgentDiscussion } from "@/lib/agent-discussions";
 
-describe("Mindspace Open-Source ML Ensemble, SQLite & No-Preset Verification", () => {
-  it("starts with no default stock selected and zero preset wallet cash in SQLite", async () => {
+describe("Mindspace Open-Source ML Ensemble, Multi-Horizon Probabilities & No-Preset Verification", () => {
+  it("starts with no default stock selected and zero preset wallet cash", async () => {
     const snap = getMarketSnapshot();
     expect(snap.activeSymbol).toBe("");
     expect(snap.liveAlerts).toHaveLength(0);
@@ -57,6 +57,21 @@ describe("Mindspace Open-Source ML Ensemble, SQLite & No-Preset Verification", (
     expect(userPred.agentConsensus.bear.focusTopic).toContain("ATR-14 Volatility");
     expect(userPred.agentConsensus.stag.focusTopic).toContain("Institutional VWAP");
     expect(userPred.agentConsensus.rabbit.focusTopic).toContain("Bid/Ask Spread");
+
+    // Verify all 6 horizons (1D, 1W, 1M, 6M, 1Y, 5Y) have 4-agent reports and profit/loss probabilities summing to 100%
+    const horizons = ["1D", "1W", "1M", "6M", "1Y", "5Y"] as const;
+    for (const h of horizons) {
+      const hf = userPred.horizonForecasts[h];
+      expect(hf).toBeDefined();
+      expect(hf.profitProbability + hf.lossProbability).toBe(100);
+      expect(Object.keys(hf.agents)).toEqual(["bull", "bear", "stag", "rabbit"]);
+    }
+
+    // Verify a bearish stock (TSLA with negative change) predicts LOSS on 1D with >50% loss probability
+    const tslaPred = generateDeterministicPrediction(STOCKS_CATALOG.tesla, "1D", 10);
+    expect(tslaPred.isProfitPredicted).toBe(false);
+    expect(tslaPred.lossProbability).toBeGreaterThan(50);
+    expect(tslaPred.expectedReturnPct).toBeLessThan(0);
   });
 
   it("accurately detects Indian and US exchange market open and closed hours", () => {

@@ -4,9 +4,9 @@
 
 ![Mindspace Banner](logo.png)
 
-Mindspace is an immersive, real-time financial trading floor powered by **Three.js (WebGL)**, a modern **TanStack Start & Nitro** architecture, **SQLite** persistent storage, and **4 autonomous AI market agents**.
+Mindspace is an immersive, real-time financial trading floor powered by **Three.js (WebGL)**, a modern **TanStack Start & Nitro** architecture, isolated personal account storage, and **4 autonomous AI market agents**.
 
-The platform merges real-world market feeds (Indian NSE/BSE & US Markets), strict exchange session hours enforcement, Groww-style simulation trading, interactive multi-agent Q&A discussions, and institutional-grade Word document reporting into a cohesive 3D spatial experience.
+The platform merges real-world market feeds (Indian NSE/BSE & US Markets), strict exchange session hours enforcement, interactive simulation trading, 6-horizon profit/loss probability modeling, multi-agent Q&A discussions, and institutional-grade Word document reporting into a cohesive 3D spatial experience.
 
 ---
 
@@ -19,11 +19,11 @@ The platform merges real-world market feeds (Indian NSE/BSE & US Markets), stric
   - [🦌 Stag Agent](#-stag-agent--macro-valuation--portfolio-allocator)
   - [🐇 Rabbit Agent](#-rabbit-agent--hft-order-flow--execution-specialist)
 - [The 3D Exchange Trading Floor](#-the-3d-exchange-trading-floor)
+- [Personal Account Authentication & Isolated Data](#-personal-account-authentication--isolated-data)
 - [Real-Time Market Hours & Settlement Freezing](#-real-time-market-hours--settlement-freezing)
-- [Simulation Trading Platform (Groww-Style)](#-simulation-trading-platform-groww-style)
+- [Live Trading Simulation & 6-Horizon Profit/Loss Engine](#-live-trading-simulation--6-horizon-profitloss-engine)
 - [Agent Discussions & User Q&A Roundtable](#-agent-discussions--user-qa-roundtable)
-- [Export to Professional Word (.docx) Reports](#-export-to-professional-word-docx-reports)
-- [SQLite Database Architecture](#-sqlite-database-architecture)
+- [Export to Professional Word (.doc) Reports](#-export-to-professional-word-doc-reports)
 - [Tech Stack](#-tech-stack)
 - [Local Development & Setup](#-local-development--setup)
 - [Available Scripts](#-available-scripts)
@@ -34,15 +34,15 @@ The platform merges real-world market feeds (Indian NSE/BSE & US Markets), stric
 
 | Feature                                | Description                                                                                                                                                                        |
 | :------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **🌐 Interactive 3D Landing Page**     | Always opens first with a 1-by-1 3D Agent Spotlight, 4 individual 3D Roblox agent cards, and 3D holographic inspection capsules before entering the workspace.                     |
+| **🔐 Login & Registration Gate**       | Register with Username, Email & Password and log in with Username, Password & Remember Me. Each user's virtual wallet, bought stocks, orders, and discussions are 100% isolated.   |
 | **🎮 Interactive 3D Trading Floor**    | Canvas-rendered Three.js office with dynamic weather, sun azimuth, rain/fog, and day-night lighting synced to your system's exact local time and location.                         |
-| **🤖 4 Autonomous AI Market Agents**   | Bull, Bear, Stag, and Rabbit work collaboratively to analyze stocks, trade in simulation, and hold educational market roundtables.                                                 |
-| **📈 Live Indian & US Market Support** | Track Indian indices (NIFTY 50, SENSEX, BANKNIFTY) and equities (RELIANCE, TCS, INFY, HDFCBANK) alongside US giants (AAPL, NVDA, TSLA, MSFT).                                      |
+| **🤖 4 Autonomous AI Market Agents**   | Bull, Bear, Stag, and Rabbit work collaboratively to analyze stocks, evaluate 6-horizon profit/loss probabilities, and hold educational market roundtables.                        |
+| **📈 Live Indian & US Market Support** | Track Indian indices (NIFTY 50, SENSEX) and equities (RELIANCE, TCS, INFY, HDFCBANK) alongside US giants (AAPL, NVDA, TSLA, MSFT).                                                 |
 | **⏰ Strict Exchange Hours Engine**    | Real-time session detection freezes prices to official closing numbers after market hours (3:30 PM IST for NSE; 4:00 PM EST for US), eliminating fictitious off-market volatility. |
-| **🎯 Settlement-Based Predictions**    | After-hours predictions run on official closing OHLCV candles, RSI, MACD, and Bollinger Bands rather than simulated random ticks.                                                  |
-| **💼 Groww-Style Paper Trading**       | Execute simulated market and limit orders by **exact quantity of shares**, calculate real-time P&L, track holdings, and build watchlists.                                          |
+| **💼 Live Paper Trading Simulation**   | Execute simulated market and limit orders by **exact quantity of shares**, click bought positions to switch or sell, and inspect 4-agent reports for 1D, 1W, 1M, 6M, 1Y & 5Y.      |
 | **💬 Agent Discussion Roundtable**     | Switch to the "Discussions" drawer where all 4 agents gather around the coffee table in 3D space to discuss tactical tips or answer user questions.                                |
-| **📄 Export to Word (.docx)**          | One-click export of an institutional-grade research document featuring complete analysis tables, consensus scores, and agent justifications.                                       |
-| **🗄️ Embedded SQLite Storage**         | Local, zero-latency database storing watchlists, executed trades, portfolio balances, and historical agent predictions.                                                            |
+| **📄 Export to Word (.doc)**           | One-click export of both **Stock Analysis Reports** (with 6-horizon profit/loss tables) and **Agent Roundtable Discussions** in neatly organized Word document format.             |
 
 ---
 
@@ -69,19 +69,19 @@ Mindspace features four distinct AI agents modeled after classic stock market ar
   - Calculates **EMA 9 / EMA 21** golden crossovers and **SuperTrend** signals.
   - Monitors **RSI momentum** surges ($RSI > 55$) accompanied by $>1.5\times$ average trading volume.
   - Detects **MACD histogram** expansions above the baseline.
-  - Projects multi-day upside target prices and upside profit-potential percentages.
+  - Projects upside target prices and profit probabilities across 1D, 1W, 1M, 6M, 1Y, and 5Y horizons.
 - **Roundtable & Q&A Persona**: Encourages riding winning trends, pyramiding into breakouts, trailing stop-losses, and seizing growth opportunities without falling into FOMO.
 
 ---
 
 ### 🐻 Bear Agent — Risk Manager & Capital Preservation Officer
 
-- **Role**: Protects your portfolio capital, uncovers hidden downside risks, and identifies distribution patterns.
+- **Role**: Protects your portfolio capital, uncovers hidden downside risks, and predicts losses when momentum deteriorates.
 - **Jobs & Technical Indicators**:
   - Detects **RSI overbought traps** ($RSI > 70$), negative divergence, and false breakout rejections.
   - Identifies **Bollinger Band upper-band exhaustion** and heavy institutional selling volume.
-  - Calculates maximum anticipated drawdown and enforces strict **Risk-Reward Ratios** ($\ge 2:1$).
-  - Computes non-negotiable **Stop-Loss levels** to cap portfolio losses at $1\%-2\%$ per trade.
+  - Calculates **Loss Probability (%)** vs **Profit Probability (%)** and warns when a trade is projected to result in a loss.
+  - Computes non-negotiable **Stop-Loss levels** to cap portfolio losses.
 - **Roundtable & Q&A Persona**: Pragmatic, defensive, and risk-obsessed. Teaches trade sizing, hedging techniques, capital preservation, and identifying market distribution tops.
 
 ---
@@ -90,9 +90,9 @@ Mindspace features four distinct AI agents modeled after classic stock market ar
 
 - **Role**: Long-term asset allocator focused on fundamental valuation, margin of safety, and institutional consensus.
 - **Jobs & Technical Indicators**:
-  - Evaluates **Price-to-Earnings (P/E)**, **Price-to-Book (P/B)**, and sector-median valuation bands.
-  - Computes institutional accumulation metrics and dividend sustainability scores.
-  - Analyzes market regime indicators and long-term moving averages (**50-day & 200-day SMAs**).
+  - Evaluates **Price-to-Earnings (P/E)**, **Price-to-Book (P/B)**, and institutional VWAP equilibrium.
+  - Computes Kalman State-Space fair value across medium and long-term horizons (`6M`, `1Y`, `5Y`).
+  - Analyzes market regime stationarity and long-term moving averages (**50-day & 200-day SMAs**).
   - Formulates fair-value target ranges and recommends portfolio sector rebalancing.
 - **Roundtable & Q&A Persona**: Patient, disciplined, and value-oriented. Shares strategies on dollar-cost averaging (SIP), identifying undervalued moats, and filtering out market noise.
 
@@ -105,52 +105,31 @@ Mindspace features four distinct AI agents modeled after classic stock market ar
   - Scans **Level-2 order book depth** (top 5 bids and asks) to measure order imbalances.
   - Tracks **Volume-Weighted Average Price (VWAP)** deviations to detect intraday pullbacks.
   - Estimates bid-ask spread friction and slippage costs.
-  - Determines the exact optimal limit entry price and tight stop brackets for high-precision fills.
+  - Determines the exact optimal limit entry price and profit/loss exit windows.
 - **Roundtable & Q&A Persona**: Fast, agile, and execution-centric. Advises on avoiding market orders during volatile opening bells, timing intraday liquidity pockets, and reducing slippage.
 
 ---
 
-## 🏢 The 3D Exchange Trading Floor
+## 🔐 Personal Account Authentication & Isolated Data
 
-Mindspace takes trading out of flat 2D dashboards and places it inside a dynamic 3D office environment:
-
-- **Procedural Canvas Textures**: All textures (trading screens, wood parquet flooring, glass partitions, and desk monitors) are dynamically generated using Canvas2D with zero external image requests.
-- **System-Synced Weather & Lighting**:
-  - Detects the user's local operating system time and geographic coordinates.
-  - Accurately computes the sun's altitude and azimuth angle.
-  - Switches between morning dawn, midday sun, golden hour sunset, and starry night skies with real-time fog and cloud cover.
-- **Dynamic 3D Agent HUD**: A clean horizontal status indicator rendered directly above the floor displays real-time agent states (e.g., _Bull: Analyzing EMA Cross_, _Bear: Calculating Max Drawdown_, _Rabbit: Scanning Order Book_).
-- **Interactive Roaming**: Agents roam freely between workstations, look out the panoramic exchange window, and gather at the executive lounge during discussion sessions.
+- **Landing Page First**: Every time Mindspace is launched, the interactive 3D Landing Page opens first.
+- **Login & Registration Gate**: Clicking **"Try out Mindspace"** opens the authentication gate:
+  - **Registration**: Username, Email, Password, and Remember Me option.
+  - **Login**: Username, Password, and Remember Me option.
+- **100% Per-User Isolation**: Each user's virtual wallet capital, bought stock positions, executed order ledger, selected stock, and agent discussions are isolated to their username.
 
 ---
 
-## ⏰ Real-Time Market Hours & Settlement Freezing
-
-Mindspace enforces real-world exchange timings to guarantee realistic data integrity:
-
-```
-[ Market Open (9:15 AM - 3:30 PM IST) ]  -->  Live Real-Time Price Updates & Streaming Ticks
-[ Market Closed (After 3:30 PM / Weekend) ] -->  Freeze to Official Settlement Closing Price (No Random Numbers)
-```
-
-- **Clear Market Status Badges**:
-  - `🟢 Market Open` during active exchange trading sessions.
-  - `🔴 Market Closed · Closed at 3:30 PM IST · Opens 9:15 AM IST` (or US equivalent) when the bell rings.
-- **Settlement-Based Predictions**: When running analysis off-hours, the 4 AI agents base their forecasts on verified official daily closing data rather than simulated random ticks.
-
----
-
-## 💼 Simulation Trading Platform (Groww-Style)
+## 💼 Live Trading Simulation & 6-Horizon Profit/Loss Engine
 
 Experience the realism of live markets without financial risk:
 
-- **Quantity-Based Execution**: Enter the exact number of shares you wish to buy or sell rather than abstract currency amounts.
-- **Live Bid/Ask Match Engine**: Orders execute against real-time market prices with automatic margin and capital deduction.
-- **Comprehensive Portfolio Tracking**:
-  - Current Holdings & Average Buy Price
-  - Real-Time P&L ($\$$ / ₹ and $\%$)
-  - Total Invested vs. Current Portfolio Valuation
-  - Complete Executed Order History stored in SQLite
+- **Click & Switch Bought Stocks**: Click any bought stock in your portfolio or the Quick Switcher ribbon to immediately switch to it, inspect its chart, or sell shares.
+- **1-Click & Partial Selling**: Use **Sell All** for instant execution at the live Bid price, or click **Sell** to load the position into the Order Pad.
+- **6-Horizon 4-Agent Analysis (`1D`, `1W`, `1M`, `6M`, `1Y`, `5Y`)**:
+  - Honest **PROFIT** or **LOSS** predictions based on momentum, technical alignment, and entry price.
+  - Explicit **Probability of Profit (%)** and **Probability of Loss (%)** for every time horizon.
+  - Side-by-side 4-Agent (`Bull`, `Bear`, `Stag`, `Rabbit`) breakdown for each of the 6 horizons.
 
 ---
 
@@ -158,63 +137,37 @@ Experience the realism of live markets without financial risk:
 
 Beyond analyzing individual stocks, Mindspace provides an interactive roundtable lounge:
 
-- **Start / Stop Controls**: Easily trigger or pause agent discussions with the dedicated `▶ Start` / `⏸ Pause` controls.
+- **Start / Stop Controls**: Easily trigger or pause agent discussions with the dedicated `▶ Start` / `⏸ Stop` controls.
 - **3D Lounge Gathering**: When discussion mode begins, Bull, Bear, Stag, and Rabbit automatically walk over and gather around the office coffee table.
-- **Interactive User Q&A Input**: A sticky text prompt allows you to ask any financial question (e.g., _"How should I hedge ahead of budget day?"_). All 4 agents immediately answer from their respective perspectives.
-- **Token-Efficient & Offline Resilient**:
-  - Ultra-compact prompts consume only ~150–250 tokens per turn using free-tier OpenRouter models.
-  - Comprehensive offline fallback engine with 15+ quantitative investment topics ensures instant, zero-cost responses even without internet or API keys.
+- **Interactive User Q&A Input**: Ask any financial question in the bottom text box and all 4 agents immediately answer from their respective perspectives.
+- **Export Discussions to Word (.doc)**: Export your entire roundtable conversation and Q&A transcript into a neatly organized, tabular Word document with one click.
 
 ---
 
-## 📄 Export to Professional Word (.docx) Reports
+## 📄 Export to Professional Word (.doc) Reports
 
-Generate institutional-quality research reports with a single click:
+Generate institutional-quality Word documents with a single click:
 
-- **Executive Summary & Consensus Score**: Combined multi-agent stance (`STRONG BUY`, `BUY`, `HOLD`, `SELL`) with confidence metrics.
-- **Structured Data Tables**:
-  | Agent      |  Stance  | Target Price | Stop-Loss |      Key Metric       | Technical Thesis                    |
-  | :--------- | :------: | :----------: | :-------: | :-------------------: | :---------------------------------- |
-  | **Bull**   | Bullish  |    ₹2,850    |  ₹2,640   | EMA 9/21 Golden Cross | Momentum breakout above 20-day high |
-  | **Bear**   | Cautious |    ₹2,550    |  ₹2,680   | RSI Overbought (68.4) | Overhead resistance at ₹2,750       |
-  | **Stag**   | Neutral  |    ₹2,720    |  ₹2,500   | P/E 24.2 vs Sector 26 | Fairly valued with steady dividends |
-  | **Rabbit** |  Active  |    ₹2,710    |  ₹2,675   |    VWAP Slip 0.12%    | Tight spread, limit entry at ₹2,688 |
-- **Detailed Agent Breakdowns**: Dedicated report sections containing each agent's individual mathematical rationale and risk parameters.
-
----
-
-## 🗄️ SQLite Database Architecture
-
-Mindspace includes an embedded SQLite database (`data/mindspace.sqlite`) with automatic schema initialization:
-
-- `portfolio`: Stores virtual cash balance and realized gains.
-- `holdings`: Tracks symbol, exchange, quantity, average price, and timestamp.
-- `orders`: Audit log of all market/limit buy and sell orders.
-- `watchlist`: User's custom pinned stocks.
-- `agent_predictions`: Historical archive of predictions generated by Bull, Bear, Stag, and Rabbit for backtesting accuracy.
-- `system_settings`: Preserves user preferences, API keys, and notification thresholds.
+1. **Stock Analysis Report (.doc)**:
+   - Executive stock overview & exchange session status.
+   - Complete **6-Horizon (`1D`, `1W`, `1M`, `6M`, `1Y`, `5Y`) Profit/Loss & Probability Matrix**.
+   - Tabular 4-Agent (`Bull`, `Bear`, `Stag`, `Rabbit`) domain reports and consensus trade plan.
+2. **Agent Discussions & Q&A Report (.doc)**:
+   - Executive summary table of all roundtable topics and user questions.
+   - Structured tabular transcript of every response from Bull, Bear, Stag, and Rabbit.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend & 3D**: [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Three.js](https://threejs.org/), [@react-three/fiber](https://r3f.docs.pmnd.rs/), [Tailwind CSS](https://tailwindcss.com/), [Lucide React](https://lucide.dev/)
-- **Framework & SSR**: [TanStack Start](https://tanstack.com/start), [Vinxi](https://vinxi.vercel.app/), [Nitro](https://nitro.unjs.io/) (Cloudflare Pages/Workers preset)
-- **Database**: [SQLite](https://sqlite.org/) with WAL journaling mode
-- **Export Engine**: [docx](https://docx.js.org/) for programmatic Word document generation
-- **AI & ML Engine**: OpenRouter API (free-tier optimized) + Offline Quantitative Indicator Rules Engine
-- **Testing**: [Vitest](https://vitest.dev/) with testing-library
+- **Frontend & 3D**: [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Three.js](https://threejs.org/), [@react-three/fiber](https://r3f.docs.pmnd.rs/), [Tailwind CSS](https://tailwindcss.com/)
+- **Framework & SSR**: [TanStack Start](https://tanstack.com/start), [Nitro](https://nitro.unjs.io/)
+- **AI & ML Engine**: OpenRouter API (free-tier optimized) + Open-Source Quantitative ML Ensemble (LightGBM GBDT + Kalman State-Space AR + Holt-Winters)
+- **Testing**: [Vitest](https://vitest.dev/)
 
 ---
 
 ## 🚀 Local Development & Setup
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v18.0.0 or higher)
-- `npm` or `pnpm`
-
-### Installation
 
 1. **Clone the repository**:
 
@@ -229,33 +182,19 @@ Mindspace includes an embedded SQLite database (`data/mindspace.sqlite`) with au
    npm install
    ```
 
-3. **Configure Environment Variables** (Optional for custom LLM keys):
-
-   ```bash
-   cp .env.example .env
-   # Add your OPENROUTER_API_KEY or GROWW_API_KEY if available
-   ```
-
-4. **Launch the development server**:
+3. **Launch the development server**:
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) to enter the 3D Mindspace trading floor.
 
 ---
 
 ## 🧪 Available Scripts
 
-| Command          | Purpose                                                      |
-| :--------------- | :----------------------------------------------------------- |
-| `npm run dev`    | Starts local development server with hot-module reloading    |
-| `npm run build`  | Compiles client and SSR bundles with Nitro Cloudflare preset |
-| `npm test`       | Runs the full Vitest suite (8 unit & integration tests)      |
-| `npm run lint`   | Checks TypeScript and ESLint rules                           |
-| `npm run format` | Formats all source files via Prettier                        |
-
----
-
-## 📜 License
-
-Mindspace is proprietary and open for personal research and paper trading. Developed with pride by [ashwintelangstark](https://github.com/ashwintelangstark).
+| Command          | Purpose                                                |
+| :--------------- | :----------------------------------------------------- |
+| `npm run dev`    | Starts local development server with hot-module reload |
+| `npm run build`  | Compiles client and server production bundles          |
+| `npm test`       | Runs the Vitest unit & integration test suite          |
+| `npm run lint`   | Checks TypeScript and linting rules                    |
+| `npm run format` | Formats all source files via oxfmt                     |

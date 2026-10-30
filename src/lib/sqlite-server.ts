@@ -45,9 +45,11 @@ interface OrderRow {
 
 export interface SqliteActionPayload {
   action?: string;
+  username?: string;
   cash?: number;
   startingCash?: number;
   realizedPL?: number;
+  orders?: unknown[];
   positions?: Record<
     string,
     {
@@ -246,6 +248,11 @@ async function getDb(): Promise<SqliteDatabaseLike | null> {
         price_at_alert REAL NOT NULL,
         created_at TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS user_portfolios (
+        username TEXT PRIMARY KEY,
+        state_json TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
     `);
 
     dbInstance = db;
@@ -265,8 +272,38 @@ export async function handleSqliteAction(
   }
 
   const action = body?.action;
+  const userKey = body?.username ? body.username.trim().toLowerCase() : "";
 
   if (action === "get_state") {
+    if (userKey && userKey !== "default") {
+      const userRow = db
+        .prepare("SELECT state_json FROM user_portfolios WHERE username = ?")
+        .get(userKey) as { state_json?: string } | undefined;
+      if (userRow?.state_json) {
+        try {
+          const parsed = JSON.parse(userRow.state_json);
+          return {
+            ok: true,
+            wallet: {
+              cash: parsed.cash ?? 0,
+              startingCash: parsed.startingCash ?? 0,
+              realizedPL: parsed.realizedPL ?? 0,
+            },
+            positions: parsed.positions || {},
+            orders: parsed.orders || [],
+          };
+        } catch {
+          // fallback
+        }
+      }
+      return {
+        ok: true,
+        wallet: { cash: 0, startingCash: 0, realizedPL: 0 },
+        positions: {},
+        orders: [],
+      };
+    }
+
     const wallet = db
       .prepare(
         "SELECT cash, starting_cash, realized_pl, updated_at FROM portfolio_wallet WHERE id = 1",
@@ -337,8 +374,39 @@ export async function handleSqliteAction(
   }
 
   if (action === "sync_portfolio") {
-    const { cash, startingCash, realizedPL, positions, newOrder } = body;
+    const { cash, startingCash, realizedPL, positions, orders, newOrder } = body;
     const now = new Date().toISOString();
+
+    if (userKey && userKey !== "default") {
+      const existingRow = db
+        .prepare("SELECT state_json FROM user_portfolios WHERE username = ?")
+        .get(userKey) as { state_json?: string } | undefined;
+      let existingOrders: unknown[] = [];
+      if (existingRow?.state_json) {
+        try {
+          const p = JSON.parse(existingRow.state_json);
+          if (Array.isArray(p.orders)) existingOrders = p.orders;
+        } catch {
+          // ignore
+        }
+      }
+      const nextOrders = Array.isArray(orders)
+        ? orders
+        : newOrder
+          ? [newOrder, ...existingOrders].slice(0, 50)
+          : existingOrders;
+      const statePayload = {
+        cash: cash ?? 0,
+        startingCash: startingCash ?? 0,
+        realizedPL: realizedPL ?? 0,
+        positions: positions || {},
+        orders: nextOrders,
+      };
+      db.prepare(
+        "INSERT OR REPLACE INTO user_portfolios (username, state_json, updated_at) VALUES (?, ?, ?)",
+      ).run(userKey, JSON.stringify(statePayload), now);
+      return { ok: true };
+    }
 
     db.prepare(
       "UPDATE portfolio_wallet SET cash = ?, starting_cash = ?, realized_pl = ?, updated_at = ? WHERE id = 1",
@@ -391,6 +459,19 @@ export async function handleSqliteAction(
   if (action === "reset_portfolio") {
     const now = new Date().toISOString();
     const newCapital = typeof body.cash === "number" && body.cash >= 0 ? body.cash : 0.0;
+    if (userKey && userKey !== "default") {
+      const resetState = {
+        cash: newCapital,
+        startingCash: newCapital,
+        realizedPL: 0.0,
+        positions: {},
+        orders: [],
+      };
+      db.prepare(
+        "INSERT OR REPLACE INTO user_portfolios (username, state_json, updated_at) VALUES (?, ?, ?)",
+      ).run(userKey, JSON.stringify(resetState), now);
+      return { ok: true };
+    }
     db.prepare(
       "UPDATE portfolio_wallet SET cash = ?, starting_cash = ?, realized_pl = 0.0, updated_at = ? WHERE id = 1",
     ).run(newCapital, newCapital, now);

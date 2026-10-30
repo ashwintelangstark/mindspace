@@ -56,7 +56,7 @@ export default {
     try {
       const url = new URL(request.url);
 
-      // SQLite API Endpoint
+      // Portfolio API Endpoint
       if (url.pathname === "/api/db") {
         if (request.method === "POST") {
           const body = (await request.json()) as SqliteActionPayload;
@@ -66,7 +66,8 @@ export default {
             headers: { "content-type": "application/json" },
           });
         }
-        const result = await handleSqliteAction({ action: "get_state" });
+        const userParam = url.searchParams.get("user") || undefined;
+        const result = await handleSqliteAction({ action: "get_state", username: userParam });
         return new Response(JSON.stringify(result), {
           status: 200,
           headers: { "content-type": "application/json" },

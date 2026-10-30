@@ -13,11 +13,14 @@ export interface StockQuote {
   open?: number;
   prevClose?: number;
   currency: string;
-  change: number; // percentage, e.g. +1.24
-  changeAmount: number;
+  change: number; // percentage, e.g. +1.24 or -1.45
+  changeAmount?: number;
   market: string; // "NSE" | "BSE" | "NASDAQ" | "NYSE" | "CRYPTO"
-  high: number;
-  low: number;
+  sector?: string;
+  high?: number;
+  low?: number;
+  high24h?: number;
+  low24h?: number;
   volume: string;
   peRatio?: number;
   marketCap?: string;
@@ -28,7 +31,7 @@ export interface StockQuote {
 
 export interface CandleData {
   time: string;
-  timestamp: number;
+  timestamp?: number;
   open: number;
   high: number;
   low: number;
@@ -45,35 +48,33 @@ export interface CandleData {
 
 export interface MLSubModelMetric {
   name: string;
-  methodology: string;
+  methodology?: string;
+  weight: number;
+  ensembleWeight?: number;
   directionalAccuracy: number;
   mae: number;
   rmse: number;
-  ensembleWeight: number;
   predictedPrice: number;
 }
 
 export interface MLModelReport {
-  ensembleName: string;
-  llmReasoningModel: string;
-  outOfSampleAccuracy: number; // >= 90%+ validated directional accuracy
-  mae: number;
-  rmse: number;
-  trainSamples: number;
-  validationSamples: number;
-  testSamples: number;
-  stationarityStatus: string;
-  seasonalityDetected: string;
+  modelName: string;
+  ensembleName?: string;
+  architecture: string;
+  trainValTestSplit: string;
+  stationarityCheck: string;
+  ensembleDirectionalAccuracy: number;
+  validationMAE: number;
+  validationRMSE: number;
   technicalIndicators: {
     rsi14: number;
-    macdHistogram: number;
-    macdSignal: string;
+    macd: number;
     ema20: number;
     ema50: number;
-    emaTrend: string;
     vwap: number;
     atr14: number;
-    bollingerBandWidth: string;
+    bollingerUpper: number;
+    bollingerLower: number;
   };
   subModels: MLSubModelMetric[];
 }
@@ -95,17 +96,51 @@ export interface AgentAnalysis {
   status: "idle" | "walking" | "drinking_coffee" | "working" | "ready";
 }
 
+export interface HorizonAgentSummary {
+  role: AgentRole;
+  agentName: string;
+  avatar: string;
+  roleDescription: string;
+  stance: "Bullish" | "Bearish" | "Neutral";
+  targetPrice: number;
+  stopLossPrice: number;
+  expectedReturnPct: number;
+  commentary: string;
+  actionRecommendation: string;
+  confidencePct: number;
+}
+
+export interface HorizonForecastDetail {
+  horizon: TimeHorizon;
+  price: number;
+  changePct: number; // positive for predicted profit, negative for predicted loss
+  bias: string; // "PROFIT" | "LOSS"
+  isProfitPredicted: boolean;
+  profitProbability: number; // 0-100%
+  lossProbability: number; // 0-100%
+  stopLossPrice: number;
+  stopLossPct: number;
+  projectedPLAmount: number; // signed P&L for shares count
+  verdict:
+    "STRONG BUY" | "BUY" | "ACCUMULATE" | "HOLD" | "TAKE PROFIT" | "SELL / AVOID" | "BOOK LOSS";
+  withdrawTiming: string;
+  agents: Record<AgentRole, HorizonAgentSummary>;
+}
+
 export interface AgentLiveAlert {
   id: string;
-  agentRole: AgentRole;
+  agentId: AgentRole;
+  agentRole?: AgentRole;
   agentName: string;
   avatar: string;
   symbol: string;
-  title: string;
+  topic: string;
+  signal: string;
+  title?: string;
   message: string;
-  severity: "bullish" | "bearish" | "strategy" | "execution";
+  severity?: "bullish" | "bearish" | "strategy" | "execution";
   priceAtAlert: number;
-  currency: string;
+  currency?: string;
   timestamp: string;
 }
 
@@ -113,9 +148,24 @@ export interface StockPrediction {
   stock: StockQuote;
   horizon: TimeHorizon;
   timestamp: string;
-  consensusVerdict: "STRONG BUY" | "BUY" | "ACCUMULATE" | "HOLD" | "TAKE PROFIT" | "EXIT";
+  consensusVerdict:
+    | "STRONG BUY"
+    | "BUY"
+    | "ACCUMULATE"
+    | "HOLD"
+    | "TAKE PROFIT"
+    | "EXIT"
+    | "SELL / AVOID"
+    | "BOOK LOSS";
   accuracyRate: number; // e.g. 91.8%
   confidenceScore: number; // 0-100
+
+  // Honest Profit vs Loss Prediction & Probabilities
+  isProfitPredicted: boolean;
+  profitProbability: number; // 0-100%
+  lossProbability: number; // 0-100%
+  expectedReturnPct: number; // positive if profit, negative if loss
+  expectedPLAmount: number; // positive if profit, negative if loss
 
   // Investment & withdrawal advisory (Shares quantity entered by user)
   sharesQuantity?: number;
@@ -132,7 +182,7 @@ export interface StockPrediction {
     sessionMessage: string;
   };
 
-  // When to withdraw (Profit)
+  // When to withdraw (Profit or Target)
   targetPrice: number;
   targetGainPct: number;
   withdrawProfitDate: string; // estimated timeframe to exit for profit
@@ -152,10 +202,10 @@ export interface StockPrediction {
     bullishHigh: number;
   };
 
-  // Horizon status
-  horizonForecasts: Record<TimeHorizon, { price: number; changePct: number; bias: string }>;
+  // Multi-Horizon Forecasts (1D, 1W, 1M, 6M, 1Y, 5Y) with 4-agent reports & probabilities
+  horizonForecasts: Record<TimeHorizon, HorizonForecastDetail>;
 
-  // Individual agent analyses (4 specialized topics)
+  // Individual agent analyses (4 specialized topics) for active horizon
   agentConsensus: Record<AgentRole, AgentAnalysis>;
 
   // Open-Source ML Ensemble Report
@@ -173,6 +223,7 @@ export interface SimulationOrder {
   timeString: string;
   side: "BUY" | "SELL";
   orderType?: "MARKET" | "LIMIT";
+  executionType?: string;
   symbol: string;
   name: string;
   qty: number;

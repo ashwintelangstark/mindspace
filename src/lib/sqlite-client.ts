@@ -1,11 +1,18 @@
 import { SimulationOrder, SimulationState, StockPrediction, AgentLiveAlert } from "@/types/stock";
+import { getActiveUsername } from "./auth";
 
-const STORAGE_KEY = "mindspace_simulation_state_v2";
+function getStorageKey(username?: string): string {
+  const user = (username || getActiveUsername() || "guest").trim().toLowerCase();
+  return `mindspace_simulation_state_v2_${user}`;
+}
 
-export async function loadPortfolioFromSqlite(): Promise<{
+export async function loadPortfolioFromSqlite(username?: string): Promise<{
   simState: SimulationState;
   dbConnected: boolean;
 }> {
+  const user = (username || getActiveUsername() || "guest").trim().toLowerCase();
+  const storageKey = getStorageKey(user);
+
   let localFallback: SimulationState = {
     cash: 0.0,
     startingCash: 0.0,
@@ -16,7 +23,7 @@ export async function loadPortfolioFromSqlite(): Promise<{
 
   try {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         localFallback = JSON.parse(saved);
       }
@@ -26,7 +33,7 @@ export async function loadPortfolioFromSqlite(): Promise<{
   }
 
   try {
-    const res = await fetch("/api/db", { method: "GET" });
+    const res = await fetch(`/api/db?user=${encodeURIComponent(user)}`, { method: "GET" });
     if (!res.ok) return { simState: localFallback, dbConnected: false };
     const data = await res.json();
     if (data && data.ok && data.wallet) {
@@ -38,7 +45,7 @@ export async function loadPortfolioFromSqlite(): Promise<{
         orders: data.orders || localFallback.orders,
       };
       if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(serverState));
+        localStorage.setItem(storageKey, JSON.stringify(serverState));
       }
       return { simState: serverState, dbConnected: true };
     }
@@ -52,20 +59,26 @@ export async function loadPortfolioFromSqlite(): Promise<{
 export async function syncPortfolioToSqlite(
   state: SimulationState,
   newOrder?: SimulationOrder,
+  username?: string,
 ): Promise<boolean> {
+  const user = (username || getActiveUsername() || "guest").trim().toLowerCase();
+  const storageKey = getStorageKey(user);
+
   try {
     if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(storageKey, JSON.stringify(state));
     }
     const res = await fetch("/api/db", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "sync_portfolio",
+        username: user,
         cash: state.cash,
         startingCash: state.startingCash,
         realizedPL: state.realizedPL,
         positions: state.positions,
+        orders: state.orders,
         newOrder,
       }),
     });
@@ -76,17 +89,27 @@ export async function syncPortfolioToSqlite(
   }
 }
 
-export async function resetPortfolioInSqlite(newCapital = 0.0): Promise<boolean> {
+export async function resetPortfolioInSqlite(
+  newCapital = 0.0,
+  username?: string,
+): Promise<boolean> {
+  const user = (username || getActiveUsername() || "guest").trim().toLowerCase();
+  const storageKey = getStorageKey(user);
+
   try {
     if (typeof window !== "undefined") {
       if (newCapital === 0) {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(storageKey);
       }
     }
     const res = await fetch("/api/db", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "reset_portfolio", cash: newCapital }),
+      body: JSON.stringify({
+        action: "reset_portfolio",
+        username: user,
+        cash: newCapital,
+      }),
     });
     const data = await res.json();
     return Boolean(data?.ok);
@@ -102,6 +125,7 @@ export async function savePredictionToSqlite(prediction: StockPrediction): Promi
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "save_prediction",
+        username: getActiveUsername(),
         prediction,
       }),
     });

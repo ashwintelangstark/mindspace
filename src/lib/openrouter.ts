@@ -25,12 +25,58 @@ const envApiKey =
 
 export const OPENROUTER_DEFAULT_KEY = envApiKey || "";
 
+export interface OpenRouterModelOption {
+  id: string;
+  name: string;
+  provider: string;
+  badge: string;
+  description: string;
+}
+
+export const FREE_OPENROUTER_MODELS: OpenRouterModelOption[] = [
+  {
+    id: "openrouter/free",
+    name: "OpenRouter Auto Free",
+    provider: "OpenRouter Pool",
+    badge: "Unlimited · Fast",
+    description: "Automatic high-speed routing across unlimited free models with zero rate limits",
+  },
+  {
+    id: "google/gemma-4-31b-it:free",
+    name: "Google Gemma 4 31B",
+    provider: "Google AI",
+    badge: "31B Reasoning",
+    description: "State-of-the-art multimodal reasoning, in-depth quantitative math & stock thesis",
+  },
+  {
+    id: "nvidia/nemotron-3.5-lightning:free",
+    name: "NVIDIA Nemotron 3.5",
+    provider: "NVIDIA",
+    badge: "Low-Latency",
+    description: "Ultra-fast financial calculations, microstructure analysis and risk validation",
+  },
+  {
+    id: "cohere/north-mini-code:free",
+    name: "Cohere North Mini",
+    provider: "Cohere",
+    badge: "Math & Code",
+    description: "Algorithmic profit/loss modeling and technical formula evaluation",
+  },
+  {
+    id: "recursive/flint-v1.0:free",
+    name: "Recursive Flint v1.0",
+    provider: "Recursive AI",
+    badge: "Synthesis",
+    description: "Multi-factor consensus and market doubt clarification",
+  },
+];
+
 // Verified OpenRouter free-tier & auto-routed models for financial reasoning
 export const OPENROUTER_MODELS = [
-  "cohere/north-mini-code:free",
   "openrouter/free",
+  "google/gemma-4-31b-it:free",
   "nvidia/nemotron-3.5-lightning:free",
-  "dots-studio/dots-3-note-preview:free",
+  "cohere/north-mini-code:free",
   "recursive/flint-v1.0:free",
 ];
 

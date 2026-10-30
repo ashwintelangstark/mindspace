@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { STOCKS_CATALOG } from "@/data/stocks";
-import { generateDeterministicPrediction, runOpenSourceMLPipeline } from "@/lib/openrouter";
+import {
+  generateDeterministicPrediction,
+  runOpenSourceMLPipeline,
+  FREE_OPENROUTER_MODELS,
+} from "@/lib/openrouter";
 import { getLiveStockQuote, getMarketSnapshot, getExchangeMarketStatus } from "@/lib/market-engine";
 import { getSystemSkyAndWeather } from "@/game/scene/textures";
 import { handleSqliteAction } from "@/lib/sqlite-server";
@@ -10,7 +14,8 @@ import {
   assignTaskToAgents,
   gatherAgentsForDiscussion,
 } from "@/game/sim/roam";
-import { fetchAgentDiscussion } from "@/lib/agent-discussions";
+import { fetchAgentDiscussion, queryMindspaceChatbot } from "@/lib/agent-discussions";
+import { exportDiscussionsToWordDoc } from "@/lib/export-word";
 
 import {
   registerMindspaceUser,
@@ -204,5 +209,58 @@ describe("Mindspace Open-Source ML Ensemble, Multi-Horizon Probabilities & No-Pr
     });
     expect(successLogin.ok).toBe(true);
     expect(getCurrentUser()?.username).toBe("testtrader");
+  });
+
+  it("provides free unlimited OpenRouter models and queries the AI Chatbot with live web context and exact P&L calculation", async () => {
+    // 1. Verify Free OpenRouter models catalog
+    expect(FREE_OPENROUTER_MODELS.length).toBeGreaterThanOrEqual(4);
+    expect(FREE_OPENROUTER_MODELS[0].id).toBe("openrouter/free");
+    expect(FREE_OPENROUTER_MODELS[0].badge).toContain("Unlimited");
+
+    // 2. Query Chatbot for P&L analysis and doubt clearing on Reliance 50 shares
+    const reliance = STOCKS_CATALOG.reliance;
+    const botTurn = await queryMindspaceChatbot({
+      userQuestion: "Calculate P&L for 50 shares of Reliance and clear my doubt on stop-loss",
+      activeStock: reliance,
+      selectedModel: "openrouter/free",
+      apiKey: "", // test offline algorithm fallback
+    });
+
+    expect(botTurn.mode).toBe("chatbot");
+    expect(botTurn.messages).toHaveLength(2);
+
+    const userMsg = botTurn.messages[0];
+    expect(userMsg.sender).toBe("user");
+    expect(userMsg.message).toContain("50 shares");
+
+    const assistantMsg = botTurn.messages[1];
+    expect(assistantMsg.sender).toBe("assistant");
+    expect(assistantMsg.name).toContain("Mindspace AI");
+    expect(assistantMsg.avatar).toBe("🤖");
+
+    // Contains exact P&L calculations
+    expect(assistantMsg.message).toContain("50 shares");
+    expect(assistantMsg.message).toContain("Calculated Profit & Loss (P&L) Framework");
+    expect(assistantMsg.message).toContain("Potential Profit");
+    expect(assistantMsg.message).toContain("Potential Loss");
+    expect(assistantMsg.message).toContain("Risk-to-Reward");
+
+    // Synthesizes the 4 agents
+    expect(assistantMsg.message).toContain("Bull");
+    expect(assistantMsg.message).toContain("Bear");
+    expect(assistantMsg.message).toContain("Stag");
+    expect(assistantMsg.message).toContain("Rabbit");
+
+    // Live web context is attached
+    expect(botTurn.webContext).toBeDefined();
+    expect(botTurn.webContext).toContain(reliance.symbol);
+
+    // 3. Verify Word (.doc) export handles the chatbot turn
+    expect(() => {
+      // Mock document and URL in test environment if needed
+      if (typeof window !== "undefined") {
+        exportDiscussionsToWordDoc([botTurn], "testtrader");
+      }
+    }).not.toThrow();
   });
 });

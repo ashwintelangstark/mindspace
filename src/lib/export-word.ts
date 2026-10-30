@@ -502,6 +502,7 @@ export function exportDiscussionsToWordDoc(turns: DiscussionTurn[], username?: s
     .role-bear { color: #bf2600; font-weight: bold; }
     .role-stag { color: #0052cc; font-weight: bold; }
     .role-rabbit { color: #b35c00; font-weight: bold; }
+    .role-assistant { color: #00875a; font-weight: bold; }
     .role-user { color: #5243aa; font-weight: bold; }
     .footer {
       margin-top: 24pt;
@@ -579,11 +580,13 @@ export function exportDiscussionsToWordDoc(turns: DiscussionTurn[], username?: s
                   ? "role-stag"
                   : m.sender === "rabbit"
                     ? "role-rabbit"
-                    : "role-user";
+                    : m.sender === "assistant"
+                      ? "role-assistant"
+                      : "role-user";
           return `
       <tr>
         <td class="${cls}">${m.avatar} ${m.name}</td>
-        <td><strong>${m.roleTitle || (m.sender === "user" ? "Investor Question" : "AI Specialist")}</strong></td>
+        <td><strong>${m.roleTitle || (m.sender === "user" ? "Investor Question" : m.sender === "assistant" ? "Mindspace AI Chatbot" : "AI Specialist")}</strong></td>
         <td style="line-height: 1.4;">${m.message}</td>
         <td>${m.timestamp}</td>
       </tr>`;

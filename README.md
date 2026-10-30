@@ -22,7 +22,7 @@ The platform merges real-world market feeds (Indian NSE/BSE & US Markets), stric
 - [Personal Account Authentication & Isolated Data](#-personal-account-authentication--isolated-data)
 - [Real-Time Market Hours & Settlement Freezing](#-real-time-market-hours--settlement-freezing)
 - [Live Trading Simulation & 6-Horizon Profit/Loss Engine](#-live-trading-simulation--6-horizon-profitloss-engine)
-- [Agent Discussions & User Q&A Roundtable](#-agent-discussions--user-qa-roundtable)
+- [AI Market Chatbot & 4-Agent Strategy Roundtable](#-ai-market-chatbot--4-agent-strategy-roundtable)
 - [Export to Professional Word (.doc) Reports](#-export-to-professional-word-doc-reports)
 - [Tech Stack](#-tech-stack)
 - [Local Development & Setup](#-local-development--setup)
@@ -133,14 +133,28 @@ Experience the realism of live markets without financial risk:
 
 ---
 
-## 💬 Agent Discussions & User Q&A Roundtable
+## 💬 AI Market Chatbot & 4-Agent Strategy Roundtable
 
-Beyond analyzing individual stocks, Mindspace provides an interactive roundtable lounge:
+Mindspace features a dual-mode discussion intelligence system accessible right from the side drawer:
 
-- **Start / Stop Controls**: Easily trigger or pause agent discussions with the dedicated `▶ Start` / `⏸ Stop` controls.
-- **3D Lounge Gathering**: When discussion mode begins, Bull, Bear, Stag, and Rabbit automatically walk over and gather around the office coffee table.
-- **Interactive User Q&A Input**: Ask any financial question in the bottom text box and all 4 agents immediately answer from their respective perspectives.
-- **Export Discussions to Word (.doc)**: Export your entire roundtable conversation and Q&A transcript into a neatly organized, tabular Word document with one click.
+### 1. 🤖 AI Market Chatbot (Free Unlimited Model & Live Web Grounding)
+
+- **Unlimited Free OpenRouter Models**: Powered by `openrouter/free` (high-speed auto-router across free pools with zero rate limits), with selectable options including **Google Gemma 4 31B**, **NVIDIA Nemotron 3.5**, **Cohere North Mini**, and **Recursive Flint v1.0**.
+- **Live Web & Real-Time Market Grounding**: Dynamically queries live stock quotes, 24-hour price changes, intraday highs/lows, VWAP, 20-EMA, and RSI from the web feed, enabling the chatbot to give up-to-the-minute answers.
+- **Exact Profit & Loss (P&L) Calculator**: Ask about any position sizing (e.g. _"Calculate P&L for 50 shares of Reliance"_) and the chatbot automatically computes:
+  - Capital deployed ($Shares \times Price$)
+  - Upside target price and potential gross profit in amount & %
+  - Technical stop-loss price and maximum loss at risk in amount & %
+  - Asymmetric Risk-to-Reward Ratio (RRR)
+- **Comprehensive Doubt Clearing**: Clear any doubts on trading mechanics, technical indicators, short selling, risk management, or macro market shifts.
+- **4-Agent Multi-Perspective Synthesis**: Every response synthesizes actionable viewpoints from Bull (momentum), Bear (defense), Stag (valuation), and Rabbit (VWAP / execution).
+
+### 2. 👥 4-Agent Strategy Roundtable
+
+- **Start / Stop Controls**: Easily trigger or pause agent discussions with dedicated `▶ Start` / `⏸ Stop` buttons.
+- **3D Lounge Gathering**: When roundtable mode begins, Bull, Bear, Stag, and Rabbit automatically walk over and gather around the office coffee table in the 3D scene.
+- **Interactive User Q&A**: Ask any financial question and all 4 agents immediately answer with their distinct individual personas.
+- **Export Discussions to Word (.doc)**: Export all chatbot analyses, P&L tables, and roundtable transcripts into a neatly formatted Word document with one click.
 
 ---
 

@@ -4,6 +4,7 @@ import {
   fetchStockPrediction,
   generateDeterministicPrediction,
   OPENROUTER_DEFAULT_KEY,
+  FREE_OPENROUTER_MODELS,
 } from "@/lib/openrouter";
 import {
   assignTaskToAgents,
@@ -23,9 +24,14 @@ import {
   StockSearchResultItem,
 } from "@/lib/market-engine";
 import { exportPredictionToWordDoc, exportDiscussionsToWordDoc } from "@/lib/export-word";
-import { fetchAgentDiscussion, DiscussionTurn } from "@/lib/agent-discussions";
+import {
+  fetchAgentDiscussion,
+  queryMindspaceChatbot,
+  DiscussionTurn,
+} from "@/lib/agent-discussions";
 import { getCurrentUser } from "@/lib/auth";
 import { CandlestickChart } from "./CandlestickChart";
+import { FormattedChatMessage } from "./FormattedChatMessage";
 
 interface StockDrawerProps {
   currentStock: StockQuote | null;
@@ -57,6 +63,8 @@ export function StockDrawer({
 
   // Tab mode: "analysis" (stock charts & predictions) vs "discussions" (agent tips roundtable & Q&A)
   const [drawerMode, setDrawerMode] = useState<"analysis" | "discussions">("analysis");
+  const [discussionSubMode, setDiscussionSubMode] = useState<"chatbot" | "roundtable">("chatbot");
+  const [selectedModel, setSelectedModel] = useState<string>("openrouter/free");
   const [isDiscussionActive, setIsDiscussionActive] = useState(false);
   const [discussionTurns, setDiscussionTurns] = useState<DiscussionTurn[]>([]);
   const [isGeneratingDiscussion, setIsGeneratingDiscussion] = useState(false);
@@ -195,9 +203,9 @@ export function StockDrawer({
     }
   };
 
-  const handleAskAgentQuestion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = userQuestionInput.trim();
+  const handleAskAgentQuestion = async (e?: React.FormEvent, customQuestion?: string) => {
+    if (e) e.preventDefault();
+    const q = (customQuestion || userQuestionInput).trim();
     if (!q || isGeneratingDiscussion) return;
 
     setUserQuestionInput("");
@@ -206,11 +214,24 @@ export function StockDrawer({
     setIsDiscussionActive(true);
 
     try {
-      const turn = await fetchAgentDiscussion(q, true, apiKey);
-      setDiscussionTurns((prev) => [...prev, turn]);
-      showToast("Bull, Bear, Stag & Rabbit answered your question!");
-    } catch {
-      showToast("Failed to answer question. Try again.");
+      if (discussionSubMode === "chatbot") {
+        const botTurn = await queryMindspaceChatbot({
+          userQuestion: q,
+          activeStock: liveStock,
+          selectedModel: selectedModel,
+          apiKey: apiKey,
+          conversationHistory: discussionTurns.flatMap((t) => t.messages),
+        });
+        setDiscussionTurns((prev) => [...prev, botTurn]);
+        showToast("🤖 Mindspace AI Chatbot answered your doubt with live web data & P&L!");
+      } else {
+        const turn = await fetchAgentDiscussion(q, true, apiKey, selectedModel);
+        setDiscussionTurns((prev) => [...prev, turn]);
+        showToast("Bull, Bear, Stag & Rabbit answered your question!");
+      }
+    } catch (err) {
+      console.error("Agent discussion error:", err);
+      showToast("Processed via offline quantitative engine.");
     } finally {
       setIsGeneratingDiscussion(false);
     }
@@ -986,59 +1007,66 @@ export function StockDrawer({
           )}
         </>
       ) : (
-        /* DISCUSSIONS MODE: Only the 4-agent round-table conversation & Q&A is visible */
+        /* DISCUSSIONS MODE: AI Market Chatbot & 4-Agent Strategy Roundtable */
         <div className="flex-1 flex flex-col min-h-0 bg-[#040a07]">
-          {/* Discussion Header & Control Panel */}
-          <div className="p-4 border-b border-[#143c2d] bg-[#020705]">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-black text-sm text-white tracking-wide uppercase">
-                    💬 Agent Strategy Roundtable
-                  </h3>
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-mono font-bold ${
-                      isDiscussionActive
-                        ? "border border-[#00e59a55] bg-[#00e59a18] text-[#00e59a]"
-                        : "border border-gray-600 bg-gray-800 text-gray-300"
-                    }`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        isDiscussionActive ? "bg-[#00e59a] animate-ping" : "bg-gray-400"
-                      }`}
-                    />
-                    {isDiscussionActive ? "ACTIVE" : "PAUSED"}
-                  </span>
-                </div>
-                <p className="text-[10.5px] text-[#92a79c] mt-0.5 font-medium">
-                  Bull, Bear, Stag & Rabbit debating investing tips in the 3D lounge
-                </p>
-              </div>
-
-              {/* Discussion Controls */}
-              <div className="flex flex-wrap items-center gap-1.5">
+          {/* Discussion Header & Mode Switch */}
+          <div className="p-4 border-b border-[#143c2d] bg-[#020705] space-y-3">
+            {/* Top Row: Sub-mode pills & status */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#030906] border border-[#143c2d]">
                 <button
                   type="button"
-                  onClick={handleToggleDiscussion}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 shadow-sm ${
-                    isDiscussionActive
-                      ? "border border-amber-500/60 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
-                      : "border border-[#00e59a] bg-[#00e59a] text-[#00180e] hover:bg-[#48ffbe]"
+                  onClick={() => setDiscussionSubMode("chatbot")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    discussionSubMode === "chatbot"
+                      ? "bg-[#00e59a] text-[#00180e] shadow-[0_0_12px_rgba(0,229,154,0.3)] font-black"
+                      : "text-gray-400 hover:text-white"
                   }`}
                 >
-                  <span>{isDiscussionActive ? "⏸ Stop" : "▶ Start"}</span>
+                  <span>🤖</span>
+                  <span>AI Market Chatbot</span>
                 </button>
-
                 <button
                   type="button"
-                  onClick={handleNextDiscussionTopic}
-                  disabled={isGeneratingDiscussion}
-                  title="Generate a new practical trading tip topic"
-                  className="px-2.5 py-1.5 rounded-xl border border-[#1b5e41] bg-[#081e14] hover:bg-[#0c2f20] text-gray-200 text-xs font-bold transition-all disabled:opacity-40"
+                  onClick={() => setDiscussionSubMode("roundtable")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    discussionSubMode === "roundtable"
+                      ? "bg-[#00e59a] text-[#00180e] shadow-[0_0_12px_rgba(0,229,154,0.3)] font-black"
+                      : "text-gray-400 hover:text-white"
+                  }`}
                 >
-                  {isGeneratingDiscussion ? "..." : "🎲 New Topic"}
+                  <span>👥</span>
+                  <span>4-Agent Roundtable</span>
                 </button>
+              </div>
+
+              {/* Action Controls */}
+              <div className="flex items-center gap-1.5">
+                {discussionSubMode === "roundtable" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleToggleDiscussion}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 shadow-sm ${
+                        isDiscussionActive
+                          ? "border border-amber-500/60 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                          : "border border-[#00e59a] bg-[#00e59a] text-[#00180e] hover:bg-[#48ffbe]"
+                      }`}
+                    >
+                      <span>{isDiscussionActive ? "⏸ Stop" : "▶ Start"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleNextDiscussionTopic}
+                      disabled={isGeneratingDiscussion}
+                      title="Generate a new practical trading tip topic"
+                      className="px-2.5 py-1.5 rounded-xl border border-[#1b5e41] bg-[#081e14] hover:bg-[#0c2f20] text-gray-200 text-xs font-bold transition-all disabled:opacity-40"
+                    >
+                      {isGeneratingDiscussion ? "..." : "🎲 New"}
+                    </button>
+                  </>
+                )}
 
                 <button
                   type="button"
@@ -1048,7 +1076,7 @@ export function StockDrawer({
                   className="px-2.5 py-1.5 rounded-xl border border-[#00e59a] bg-[#082417] hover:bg-[#00e59a] hover:text-[#00180e] text-[#00e59a] text-xs font-bold transition-all disabled:opacity-40 flex items-center gap-1"
                 >
                   <span>📄</span>
-                  <span>Export Word</span>
+                  <span className="hidden sm:inline">Export Word</span>
                 </button>
 
                 {discussionTurns.length > 0 && (
@@ -1063,29 +1091,98 @@ export function StockDrawer({
                 )}
               </div>
             </div>
+
+            {/* Model & Live Web Data Selector Bar */}
+            <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#0e2c1f] text-[10.5px]">
+              {/* OpenRouter Free Model Selector */}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[#00e59a] font-mono font-bold shrink-0">Model:</span>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="bg-[#030a07] border border-[#174f35] text-white rounded-lg px-2 py-1 text-[10.5px] font-mono focus:outline-none focus:border-[#00e59a] truncate max-w-[210px]"
+                  title="Select any free unlimited model from OpenRouter"
+                >
+                  {FREE_OPENROUTER_MODELS.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.badge})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Live Web Grounded Badge */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-mono font-bold border border-[#00e59a55] bg-[#00e59a15] text-[#00e59a]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#00e59a] animate-ping" />
+                  <span>🌐 Live Web {liveStock ? `(${liveStock.symbol})` : "Active"}</span>
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Scrollable Conversation Feed */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {discussionTurns.length === 0 ? (
-              <div className="py-12 text-center">
+              <div className="py-8 px-2 text-center">
                 <div className="h-14 w-14 rounded-2xl border border-[#18533b] bg-[#06150e] flex items-center justify-center mx-auto mb-3 text-2xl shadow-[0_0_20px_rgba(0,229,154,0.15)]">
-                  ☕
+                  {discussionSubMode === "chatbot" ? "🤖" : "☕"}
                 </div>
                 <h4 className="text-xs font-black uppercase text-white tracking-wider">
-                  Roundtable Ready
+                  {discussionSubMode === "chatbot"
+                    ? "Mindspace AI Market Chatbot Ready"
+                    : "4-Agent Strategy Roundtable Ready"}
                 </h4>
-                <p className="text-[11px] text-gray-400 mt-1 max-w-xs mx-auto leading-relaxed">
-                  Click <strong className="text-[#00e59a]">Start</strong> to hear Bull, Bear, Stag &
-                  Rabbit share tactical investing tips, or ask them any question below!
+                <p className="text-[11px] text-gray-400 mt-1.5 max-w-sm mx-auto leading-relaxed">
+                  {discussionSubMode === "chatbot"
+                    ? "Ask any question to clear your doubts on stocks, calculate exact profits & losses for your shares, or analyze technical indicators with live web and market data."
+                    : "Click Start to hear Bull, Bear, Stag & Rabbit debate institutional risk, breakouts, and order-flow strategies in the 3D lounge."}
                 </p>
-                <button
-                  type="button"
-                  onClick={handleToggleDiscussion}
-                  className="mt-4 px-4 py-2 rounded-xl border border-[#00e59a] bg-[#00e59a] text-[#00180e] font-black text-xs hover:bg-[#52ffbf] transition-all"
-                >
-                  ▶ Start Discussion Now
-                </button>
+
+                {/* Quick Starter Prompts */}
+                <div className="mt-5 space-y-2 max-w-sm mx-auto text-left">
+                  <div className="text-[10px] font-mono text-[#00e59a] uppercase font-bold text-center">
+                    Try Asking a Question:
+                  </div>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {[
+                      {
+                        title: "📊 Calculate P&L for 50 shares",
+                        desc: liveStock
+                          ? `Calculate profit & loss on 50 shares of ${liveStock.symbol} with entry, targets and stop-loss`
+                          : "Calculate profit and loss on 50 shares of Reliance with entry, targets and stop-loss",
+                      },
+                      {
+                        title: "🛡 Clear Doubt: How does Stop-Loss work?",
+                        desc: "Clear my doubt: How does a stop-loss protect my capital and when should I cut losses?",
+                      },
+                      {
+                        title: "🎯 What are Bull & Bear target prices?",
+                        desc: liveStock
+                          ? `What are the Bull, Bear and Stag targets for ${liveStock.symbol}?`
+                          : "What are the Bull and Bear target prices and profit expectations?",
+                      },
+                      {
+                        title: "⚡ Short-term swing vs Long-term compounding?",
+                        desc: "Should I trade this stock for short-term swing profit or hold for long-term compounding?",
+                      },
+                    ].map((chip, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleAskAgentQuestion(undefined, chip.desc)}
+                        className="w-full text-left p-2 rounded-xl border border-[#164632] bg-[#06170f] hover:bg-[#0a261a] hover:border-[#00e59a] text-[11px] transition-all group shadow-sm"
+                      >
+                        <div className="font-bold text-gray-200 group-hover:text-[#00e59a]">
+                          {chip.title}
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-mono truncate mt-0.5">
+                          {chip.desc}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               discussionTurns.map((turn) => (
@@ -1096,7 +1193,7 @@ export function StockDrawer({
                   {/* Topic / Question Title */}
                   <div className="flex items-center justify-between pb-2 border-b border-[#123124] text-[10.5px] font-mono">
                     <span className="text-[#00e59a] font-bold flex items-center gap-1.5 truncate max-w-[320px]">
-                      <span>{turn.userQuestion ? "❓ Question:" : "💡 Topic:"}</span>
+                      <span>{turn.userQuestion ? "❓ Doubt / Question:" : "💡 Topic:"}</span>
                       <span className="text-gray-200 font-sans font-semibold truncate">
                         {turn.topic}
                       </span>
@@ -1104,43 +1201,48 @@ export function StockDrawer({
                     <span className="text-gray-500 shrink-0">{turn.timestamp}</span>
                   </div>
 
-                  {/* Messages from agents or user */}
+                  {/* Messages from Chatbot, Agents, or User */}
                   <div className="space-y-2">
                     {turn.messages.map((msg) => {
                       const isUser = msg.sender === "user";
+                      const isAssistant = msg.sender === "assistant";
                       const isBull = msg.sender === "bull";
                       const isBear = msg.sender === "bear";
                       const isStag = msg.sender === "stag";
 
                       const borderClass = isUser
                         ? "border-[#8b5cf655] bg-[#8b5cf612]"
-                        : isBull
-                          ? "border-[#00e59a44] bg-[#00e59a0f]"
-                          : isBear
-                            ? "border-[#ff354944] bg-[#ff35490f]"
-                            : isStag
-                              ? "border-[#38bdf844] bg-[#38bdf80f]"
-                              : "border-[#fbbf2444] bg-[#fbbf240f]";
+                        : isAssistant
+                          ? "border-[#00e59a66] bg-gradient-to-br from-[#061d13] via-[#04140d] to-[#020b07] shadow-[0_0_15px_rgba(0,229,154,0.08)]"
+                          : isBull
+                            ? "border-[#00e59a44] bg-[#00e59a0f]"
+                            : isBear
+                              ? "border-[#ff354944] bg-[#ff35490f]"
+                              : isStag
+                                ? "border-[#38bdf844] bg-[#38bdf80f]"
+                                : "border-[#fbbf2444] bg-[#fbbf240f]";
 
                       const nameColor = isUser
                         ? "text-[#c084fc]"
-                        : isBull
+                        : isAssistant
                           ? "text-[#00e59a]"
-                          : isBear
-                            ? "text-[#ff6b7a]"
-                            : isStag
-                              ? "text-[#38bdf8]"
-                              : "text-[#fbbf24]";
+                          : isBull
+                            ? "text-[#00e59a]"
+                            : isBear
+                              ? "text-[#ff6b7a]"
+                              : isStag
+                                ? "text-[#38bdf8]"
+                                : "text-[#fbbf24]";
 
                       return (
                         <div
                           key={msg.id}
-                          className={`rounded-xl border p-2.5 text-xs transition-colors ${borderClass}`}
+                          className={`rounded-xl border p-3 text-xs transition-colors ${borderClass}`}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <span className="text-base shrink-0">{msg.avatar}</span>
-                              <div className="flex items-baseline gap-1.5">
+                              <div className="flex items-baseline gap-1.5 flex-wrap">
                                 <span
                                   className={`font-black uppercase tracking-wide text-xs ${nameColor}`}
                                 >
@@ -1153,13 +1255,27 @@ export function StockDrawer({
                                 )}
                               </div>
                             </div>
-                            <span className="text-[9px] font-mono text-gray-500 shrink-0">
-                              {msg.timestamp}
-                            </span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {msg.modelUsed && (
+                                <span className="hidden sm:inline-block text-[9px] font-mono text-[#00e59a] bg-[#00e59a15] px-1.5 py-0.5 rounded border border-[#00e59a33]">
+                                  {msg.modelUsed}
+                                </span>
+                              )}
+                              <span className="text-[9px] font-mono text-gray-500">
+                                {msg.timestamp}
+                              </span>
+                            </div>
                           </div>
-                          <p className="text-gray-200 mt-1.5 text-[11.5px] leading-relaxed pl-6">
-                            {msg.message}
-                          </p>
+
+                          <div className="mt-2 pl-6">
+                            {isAssistant ? (
+                              <FormattedChatMessage content={msg.message} />
+                            ) : (
+                              <p className="text-gray-200 text-[11.5px] leading-relaxed">
+                                {msg.message}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -1169,24 +1285,86 @@ export function StockDrawer({
             )}
 
             {isGeneratingDiscussion && (
-              <div className="p-3 rounded-xl border border-[#00e59a44] bg-[#00e59a0d] flex items-center gap-2.5 text-xs text-[#00e59a]">
+              <div className="p-3.5 rounded-xl border border-[#00e59a44] bg-[#00e59a0d] flex items-center gap-2.5 text-xs text-[#00e59a] shadow-inner">
                 <span className="animate-spin text-base">⏳</span>
                 <span className="font-mono">
-                  Agents formulating answers around the coffee table...
+                  {discussionSubMode === "chatbot"
+                    ? `Mindspace AI (${selectedModel}) analyzing with live web market data & calculating P&L...`
+                    : "Agents formulating answers around the coffee table..."}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Sticky Bottom Question Input Box */}
-          <form
-            onSubmit={handleAskAgentQuestion}
-            className="p-3.5 border-t border-[#143c2d] bg-[#020705] shrink-0"
-          >
-            <div className="flex gap-2">
+          {/* Sticky Bottom Question & Doubt Clearing Form */}
+          <div className="border-t border-[#143c2d] bg-[#020705] p-3.5 shrink-0 space-y-2">
+            {/* Quick Suggestion Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px] font-mono no-scrollbar">
+              <span className="text-gray-500 shrink-0 font-bold">Quick:</span>
+              <button
+                type="button"
+                onClick={() =>
+                  handleAskAgentQuestion(
+                    undefined,
+                    liveStock
+                      ? `Calculate P&L for 50 shares of ${liveStock.symbol} with entry, targets and stop-loss`
+                      : "Calculate P&L for 50 shares of Reliance with entry, targets and stop-loss",
+                  )
+                }
+                className="shrink-0 px-2.5 py-1 rounded-lg border border-[#1a553c] bg-[#06170f] hover:bg-[#0a261a] hover:border-[#00e59a] text-gray-300 hover:text-white transition-all"
+              >
+                📊 Calculate P&L (50 shares)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleAskAgentQuestion(
+                    undefined,
+                    "Clear my doubt: How does stop-loss protect my capital and when should I exit?",
+                  )
+                }
+                className="shrink-0 px-2.5 py-1 rounded-lg border border-[#1a553c] bg-[#06170f] hover:bg-[#0a261a] hover:border-[#00e59a] text-gray-300 hover:text-white transition-all"
+              >
+                🛡 Stop-Loss Rule
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleAskAgentQuestion(
+                    undefined,
+                    liveStock
+                      ? `What are the Bull, Bear and Stag target prices and profit expectations for ${liveStock.symbol}?`
+                      : "What are the Bull and Bear target prices and profit expectations?",
+                  )
+                }
+                className="shrink-0 px-2.5 py-1 rounded-lg border border-[#1a553c] bg-[#06170f] hover:bg-[#0a261a] hover:border-[#00e59a] text-gray-300 hover:text-white transition-all"
+              >
+                🎯 Target Prices
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleAskAgentQuestion(
+                    undefined,
+                    liveStock
+                      ? `What do RSI and VWAP indicators say about ${liveStock.symbol} right now?`
+                      : "What do RSI and VWAP indicators say about current market momentum?",
+                  )
+                }
+                className="shrink-0 px-2.5 py-1 rounded-lg border border-[#1a553c] bg-[#06170f] hover:bg-[#0a261a] hover:border-[#00e59a] text-gray-300 hover:text-white transition-all"
+              >
+                ⚡ RSI & VWAP
+              </button>
+            </div>
+
+            <form onSubmit={handleAskAgentQuestion} className="flex gap-2">
               <input
                 type="text"
-                placeholder="Ask Bull, Bear, Stag & Rabbit a question (e.g. 'How to handle market crashes?', 'Is gold good right now?')..."
+                placeholder={
+                  discussionSubMode === "chatbot"
+                    ? "Ask AI Chatbot any doubt, calculate profits/losses, or request live web market analysis..."
+                    : "Ask Bull, Bear, Stag & Rabbit a question (e.g. 'How to handle market crashes?')..."
+                }
                 value={userQuestionInput}
                 onChange={(e) => setUserQuestionInput(e.target.value)}
                 className="flex-1 rounded-xl border border-[#18543b] bg-[#030906] px-3.5 py-2.5 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00e59a] shadow-inner"
@@ -1196,11 +1374,19 @@ export function StockDrawer({
                 disabled={!userQuestionInput.trim() || isGeneratingDiscussion}
                 className="px-4 py-2.5 rounded-xl border border-[#00e59a] bg-[#00e59a] text-[#00180e] font-black text-xs hover:bg-[#52ffbf] disabled:opacity-40 transition-all shrink-0 shadow-sm"
               >
-                {isGeneratingDiscussion ? "..." : "Ask Agents"}
+                {isGeneratingDiscussion
+                  ? "..."
+                  : discussionSubMode === "chatbot"
+                    ? "Ask Chatbot"
+                    : "Ask Agents"}
               </button>
-            </div>
-            <div className="flex items-center justify-between text-[10px] text-gray-500 mt-1.5 font-mono">
-              <span>⚡ Token-efficient: 4 perspectives in 1 turn</span>
+            </form>
+
+            <div className="flex items-center justify-between text-[10px] text-gray-500 font-mono pt-0.5">
+              <span className="flex items-center gap-1 text-[#00e59a]">
+                <span>⚡</span>
+                <span>Unlimited Free Model ({selectedModel.split("/")[1] || selectedModel})</span>
+              </span>
               {discussionTurns.length > 0 ? (
                 <button
                   type="button"
@@ -1213,7 +1399,7 @@ export function StockDrawer({
                 <span>Bull · Bear · Stag · Rabbit</span>
               )}
             </div>
-          </form>
+          </div>
         </div>
       )}
 

@@ -1,5 +1,6 @@
 import { StockQuote, CandleData, AgentLiveAlert } from "@/types/stock";
-import { STOCKS_CATALOG, INITIAL_INDICES, MarketIndexQuote } from "@/data/stocks";
+import { STOCKS_CATALOG, INITIAL_INDICES, MarketIndexQuote, findStock } from "@/data/stocks";
+import { searchUniverse, findUniverseStock } from "@/data/stocks-universe";
 import { agents, currentTask } from "@/game/sim/roam";
 import { saveAgentAlertToSqlite } from "./sqlite-client";
 
@@ -48,8 +49,15 @@ export function getExchangeMarketStatus(
     };
   }
 
+  // Check if stock is known from the 7,280+ universe
+  const uni = findUniverseStock(upperS);
+  const isIndianFromUniverse = uni
+    ? uni.currency === "₹" || uni.market.includes("NSE") || uni.market.includes("BSE")
+    : false;
+
   // 2. Indian Equities & Indices (NSE / BSE / NIFTY 50 / SENSEX / Reliance / TCS / etc.)
   const isIndian =
+    isIndianFromUniverse ||
     upperM.includes("NSE") ||
     upperM.includes("BSE") ||
     upperM.includes("INDIA") ||
@@ -318,7 +326,8 @@ function buildAlertsForSymbol(symbol: string): AgentLiveAlert[] {
 }
 
 /**
- * Queries `/api/market/search` (Yahoo Finance v1 Search API) and merges with local matches.
+ * Searches across the entire 7,280+ security universe (NSE Indian equities + US Markets)
+ * and queries `/api/market/search` (Yahoo Finance v1 Search API) in real time.
  */
 export async function searchStocksLive(query: string): Promise<StockSearchResultItem[]> {
   const q = query.trim();
@@ -328,10 +337,12 @@ export async function searchStocksLive(query: string): Promise<StockSearchResult
   const localMatches: StockSearchResultItem[] = [];
   const seen = new Set<string>();
 
+  // 1. Search local curated STOCKS_CATALOG
   for (const stock of Object.values(STOCKS_CATALOG)) {
     if (stock.symbol.toLowerCase().includes(lower) || stock.name.toLowerCase().includes(lower)) {
-      if (!seen.has(stock.yahooSymbol)) {
-        seen.add(stock.yahooSymbol);
+      const key = stock.yahooSymbol || stock.symbol;
+      if (!seen.has(key)) {
+        seen.add(key);
         localMatches.push({
           symbol: stock.symbol,
           yahooSymbol: stock.yahooSymbol,
@@ -344,6 +355,24 @@ export async function searchStocksLive(query: string): Promise<StockSearchResult
     }
   }
 
+  // 2. Search entire 7,280+ Security Universe (NSE Indian Equities + US Universe)
+  const universeMatches = searchUniverse(q, 30);
+  for (const u of universeMatches) {
+    const key = u.yahooSymbol || u.symbol;
+    if (!seen.has(key)) {
+      seen.add(key);
+      localMatches.push({
+        symbol: u.symbol,
+        yahooSymbol: u.yahooSymbol || u.symbol,
+        name: u.name,
+        market: u.market,
+        currency: u.currency,
+        sector: u.sector,
+      });
+    }
+  }
+
+  // 3. Query Live Yahoo Search Endpoint for real-time external symbols
   try {
     const res = await fetch(`/api/market/search?q=${encodeURIComponent(q)}`);
     if (res.ok) {
@@ -356,14 +385,14 @@ export async function searchStocksLive(query: string): Promise<StockSearchResult
             merged.push(item);
           }
         }
-        return [...merged, ...localMatches].slice(0, 8);
+        return [...merged, ...localMatches].slice(0, 20);
       }
     }
   } catch {
-    // Fallback to local matches if offline
+    // Fallback to local and universe matches if offline
   }
 
-  return localMatches.slice(0, 8);
+  return localMatches.slice(0, 20);
 }
 
 /**
@@ -675,6 +704,20 @@ export function getLiveStockQuote(queryOrSymbol: string): StockQuote {
     ) {
       return stock;
     }
+  }
+
+  // Check 7,280+ Security Universe (NSE Indian Equities + US Equities)
+  const universeStock = findUniverseStock(queryOrSymbol);
+  if (universeStock) {
+    liveQuotes[universeStock.symbol] = universeStock;
+    if (universeStock.yahooSymbol) {
+      liveQuotes[universeStock.yahooSymbol.toUpperCase()] = universeStock;
+    }
+    basePrices[universeStock.symbol] = universeStock.price / (1 + universeStock.change / 100);
+    if (!candlesBySymbol[universeStock.symbol]) {
+      candlesBySymbol[universeStock.symbol] = generateInitialCandles(universeStock, 64);
+    }
+    return universeStock;
   }
 
   const cleanSym = upper.replace(/[^A-Z0-9-]/g, "").slice(0, 12) || "EQUITY";

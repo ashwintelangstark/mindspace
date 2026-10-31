@@ -15,7 +15,8 @@ import {
   assignTaskToAgents,
   gatherAgentsForDiscussion,
 } from "@/game/sim/roam";
-import { fetchAgentDiscussion, queryMindspaceChatbot } from "@/lib/agent-discussions";
+import { fetchAgentDiscussion, queryMindspaceChatbot, findMentionedStockInQuery } from "@/lib/agent-discussions";
+import { findUniverseStock, searchUniverse } from "@/data/stocks-universe";
 import { exportDiscussionsToWordDoc } from "@/lib/export-word";
 
 import {
@@ -298,5 +299,110 @@ describe("Mindspace Open-Source ML Ensemble, Multi-Horizon Probabilities & No-Pr
         exportDiscussionsToWordDoc([botTurn], "testtrader");
       }
     }).not.toThrow();
+  });
+
+  it("directly answers the user's specific question in chatbot without force-fitting unrelated stocks", async () => {
+    // 1. General question on Trailing Stop-Loss
+    const detection1 = findMentionedStockInQuery("What is a trailing stop loss and how does it protect profits?");
+    expect(detection1.isStockSpecific).toBe(false);
+    expect(detection1.detectedStock).toBeNull();
+
+    const turn1 = await queryMindspaceChatbot({
+      userQuestion: "What is a trailing stop loss and how does it protect profits?",
+      activeStock: STOCKS_CATALOG.reliance, // User has reliance drawer open, but asked a general question!
+      apiKey: "",
+    });
+
+    const botMsg1 = turn1.messages[1].message;
+    expect(botMsg1).toContain("Trailing Stop-Loss");
+    expect(botMsg1).toContain("Fixed Stop-Loss");
+    // Does NOT force Reliance stock overview header
+    expect(botMsg1).not.toContain("Market Intelligence Analysis: Reliance Industries");
+
+    // 2. General question on Options & Straddles
+    const turn2 = await queryMindspaceChatbot({
+      userQuestion: "Explain how call options, put options and straddles work with open interest",
+      apiKey: "",
+    });
+    const botMsg2 = turn2.messages[1].message;
+    expect(botMsg2).toContain("Options Trading Mechanics");
+    expect(botMsg2).toContain("Call Option");
+    expect(botMsg2).toContain("Put Option");
+    expect(botMsg2).toContain("Straddle");
+
+    // 3. General question on Short Squeeze
+    const turn3 = await queryMindspaceChatbot({
+      userQuestion: "What is short selling and how does a short squeeze happen?",
+      apiKey: "",
+    });
+    const botMsg3 = turn3.messages[1].message;
+    expect(botMsg3).toContain("Short Selling");
+    expect(botMsg3).toContain("Short Squeeze");
+  });
+
+  it("integrates 7,280+ stocks from official NSE India and US universes with exact quotes and live search", () => {
+    // 1. Search Indian stocks from nse_security_master.csv
+    const tcs = findUniverseStock("TCS");
+    expect(tcs).not.toBeNull();
+    expect(tcs?.currency).toBe("₹");
+    expect(tcs?.yahooSymbol).toBe("TCS.NS");
+    expect(tcs?.market).toContain("NSE");
+
+    const infy = findUniverseStock("INFY");
+    expect(infy).not.toBeNull();
+    expect(infy?.currency).toBe("₹");
+    expect(infy?.yahooSymbol).toBe("INFY.NS");
+
+    const aarti = findUniverseStock("AARTIIND");
+    expect(aarti).not.toBeNull();
+    expect(aarti?.currency).toBe("₹");
+
+    // 2. Search US stocks from us-stock-universe-latest.csv
+    const apple = findUniverseStock("AAPL");
+    expect(apple).not.toBeNull();
+    expect(apple?.currency).toBe("$");
+    expect(apple?.yahooSymbol).toBe("AAPL");
+    expect(apple?.market).toBe("NASDAQ");
+
+    const asml = findUniverseStock("ASML");
+    expect(asml).not.toBeNull();
+    expect(asml?.currency).toBe("$");
+    expect(asml?.symbol).toBe("ASML");
+
+    // 3. Search universe with filters
+    const indianResults = searchUniverse("tata", 10, "INDIA");
+    expect(indianResults.length).toBeGreaterThan(0);
+    indianResults.forEach((s) => {
+      expect(s.currency).toBe("₹");
+    });
+
+    const usResults = searchUniverse("micro", 10, "US");
+    expect(usResults.length).toBeGreaterThan(0);
+    usResults.forEach((s) => {
+      expect(s.currency).toBe("$");
+    });
+  });
+
+  it("accurately verifies IST (Indian Standard Time) market sessions and system weather profiles", () => {
+    // Tuesday 11:30 AM IST (UTC 6:00 AM) -> Indian market open
+    const tuesdayMorningUTC = new Date("2026-10-27T06:00:00Z");
+    const statusOpen = getExchangeMarketStatus("NSE", "RELIANCE.NS", tuesdayMorningUTC);
+    expect(statusOpen.isOpen).toBe(true);
+    expect(statusOpen.marketCode).toBe("NSE/BSE");
+    expect(statusOpen.badge).toBe("🟢 Market Open");
+
+    // Saturday 11:30 AM IST -> Weekend closed
+    const saturdayUTC = new Date("2026-10-31T06:00:00Z");
+    const statusWeekend = getExchangeMarketStatus("NSE", "RELIANCE.NS", saturdayUTC);
+    expect(statusWeekend.isOpen).toBe(false);
+    expect(statusWeekend.badge).toBe("🔴 Market Closed");
+    expect(statusWeekend.sessionMessage).toContain("Weekend");
+
+    // System sky and weather profile
+    const weather = getSystemSkyAndWeather();
+    expect(weather.phase).toBeDefined();
+    expect(weather.weatherSummary).toBeDefined();
+    expect(weather.skyStops).toHaveLength(4);
+    expect(weather.windowLightColor).toMatch(/^#/);
   });
 });

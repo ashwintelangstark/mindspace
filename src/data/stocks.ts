@@ -1,4 +1,5 @@
 import { StockQuote } from "@/types/stock";
+import { findUniverseStock } from "./stocks-universe";
 
 function makeQuote(
   base: Omit<StockQuote, "bid" | "ask" | "spread" | "lastTickDirection" | "lastUpdated">,
@@ -399,6 +400,10 @@ export function findStock(query: string): StockQuote {
     (s) => s.name.toLowerCase().includes(q) || s.symbol.toLowerCase().includes(q),
   );
   if (byName) return byName;
+
+  // Search full 7,280+ security universe (NSE India + US Markets)
+  const universeMatch = findUniverseStock(query);
+  if (universeMatch) return universeMatch;
 
   // Dynamic stock creation for any Indian (.NS/.BO) or US ticker searched by the user
   const rawSym = query.trim().toUpperCase().replace(/\s+/g, "");

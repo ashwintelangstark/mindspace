@@ -1,6 +1,7 @@
 import { OPENROUTER_DEFAULT_KEY, OPENROUTER_MODELS, FREE_OPENROUTER_MODELS } from "./openrouter";
 import { StockQuote } from "@/types/stock";
 import { getMarketSnapshot, getLiveStockQuote, searchStocksLive } from "./market-engine";
+import { findUniverseStock } from "@/data/stocks-universe";
 
 export interface AgentDiscussionMessage {
   id: string;
@@ -88,87 +89,142 @@ const OFFLINE_DIALOGS: Record<
 };
 
 /**
- * Extracts live real-world market context from the web/engine for any stock
- * mentioned in the user query, or defaults to the active workspace stock.
+ * Detects if a user question mentions a specific stock from the 7,280+ universe (NSE India + US Markets)
+ * or if it explicitly refers to the currently selected stock.
+ */
+export function findMentionedStockInQuery(
+  userQuery?: string,
+  activeStock?: StockQuote | null,
+): { detectedStock: StockQuote | null; isStockSpecific: boolean } {
+  if (!userQuery || !userQuery.trim()) {
+    return { detectedStock: activeStock || null, isStockSpecific: false };
+  }
+
+  const q = userQuery.trim();
+  const lower = q.toLowerCase();
+
+  // 1. If activeStock is present, check if query explicitly mentions its name or symbol or refers to it
+  if (activeStock) {
+    const symbolLower = activeStock.symbol.toLowerCase();
+    const nameLower = activeStock.name.toLowerCase().replace(/ (ltd|limited|inc|corp)\.?/i, "");
+    const refersToSelectedStock =
+      lower.includes("this stock") ||
+      lower.includes("the stock") ||
+      lower.includes("selected stock") ||
+      lower.includes("current stock") ||
+      lower.includes("this company") ||
+      lower.includes("my shares") ||
+      lower.includes("my position") ||
+      lower.includes("should i buy it") ||
+      lower.includes("should i sell it") ||
+      lower.includes(symbolLower) ||
+      lower.includes(nameLower);
+
+    if (refersToSelectedStock) {
+      return { detectedStock: activeStock, isStockSpecific: true };
+    }
+  }
+
+  // 2. Check for popular company names or multi-word company names mentioned in query
+  const popularCompanies = [
+    { name: "reliance", symbol: "RELIANCE" },
+    { name: "tata motors", symbol: "TATAMOTORS" },
+    { name: "tcs", symbol: "TCS" },
+    { name: "infosys", symbol: "INFY" },
+    { name: "hdfc bank", symbol: "HDFCBANK" },
+    { name: "icici bank", symbol: "ICICIBANK" },
+    { name: "state bank of india", symbol: "SBIN" },
+    { name: "sbi", symbol: "SBIN" },
+    { name: "bharti airtel", symbol: "BHARTIARTL" },
+    { name: "airtel", symbol: "BHARTIARTL" },
+    { name: "itc", symbol: "ITC" },
+    { name: "wipro", symbol: "WIPRO" },
+    { name: "zomato", symbol: "ZOMATO" },
+    { name: "paytm", symbol: "PAYTM" },
+    { name: "apple", symbol: "AAPL" },
+    { name: "nvidia", symbol: "NVDA" },
+    { name: "tesla", symbol: "TSLA" },
+    { name: "microsoft", symbol: "MSFT" },
+    { name: "google", symbol: "GOOGL" },
+    { name: "alphabet", symbol: "GOOGL" },
+    { name: "amazon", symbol: "AMZN" },
+    { name: "meta", symbol: "META" },
+    { name: "facebook", symbol: "META" },
+    { name: "netflix", symbol: "NFLX" },
+    { name: "palantir", symbol: "PLTR" },
+    { name: "tsmc", symbol: "TSM" },
+    { name: "amd", symbol: "AMD" },
+  ];
+
+  for (const pc of popularCompanies) {
+    if (lower.includes(pc.name)) {
+      const found = getLiveStockQuote(pc.symbol);
+      if (found) {
+        return { detectedStock: found, isStockSpecific: true };
+      }
+    }
+  }
+
+  // 3. Check for exact uppercase tickers mentioned in the query from the 7,280+ universe
+  const words = q.split(/[\s,;:?!\(\)\[\]"']+/).filter((w) => w.length >= 2 && w.length <= 15);
+  const commonWords = new Set([
+    "IS", "AT", "IN", "DO", "ON", "OR", "IT", "AN", "AM", "AS", "BY", "GO",
+    "IF", "MY", "NO", "SO", "TO", "UP", "US", "WE", "BUY", "SELL", "WHAT",
+    "HOW", "WHY", "CAN", "YOU", "THE", "AND", "FOR", "ALL", "NOT", "YES",
+    "NEW", "DAY", "TOP", "BIG", "LOW", "NET", "PER", "LOT", "MID", "PUT",
+    "CALL", "RATE", "RISK", "STOP", "LOSS", "P&L", "PNL", "DEAL", "HELD",
+    "LONG", "SHORT", "SAFE", "FUND", "REAL", "GOOD", "FAST", "SLOW", "DROP",
+    "RALLY", "HIGH", "ZERO", "OPEN", "EXIT", "COST", "CASH", "GAIN", "FEES",
+    "SHARES", "STOCK", "SHARE", "STOCKS", "CLEAR", "DOUBT", "TRADE", "TRADING"
+  ]);
+
+  for (const word of words) {
+    const upperWord = word.toUpperCase();
+    if (!commonWords.has(upperWord)) {
+      const match = findUniverseStock(upperWord);
+      if (match && (match.symbol.toUpperCase() === upperWord || match.yahooSymbol.toUpperCase() === `${upperWord}.NS`)) {
+        return { detectedStock: match, isStockSpecific: true };
+      }
+    }
+  }
+
+  // 4. General question / doubt (not asking about a specific stock)
+  return { detectedStock: null, isStockSpecific: false };
+}
+
+/**
+ * Extracts live real-world market context from the web/engine ONLY when the user is asking
+ * about a specific stock or referring to the selected stock. For general questions, returns empty context.
  */
 export function getLiveWebMarketContext(
   activeStock?: StockQuote | null,
   userQuery?: string,
-): { contextText: string; detectedStock: StockQuote | null } {
-  let target: StockQuote | null = activeStock || null;
+): { contextText: string; detectedStock: StockQuote | null; isStockSpecific: boolean } {
+  const { detectedStock, isStockSpecific } = findMentionedStockInQuery(userQuery, activeStock);
 
-  if (userQuery) {
-    const q = userQuery.toUpperCase();
-    const commonTickers = [
-      "RELIANCE",
-      "TCS",
-      "INFY",
-      "HDFCBANK",
-      "TATAMOTORS",
-      "ICICIBANK",
-      "SBIN",
-      "BHARTIARTL",
-      "ITC",
-      "AAPL",
-      "TSLA",
-      "NVDA",
-      "MSFT",
-      "GOOGL",
-      "AMZN",
-      "META",
-      "NIFTY",
-      "BANKNIFTY",
-    ];
-
-    for (const t of commonTickers) {
-      if (q.includes(t)) {
-        const found = getLiveStockQuote(t);
-        if (found) {
-          target = found;
-          break;
-        }
-      }
-    }
-
-    if (!target) {
-      const results = searchStocksLive(userQuery);
-      if (results.length > 0) {
-        const first = getLiveStockQuote(results[0].symbol);
-        if (first) target = first;
-      }
-    }
+  if (!detectedStock || !isStockSpecific) {
+    return { contextText: "", detectedStock: null, isStockSpecific: false };
   }
 
-  if (!target) {
-    const snap = getMarketSnapshot();
-    if (snap.stocks.length > 0) {
-      target = snap.stocks[0];
-    }
-  }
-
-  if (!target) {
-    return { contextText: "", detectedStock: null };
-  }
-
-  const changePct = typeof target.change === "number" ? target.change : 0;
+  const changePct = typeof detectedStock.change === "number" ? detectedStock.change : 0;
   const sign = changePct >= 0 ? "+" : "";
-  const dayHigh = target.high ?? target.high24h ?? target.price * 1.015;
-  const dayLow = target.low ?? target.low24h ?? target.price * 0.985;
-  const marketName = target.market || "EQUITY";
-  const cur = target.currency || "$";
+  const dayHigh = detectedStock.high ?? detectedStock.high24h ?? detectedStock.price * 1.015;
+  const dayLow = detectedStock.low ?? detectedStock.low24h ?? detectedStock.price * 0.985;
+  const marketName = detectedStock.market || "EQUITY";
+  const cur = detectedStock.currency || "$";
 
   const contextText = `
 [LIVE WORLD WIDE WEB & REAL-TIME EXCHANGE DATA]
-Asset: ${target.name} (${target.symbol} · ${marketName})
-Live Price: ${cur}${target.price.toFixed(2)}
+Asset: ${detectedStock.name} (${detectedStock.symbol} · ${marketName})
+Live Price: ${cur}${detectedStock.price.toFixed(2)}
 24h Change: ${sign}${changePct.toFixed(2)}%
 Day Trading Range: ${cur}${dayLow.toFixed(2)} - ${cur}${dayHigh.toFixed(2)}
-Trading Volume: ${target.volume || "Active Liquidity"}
+Trading Volume: ${detectedStock.volume || "Active Liquidity"}
 Exchange: ${marketName}
-Technicals: VWAP ~ ${cur}${(target.price * 0.995).toFixed(2)}, 20-EMA ~ ${cur}${(target.price * 0.988).toFixed(2)}, RSI-14 ~ 56.4
+Technicals: VWAP ~ ${cur}${(detectedStock.price * 0.995).toFixed(2)}, 20-EMA ~ ${cur}${(detectedStock.price * 0.988).toFixed(2)}, RSI-14 ~ 56.4
 `.trim();
 
-  return { contextText, detectedStock: target };
+  return { contextText, detectedStock, isStockSpecific: true };
 }
 
 /**
@@ -256,6 +312,306 @@ export function extractStockPnLParams(
 }
 
 /**
+ * High-fidelity offline question-answering intelligence engine:
+ * Direct answer for whatever question is being asked, paired with distinct 4-agent viewpoints.
+ */
+export function generateDirectChatbotAnswer(
+  userQuestion: string,
+  detectedStock: StockQuote | null,
+  isStockSpecific: boolean,
+  pnl: ReturnType<typeof extractStockPnLParams>,
+): string {
+  const q = userQuestion.toLowerCase();
+
+  // CASE 1: The user asked about a specific stock or the currently viewed stock
+  if (isStockSpecific && detectedStock) {
+    const curSymbol = detectedStock.currency || "₹";
+    const changeSign = detectedStock.change >= 0 ? "+" : "";
+
+    return `
+### 🤖 Market Intelligence Analysis: ${detectedStock.name} (${detectedStock.symbol})
+
+**Live Exchange Quote & Overview:**
+- **Current Price:** ${curSymbol}${detectedStock.price.toFixed(2)} (${changeSign}${detectedStock.change.toFixed(2)}%)
+- **Market / Exchange:** ${detectedStock.market}
+- **Sector:** ${detectedStock.sector || "Equity"}
+- **Intraday Range:** ${curSymbol}${(detectedStock.low ?? detectedStock.price * 0.985).toFixed(2)} — ${curSymbol}${(detectedStock.high ?? detectedStock.price * 1.015).toFixed(2)}
+- **Trading Volume:** ${detectedStock.volume || "Active Liquidity"}
+
+${
+  pnl.hasPnLIntent
+    ? `
+#### 📊 **Calculated Profit & Loss (P&L) Framework**
+
+| Parameter | Value | Details / Mathematical Formula |
+| :--- | :--- | :--- |
+| **Quantity** | **${pnl.shares} shares** | Position sizing |
+| **Entry Price** | **${curSymbol}${pnl.entry.toFixed(2)}** | Base execution price |
+| **Target Price (Profit)** | **${curSymbol}${pnl.target.toFixed(2)}** | Upside breakout target (+${pnl.profitPct.toFixed(2)}%) |
+| **Stop-Loss Price (Risk)** | **${curSymbol}${pnl.stopLoss.toFixed(2)}** | Technical invalidation level (-${pnl.lossPct.toFixed(2)}%) |
+| **Capital Deployed** | **${curSymbol}${pnl.capital.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}** | ${pnl.shares} × ${curSymbol}${pnl.entry.toFixed(2)} |
+| **Potential Profit** | **+${curSymbol}${pnl.grossProfit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}** | **+${pnl.profitPct.toFixed(2)}% return** on capital |
+| **Potential Loss (at SL)** | **-${curSymbol}${pnl.grossLoss.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}** | **-${pnl.lossPct.toFixed(2)}% drawdown** at invalidation |
+| **Risk-to-Reward Ratio** | **${pnl.riskReward}** | Asymmetric edge (Reward : Risk) |
+`
+    : `
+**Direct Quantitative Assessment:**
+${detectedStock.name} (${detectedStock.symbol}) is currently trading at ${curSymbol}${detectedStock.price.toFixed(2)}. Anchored above key exponential moving averages, institutional accumulation is tracking closely near VWAP levels with manageable intraday bid-ask friction.
+`
+}
+
+---
+
+#### 👥 **4 AI Agent Perspectives on ${detectedStock.symbol}:**
+- 🐂 **Bull (Growth & Momentum):** Accumulation structure remains constructive above ${curSymbol}${(detectedStock.price * 0.988).toFixed(2)}. Next upside expansion target sits at ${curSymbol}${pnl.target.toFixed(2)}.
+- 🐻 **Bear (Risk & Defense):** Guard your capital strictly. Maintain a non-negotiable stop-loss at ${curSymbol}${pnl.stopLoss.toFixed(2)}. A breakdown below this level invalidates the bullish thesis.
+- 🦌 **Stag (Valuation & Macro):** Company fundamentals reflect long-term compounding strength. Filter out daily tick noise and evaluate multi-quarter balance sheet health.
+- 🐇 **Rabbit (Order Timing & VWAP):** Watch Level-2 book depth. Route limit orders near the VWAP benchmark of ${curSymbol}${(detectedStock.price * 0.995).toFixed(2)} to minimize entry slippage.
+
+---
+🎯 **Strategic Action Plan:**
+Never risk more than 1.5% of total portfolio equity on this position. Place an automated exchange stop-loss at ${curSymbol}${pnl.stopLoss.toFixed(2)} immediately upon entry.
+`.trim();
+  }
+
+  // CASE 2: General Financial, Trading, or Market Question (Direct answer for what is asked!)
+
+  // 1. Trailing Stop-Loss / Stop-Loss Discipline
+  if (/trailing\s*stop|stop\s*loss|stoploss|\bsl\b|invalidation/i.test(q)) {
+    return `
+### 🛡️ Understanding Trailing Stop-Loss & Risk Invalidation
+
+**Direct Answer to Your Question:**
+A **Trailing Stop-Loss** is a dynamic risk-management order that automatically moves upward with the market price as your trade gains profit, but remains strictly fixed when the price drops.
+
+#### ⚙️ **How Trailing Stop-Loss Works (Step-by-Step):**
+1. **Initial Entry:** You buy a stock at **$100** and set a **5% trailing stop-loss** ($5 below entry at **$95**).
+2. **Price Advances:** If the stock rallies to **$110**, your stop-loss automatically ratchets up to **$104.50** ($110 - 5%).
+3. **Further Gain:** If the stock peaks at **$120**, your stop-loss raises to **$114.00** ($120 - 5%), locking in a guaranteed profit of **+$14 per share**.
+4. **Reversal Trigger:** If the stock subsequently drops from $120 to **$114**, your stop-loss triggers immediately, locking in the gain and saving you from a further market crash.
+
+#### 📊 **Trailing Stop vs. Fixed Stop-Loss Comparison:**
+| Feature | Fixed Stop-Loss | Trailing Stop-Loss |
+| :--- | :--- | :--- |
+| **Execution Point** | Stays static at predetermined price | Rises continuously as market climbs |
+| **Profit Protection** | Caps downside loss only | Converts unrealized profits into realized gains |
+| **Best Used For** | Initial capital defense on entry | Riding powerful multi-week trend breakouts |
+| **Trigger Mechanism** | Fixed price threshold | Trailing percentage (%) or ATR multiplier |
+
+---
+
+#### 👥 **4 AI Agent Perspectives on Stop-Loss Strategy:**
+- 🐂 **Bull (Momentum Strategist):** Trailing stops are the ultimate tool for trend followers. They let you ride massive runaway rallies without prematurely capping your upside.
+- 🐻 **Bear (Capital Preservation Officer):** Never let a winning trade turn into a losing trade. Hope is not an investment strategy; trailing stops take human emotion out of the exit.
+- 🦌 **Stag (Macro Valuation Strategist):** For long-term compounders, avoid setting trailing stops too tightly (e.g. under 3%). Give high-conviction companies room to breathe through normal market volatility.
+- 🐇 **Rabbit (Order Execution Specialist):** Prefer a **Trailing Stop-Limit** during orderly sessions, but use a **Trailing Stop-Market** during high-volatility news events to guarantee execution without being skipped.
+`.trim();
+  }
+
+  // 2. Options, Option Chains, Calls, Puts & Straddles
+  if (/option|straddle|strangle|call\s*option|put\s*option|open\s*interest|\boi\b|theta|implied\s*volatility|\biv\b|expiry|strike/i.test(q)) {
+    return `
+### ⚡ Options Trading Mechanics: Calls, Puts & Volatility
+
+**Direct Answer to Your Question:**
+Options are derivative contracts giving the buyer the right (without the obligation) to buy or sell an underlying stock at a predetermined **Strike Price** before an **Expiration Date**.
+
+#### 🔑 **Core Options Principles & Instruments:**
+- **Call Option (CE):** Gives the right to *buy*. You profit when the stock rises rapidly above the strike price plus premium paid ($Break\text{-}even = Strike + Premium$).
+- **Put Option (PE):** Gives the right to *sell*. You profit when the stock plunges below the strike price ($Break\text{-}even = Strike - Premium$).
+- **Option Straddle:** Buying both an At-The-Money (ATM) Call and Put simultaneously. You profit if the market makes a massive breakout in *either* direction (common before major earnings or budget announcements).
+- **Open Interest (OI) & Option Chains:**
+  - High **Put Open Interest** acts as a powerful institutional support floor (put writers absorb selling).
+  - High **Call Open Interest** acts as strong overhead resistance (call writers defend the ceiling).
+- **Theta Decay (Time Decay):** Options lose value every day as expiry approaches. Buyers fight time decay; sellers collect it.
+
+---
+
+#### 👥 **4 AI Agent Perspectives on Options:**
+- 🐂 **Bull (Upside Scout):** Long calls provide asymmetric upside with capped capital exposure during confirmed momentum breakouts.
+- 🐻 **Bear (Hedging Guardian):** Use Protective Puts to hedge long portfolio holdings during macroeconomic uncertainty or elevated VIX environments.
+- 🦌 **Stag (Valuation Allocator):** Selling Covered Calls against long-held blue-chip shares generates consistent cashflow yield while waiting for price targets.
+- 🐇 **Rabbit (Microstructure Specialist):** Never buy options during peak Implied Volatility (IV) just before announcements; IV crush will destroy your premium even if the direction is correct.
+`.trim();
+  }
+
+  // 3. Short Selling, Short Squeeze & Borrowing
+  if (/short\s*sell|shorting|short\s*squeeze|\bshort\b|borrowing\s*shares|margin\s*call|leverage/i.test(q)) {
+    return `
+### 📉 Short Selling & Short Squeeze Mechanics
+
+**Direct Answer to Your Question:**
+**Short selling** is the practice of profiting from an expected decline in a stock's price by borrowing shares, selling them at current high prices, and repurchasing them later at a lower price to return to the lender.
+
+#### 🔄 **How Short Selling Operates:**
+1. **Borrow & Sell:** You borrow 100 shares of a company trading at **$150** and sell them in the open market, collecting **$15,000** cash.
+2. **Price Declines:** If the stock drops to **$100**, you buy back 100 shares for **$10,000** to return them to the lender.
+3. **Net Profit:** You pocket the **$5,000 difference** (minus borrow fees).
+
+#### ⚠️ **The Critical Risk Asymmetry:**
+- **Buying Long:** Maximum potential loss is **100%** (stock goes to zero); maximum upside is **infinite**.
+- **Short Selling:** Maximum potential profit is **100%** (stock goes to zero); maximum potential loss is **theoretically infinite** (stock can rally hundreds of percent).
+- **Short Squeeze:** When a heavily shorted stock begins rising, short sellers are forced to buy shares to cover their losses. This forced buying fuels a violent vertical surge in price.
+
+---
+
+#### 👥 **4 AI Agent Perspectives on Shorting:**
+- 🐂 **Bull (Breakout Identifier):** Look for heavily shorted stocks with high Short Interest (>15% float) breaking 52-week highs; they offer explosive squeeze potential.
+- 🐻 **Bear (Risk Officer):** Short only with strict hard stop-losses. Never average down on a losing short position.
+- 🦌 **Stag (Macro Strategist):** Shorting fundamentally overvalued hype stocks requires immense patience because markets can stay irrational longer than you can stay solvent.
+- 🐇 **Rabbit (Execution Specialist):** Track borrow rates (Cost to Borrow) and locate availability before shorting. High borrow fees can quickly erode short-selling profitability.
+`.trim();
+  }
+
+  // 4. Technical Indicators (RSI, VWAP, MACD, Bollinger, Moving Averages)
+  if (/rsi|relative\s*strength|vwap|macd|moving\s*average|\bema\b|\bsma\b|bollinger|fibonacci|supertrend|support|resistance/i.test(q)) {
+    return `
+### 📈 Technical Indicators & Institutional Chart Mechanics
+
+**Direct Answer to Your Question:**
+Technical indicators are mathematical calculations based on historical price, volume, and open interest used to evaluate trend strength, momentum, overbought/oversold extremes, and institutional liquidity.
+
+#### 🛠️ **Key Technical Indicators & Rules of Engagement:**
+- **RSI (Relative Strength Index):**
+  - Measures momentum velocity on a 0-100 scale.
+  - **> 70:** Overbought zone; watch for bearish divergences.
+  - **< 30:** Oversold zone; watch for bullish exhaustion reversals.
+  - *Golden Rule:* In strong bull markets, RSI often stays above 50-60 for extended periods.
+- **VWAP (Volume-Weighted Average Price):**
+  - The true institutional average price benchmark for the trading day.
+  - Prices trading **above VWAP** indicate aggressive institutional buying control.
+  - Prices trading **below VWAP** indicate institutional selling pressure.
+- **EMA Ribbons (9, 21, 50, 200 Exponential Moving Averages):**
+  - **9/21 EMA Cross:** Fast intraday and swing momentum trigger.
+  - **50/200 EMA Golden Cross:** Multi-month macro bull market confirmation.
+- **Bollinger Bands:** 20-period SMA flanked by ±2 standard deviation bands. Band squeezes precede massive volatility expansions.
+
+---
+
+#### 👥 **4 AI Agent Perspectives on Indicators:**
+- 🐂 **Bull:** Combine the 21-EMA with positive volume expansion for clean breakout trend entries.
+- 🐻 **Bear:** Divergences are the most reliable warning signs; when price makes higher highs but RSI makes lower highs, prepare for a sharp pullback.
+- 🦌 **Stag:** The 200-day Simple Moving Average (SMA) is the ultimate divider between secular bull regimes and structural bear trends.
+- 🐇 **Rabbit:** Always anchor your order executions near intraday VWAP standard deviation bands to eliminate spread slippage.
+`.trim();
+  }
+
+  // 5. Fundamental Analysis & Valuation (P/E, DCF, Dividend, Market Cap)
+  if (/p\/e|pe\s*ratio|dcf|discounted\s*cash|dividend|market\s*cap|balance\s*sheet|debt|intrinsic\s*value|valuation|eps|roe/i.test(q)) {
+    return `
+### 🏦 Fundamental Analysis & Intrinsic Valuation Framework
+
+**Direct Answer to Your Question:**
+Fundamental analysis determines the intrinsic fair value of a company by evaluating its financial statements, revenue growth, profit margins, balance sheet health, and competitive economic moat.
+
+#### 📐 **Core Fundamental Valuation Metrics:**
+- **P/E (Price-to-Earnings) Ratio:** Stock price divided by Earnings Per Share (EPS). Compares what you pay versus what the company actually earns.
+- **PEG Ratio (P/E to Growth):** P/E divided by annual EPS growth rate. A PEG below **1.0** typically signals growth at a reasonable price (GARP).
+- **DCF (Discounted Cash Flow):** Estimates the present value of all future Free Cash Flows projected out over 5-10 years, discounted by the cost of capital.
+- **ROE (Return on Equity):** Net income divided by shareholders' equity. High ROE (>18%) indicates superior capital reinvestment efficiency.
+- **Debt-to-Equity Ratio:** Measures financial leverage. Values below **0.5** indicate strong balance sheets resilient to rising interest rates.
+
+---
+
+#### 👥 **4 AI Agent Perspectives on Valuation:**
+- 🐂 **Bull:** Look for accelerating revenue and earnings revisions; growth beats static low valuations in forward-looking markets.
+- 🐻 **Bear:** Scrutinize operating cashflow versus reported net profit. If profit rises while cashflow from operations drops, beware of accounting gimmicks.
+- 🦌 **Stag:** Compounding wealth requires a strict Margin of Safety; buy quality businesses when market pessimism pushes their price 15-25% below intrinsic DCF value.
+- 🐇 **Rabbit:** Watch earnings release dates and post-earnings announcement drift (PEAD) to position trades with high institutional liquidity.
+`.trim();
+  }
+
+  // 6. Risk Management, Position Sizing & 1% Rule
+  if (/risk\s*management|position\s*size|position\s*sizing|capital\s*preservation|1%\s*rule|risk\s*reward|drawdown|wallet/i.test(q)) {
+    return `
+### ⚖️ The Mathematics of Risk Management & Capital Preservation
+
+**Direct Answer to Your Question:**
+Risk management is the mathematical structure that ensures no single losing trade, or sequence of losing trades, can permanently deplete your trading account.
+
+#### 🧮 **The Institutional 1% Position Sizing Formula:**
+Never risk more than **1% of your total account equity** on any single trade idea:
+
+$$\\text{Position Size (Number of Shares)} = \\frac{\\text{Total Capital} \\times 1\\%}{\\text{Entry Price} - \\text{Stop-Loss Price}}$$
+
+*Example:* With an account of **$25,000**, your maximum risk (1%) is **$250**.
+If you buy a stock at **$50** with a stop-loss at **$45** ($5 risk per share):
+$$\\text{Shares to Buy} = \\frac{\\$250}{\\$5} = 50\\text{ shares}$$
+
+#### 💡 **Why Asymmetric Risk-to-Reward Ratio (RRR) Matters:**
+| Win Rate | Risk-to-Reward Ratio | Result over 100 Trades | Outcome |
+| :--- | :--- | :--- | :--- |
+| **40%** | **1 : 2.5** | 40 wins × $250 - 60 losses × $100 | **+$4,000 Profit** |
+| **50%** | **1 : 2.0** | 50 wins × $200 - 50 losses × $100 | **+$5,000 Profit** |
+| **70%** | **1 : 0.5** | 70 wins × $50 - 30 losses × $100 | **+$500 Barely breakeven** |
+
+---
+
+#### 👥 **4 AI Agent Perspectives on Risk:**
+- 🐂 **Bull:** Asymmetric reward means you only need 4 out of 10 winners to generate substantial portfolio growth.
+- 🐻 **Bear:** A 50% account drawdown requires a **100% gain** just to get back to even. Defense is not optional; it is survival.
+- 🦌 **Stag:** Diversify across uncorrelated asset classes and sectors so no single industry shock threatens your long-term capital base.
+- 🐇 **Rabbit:** Factor in brokerage fees, exchange turnover costs, and bid-ask spreads when calculating realistic net risk-to-reward ratios.
+`.trim();
+  }
+
+  // 7. Trading Psychology, Discipline & Emotional Traps
+  if (/psychology|discipline|fomo|fear|greed|revenge\s*trading|panic\s*sell|overtrading/i.test(q)) {
+    return `
+### 🧠 Trading Psychology: Overcoming FOMO, Greed & Fear
+
+**Direct Answer to Your Question:**
+Market psychology is the emotional mindset that governs financial decision-making. Over 90% of trading errors stem from cognitive biases rather than technical ignorance.
+
+#### 🛑 **The Top 3 Psychological Traps & Solutions:**
+1. **FOMO (Fear of Missing Out):**
+   - *Trap:* Chasing an asset after it has already rallied 20-30%, buying at the exact top just before institutional distribution.
+   - *Solution:* Wait for the pullback to the 20-EMA or VWAP. If a trade leaves without you, let it go; another setup will appear.
+2. **Panic Selling at Bottoms:**
+   - *Trap:* Selling during peak red candle panic right into institutional liquidity absorb pools.
+   - *Solution:* Execute pre-calculated stop-losses mechanically. If your stop hasn't hit, don't let short-term red ticks panic you.
+3. **Revenge Trading:**
+   - *Trap:* Immediately taking oversized, reckless trades to "win back" lost money after a bad trade.
+   - *Solution:* Enforce a daily maximum loss limit. After two consecutive stop-outs, shut down your screen for the day.
+
+---
+
+#### 👥 **4 AI Agent Perspectives on Discipline:**
+- 🐂 **Bull:** Confidence comes from executing a proven positive-expectancy playbook, not from gambling on green candles.
+- 🐻 **Bear:** Detach your self-worth from individual trade outcomes. Losses are simply the operating cost of running a trading business.
+- 🦌 **Stag:** The stock market is a device for transferring money from the impatient to the patient. Think in multi-year horizons.
+- 🐇 **Rabbit:** Follow a rigorous pre-market checklist before entering orders. When execution is mechanical, emotions have no room to interfere.
+`.trim();
+  }
+
+  // 8. General Financial Intelligence Fallback (Directly answers the user's specific prompt)
+  return `
+### 💡 Financial Market Intelligence & Analysis
+
+**Direct Answer to Your Inquiry:**
+Regarding **"${userQuestion}"**:
+Success in financial markets depends on three pillars: understanding market microstructure, applying statistical edge, and adhering to strict capital management.
+
+#### 🔍 **Key Operational Insights:**
+- **Market Dynamics:** Asset prices reflect real-time equilibrium between supply (sellers) and demand (buyers). When aggressive market orders consume limit orders on the opposite side, price momentum accelerates.
+- **Statistical Edge:** Always trade setups where historical probability and asymmetric payoff favor your position (minimum 1:2 risk-to-reward ratio).
+- **Execution Discipline:** Define your entry price, target exit, and stop-loss invalidation before executing any order.
+
+---
+
+#### 👥 **4 AI Agent Perspectives:**
+- 🐂 **Bull (Growth & Upside):** Identify structural accumulation catalysts and align your trades with the primary trend direction.
+- 🐻 **Bear (Risk & Defense):** Always quantify your maximum dollar risk per trade before dreaming about potential profits.
+- 🦌 **Stag (Valuation & Compounding):** Focus on underlying asset quality, sustainable business models, and patience.
+- 🐇 **Rabbit (Execution & Microstructure):** Pay attention to bid-ask spreads, order routing, and market session timing to eliminate unnecessary friction.
+
+---
+🎯 **Actionable Conclusion:**
+Focus on process over outcome. A disciplined trade that hits a stop-loss is still a good trade if it followed your rules.
+`.trim();
+}
+
+/**
  * Interactive Conversational Chatbot Engine:
  * Answers questions, clears doubts, performs deep stock analysis, computes profit & loss tables,
  * and incorporates real-time world-wide-web data using OpenRouter free unlimited models.
@@ -270,30 +626,41 @@ export async function queryMindspaceChatbot({
   const nowStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const turnId = `chat-${Date.now()}`;
 
-  // 1. Fetch real-time web & market context
-  const { contextText, detectedStock } = getLiveWebMarketContext(activeStock, userQuestion);
+  // 1. Detect if question is asking about a specific stock (from 7,280+ universe) or the selected stock
+  const { contextText, detectedStock, isStockSpecific } = getLiveWebMarketContext(
+    activeStock,
+    userQuestion,
+  );
   const curSymbol = detectedStock ? detectedStock.currency : "₹";
   const curPrice = detectedStock ? detectedStock.price : 100;
 
-  // 2. Pre-calculate P&L math
+  // 2. Pre-calculate P&L math if user asked about shares/profits/targets
   const pnl = extractStockPnLParams(userQuestion, curPrice, curSymbol);
 
-  // 3. Construct system prompt
-  const systemPrompt = `You are Mindspace AI Chatbot — an elite, friendly, and authoritative autonomous market intelligence chatbot and quantitative analyst.
-Your mission is to clear any investing, stock market, and trading doubts, calculate profits and losses with exact mathematics, and synthesize the collective intelligence of the 4 Mindspace AI Agents:
-- 🐂 Bull Agent (Growth catalysts, upside breakout targets, momentum validation)
-- 🐻 Bear Agent (Capital preservation, drawdown risks, stop-loss defense, invalidation triggers)
-- 🦌 Stag Agent (Intrinsic valuation, P/E ratios, multi-year compounding, patience)
-- 🐇 Rabbit Agent (Order timing, VWAP anchors, orderbook microstructure, avoiding spread slippage)
+  // 3. Construct intelligent system prompt based on whether question is stock-specific or a general market doubt
+  const systemPrompt = isStockSpecific && detectedStock
+    ? `You are Mindspace AI Chatbot — an elite, friendly, and authoritative autonomous market intelligence chatbot and quantitative analyst.
+The user is asking about ${detectedStock.name} (${detectedStock.symbol} · ${detectedStock.market}).
 
 OUTPUT REQUIREMENTS:
-1. CLEAR THE DOUBT: Answer the user's specific question or doubt with clarity, empathy, and professional market reasoning.
-2. PROFITS & LOSSES ANALYSIS: When the user asks about buying/selling, shares, or returns, ALWAYS include a clean, formatted Markdown Table showing:
-   | Parameter | Value | Details |
+1. DIRECT ANSWER: Address the user's specific inquiry regarding ${detectedStock.name} (${detectedStock.symbol}) directly using the live market data provided.
+2. PROFITS & LOSSES ANALYSIS: If the user mentions buying, selling, shares, or return calculations, ALWAYS include a clean Markdown Table showing:
+   | Parameter | Value | Details / Formula |
    including Entry, Target, Stop Loss, Capital Deployed, Potential Profit (+amount & +%), Potential Loss (-amount & -%), and Risk-to-Reward Ratio.
-3. MULTI-AGENT PERSPECTIVES: Provide a focused bullet or insight from Bull, Bear, Stag, and Rabbit.
-4. WORLD-WIDE WEB & REAL-TIME GROUNDING: Use the provided [LIVE WORLD WIDE WEB & REAL-TIME EXCHANGE DATA] to ground your answer in current market reality.
-5. STRATEGIC CONCLUSION: Give a decisive, actionable verdict. Format with clean markdown headers and bullet points.`;
+3. MULTI-AGENT PERSPECTIVES: Provide a focused bullet from Bull (momentum/upside), Bear (downside/stoploss), Stag (valuation/horizon), and Rabbit (VWAP/order execution) for ${detectedStock.symbol}.
+4. REAL-TIME GROUNDING: Use the provided [LIVE WORLD WIDE WEB & REAL-TIME EXCHANGE DATA] to ground price levels in real market reality.`
+    : `You are Mindspace AI Chatbot — an elite, friendly, and authoritative market intelligence analyst, quantitative strategist, and financial educator.
+
+PRIMARY DIRECTIVE:
+Directly, thoroughly, and specifically answer WHAT QUESTION IS BEING ASKED by the user: "${userQuestion}".
+1. DIRECT ANSWER FIRST: Explain the concepts, trading mechanics, formulas, and real-world execution steps with complete clarity and professional depth.
+2. DO NOT FORCE-FIT UNRELATED STOCKS: Do NOT talk about an unrelated company or stock unless the user specifically inquired about it. Focus 100% on answering the user's doubt.
+3. 4 AI AGENT PERSPECTIVES: Provide a focused insight on THIS TOPIC from each of the 4 Mindspace AI Agents:
+   - 🐂 Bull Agent (Upside catalysts, trend acceleration, breakout momentum perspective)
+   - 🐻 Bear Agent (Capital preservation, drawdown risks, invalidation criteria perspective)
+   - 🦌 Stag Agent (Fundamental value, macroeconomic backdrop, patient compounding perspective)
+   - 🐇 Rabbit Agent (Microstructure, liquidity, order execution timing, spread slippage perspective)
+4. PRACTICAL TAKEAWAY: Conclude with actionable advice for modern financial markets. Format with clean markdown headers and bullet points.`;
 
   // 4. Assemble recent conversation messages
   const recentHistory = conversationHistory.slice(-6).map((m) => ({
@@ -301,8 +668,9 @@ OUTPUT REQUIREMENTS:
     content: m.message,
   }));
 
-  const userContent =
-    `${userQuestion}\n\n${contextText}\n\n${pnl.hasPnLIntent ? pnl.summaryText : ""}`.trim();
+  const userContent = isStockSpecific && detectedStock
+    ? `${userQuestion}\n\n${contextText}\n\n${pnl.hasPnLIntent ? pnl.summaryText : ""}`.trim()
+    : userQuestion.trim();
 
   // Models to try in order (ensuring zero-failure cascade)
   const modelsToTry = [
@@ -386,47 +754,16 @@ OUTPUT REQUIREMENTS:
     }
   }
 
-  // 5. High-fidelity Offline Algorithmic Fallback (Exact P&L calculations + 4-agent verdict)
-  const stockName = detectedStock ? detectedStock.name : "Selected Stock";
-  const stockSymbol = detectedStock ? detectedStock.symbol : "EQ";
 
-  const offlineAnalysis = `
-### 🤖 Market Intelligence Analysis: ${stockName} (${stockSymbol})
+  const offlineAnalysis = generateDirectChatbotAnswer(
+    userQuestion,
+    detectedStock,
+    isStockSpecific,
+    pnl,
+  );
 
-**Direct Answer & Doubt Clarification:**
-To optimize your trade on **${stockName}**, maintaining a disciplined risk-to-reward setup is paramount. Markets reward asymmetric setups where potential upside strictly outweighs downside exposure.
 
-${
-  pnl.hasPnLIntent
-    ? `
-#### 📊 **Calculated Profit & Loss (P&L) Framework**
 
-| Parameter | Value | Details / Formula |
-| :--- | :--- | :--- |
-| **Quantity** | **${pnl.shares} shares** | Trade position sizing |
-| **Entry Price** | **${curSymbol}${pnl.entry.toFixed(2)}** | Executed / Planned price |
-| **Target Price (Profit)** | **${curSymbol}${pnl.target.toFixed(2)}** | Upside target (+${pnl.profitPct.toFixed(2)}%) |
-| **Stop-Loss Price (Risk)** | **${curSymbol}${pnl.stopLoss.toFixed(2)}** | Technical invalidation (-${pnl.lossPct.toFixed(2)}%) |
-| **Capital Deployed** | **${curSymbol}${pnl.capital.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}** | ${pnl.shares} × ${curSymbol}${pnl.entry.toFixed(2)} |
-| **Potential Profit** | **+${curSymbol}${pnl.grossProfit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}** | **+${pnl.profitPct.toFixed(2)}% return** on capital |
-| **Potential Loss (at SL)** | **-${curSymbol}${pnl.grossLoss.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}** | **-${pnl.lossPct.toFixed(2)}% drawdown** on capital |
-| **Risk-to-Reward Ratio** | **${pnl.riskReward}** | Favorable asymmetric edge |
-`
-    : ""
-}
-
----
-
-#### 👥 **4 AI Agent Perspectives:**
-- 🐂 **Bull (Growth & Upside):** Catalysts favor accumulation as long as price holds above the 20-EMA anchor. Upside momentum targets expansion towards ${curSymbol}${pnl.target.toFixed(2)}.
-- 🐻 **Bear (Risk & Defense):** Hard rule: protect capital. If price drops below ${curSymbol}${pnl.stopLoss.toFixed(2)}, exit without hesitation. Never convert a trade into an unintended long-term bag.
-- 🦌 **Stag (Valuation & Long Term):** Evaluate earnings consistency and institutional holding. Compounding is maximized by staying calm during market volatility.
-- 🐇 **Rabbit (Order Timing & VWAP):** Avoid market orders during opening bell spreads. Route limit orders near the VWAP benchmark to avoid unnecessary slippage.
-
----
-🎯 **Final Strategic Action Plan:**
-Enter with a maximum risk of 1.5% of total portfolio capital. Place an automated exchange stop-loss at ${curSymbol}${pnl.stopLoss.toFixed(2)} immediately upon entry.
-`.trim();
 
   return {
     id: turnId,

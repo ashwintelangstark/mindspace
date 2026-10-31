@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { StockQuote } from "@/types/stock";
 import {
   subscribeMarketEngine,
@@ -6,6 +6,7 @@ import {
   refreshSymbolFromLiveApi,
   setActiveMarketSymbol,
 } from "@/lib/market-engine";
+import { searchUniverse, UNIVERSE_COUNTS } from "@/data/stocks-universe";
 
 interface StockExplorerModalProps {
   isOpen: boolean;
@@ -23,27 +24,33 @@ export function StockExplorerModal({ isOpen, onClose, onSelectStock }: StockExpl
     return subscribeMarketEngine((s) => setSnap(s));
   }, [isOpen]);
 
+  const stockList = useMemo(() => {
+    if (marketTab === "CRYPTO") {
+      return Object.values(snap.quotes).filter((s) => {
+        if (!s.market.includes("CRYPTO")) return false;
+        if (!filter) return true;
+        const q = filter.toLowerCase();
+        return (
+          s.name.toLowerCase().includes(q) ||
+          s.symbol.toLowerCase().includes(q) ||
+          (s.sector && s.sector.toLowerCase().includes(q))
+        );
+      });
+    }
+
+    // Search across the full 7,280+ security universe (NSE India + US Markets)
+    const rawMatches = searchUniverse(filter, 80, marketTab);
+    return rawMatches.map((stock) => snap.quotes[stock.symbol] || stock);
+  }, [filter, marketTab, snap.quotes]);
+
   if (!isOpen) return null;
 
-  const stockList = Object.values(snap.quotes).filter((s) => {
-    if (marketTab === "INDIA" && !s.market.includes("NSE") && !s.market.includes("BSE")) {
-      return false;
-    }
-    if (marketTab === "US" && !s.market.includes("NASDAQ") && !s.market.includes("NYSE")) {
-      return false;
-    }
-    if (marketTab === "CRYPTO" && !s.market.includes("CRYPTO")) {
-      return false;
-    }
-    if (!filter) return true;
-    const q = filter.toLowerCase();
-    return (
-      s.name.toLowerCase().includes(q) ||
-      s.symbol.toLowerCase().includes(q) ||
-      s.market.toLowerCase().includes(q) ||
-      (s.sector && s.sector.toLowerCase().includes(q))
-    );
-  });
+  const marketTabs = [
+    { id: "ALL", label: `All Equities (${UNIVERSE_COUNTS.total.toLocaleString()}+)` },
+    { id: "INDIA", label: `🇮🇳 India NSE (${UNIVERSE_COUNTS.nse.toLocaleString()})` },
+    { id: "US", label: `🇺🇸 US Markets (${UNIVERSE_COUNTS.us.toLocaleString()})` },
+    { id: "CRYPTO", label: "⚡ Crypto (24/7)" },
+  ] as const;
 
   return (
     <div
@@ -82,14 +89,7 @@ export function StockExplorerModal({ isOpen, onClose, onSelectStock }: StockExpl
         {/* Filter Tabs + Search Input */}
         <div className="my-4 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            {(
-              [
-                { id: "ALL", label: "All Markets (22)" },
-                { id: "INDIA", label: "🇮🇳 India (NSE / BSE)" },
-                { id: "US", label: "🇺🇸 US (NASDAQ / NYSE)" },
-                { id: "CRYPTO", label: "⚡ Crypto (24/7)" },
-              ] as const
-            ).map((tab) => (
+            {marketTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setMarketTab(tab.id)}
@@ -104,13 +104,23 @@ export function StockExplorerModal({ isOpen, onClose, onSelectStock }: StockExpl
             ))}
           </div>
 
-          <input
-            type="text"
-            placeholder="Filter by company, ticker, or sector (e.g. RELIANCE, NVDA, TCS, AAPL, Banking)..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full rounded-xl border border-[#1a573b] bg-[#030806] px-4 py-2.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-[#00e59a]"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by company, ticker, or sector (e.g. RELIANCE, TATAMOTORS, NVDA, AAPL, Banking)..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="w-full rounded-xl border border-[#1a573b] bg-[#030806] px-4 py-2.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-[#00e59a]"
+            />
+            <div className="flex items-center justify-between text-[11px] text-[#92a79c] mt-1.5 px-1 font-mono">
+              <span>
+                {filter
+                  ? `Found ${stockList.length} matching securities`
+                  : `Browsing top ${stockList.length} of ${UNIVERSE_COUNTS.total.toLocaleString()} official equities`}
+              </span>
+              <span className="text-[#00e59a]">⚡ Real-Time Exchange Master Feed</span>
+            </div>
+          </div>
         </div>
 
         {/* Live Stock Grid */}
